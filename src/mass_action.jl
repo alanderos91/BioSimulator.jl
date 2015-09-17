@@ -63,3 +63,9 @@ function mass_action_deriv(c::Float64, stoich::Vector{Int}, x::Vector{Species}, 
 
     return c * acc
 end
+
+function mass_action_deriv(r::Reaction, x::Vector{Species}, params::Dict{ASCIIString, Float64}, k::Int)
+  c = params[r.rate]
+
+  return mass_action_deriv(c, r.pre, x, k)
+end
