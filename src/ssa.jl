@@ -1,3 +1,5 @@
+export ssa_explicit, ssa_stepper!
+
 function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, jump::Float64)
   ss = 0.0
   flag = true

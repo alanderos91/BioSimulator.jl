@@ -1,3 +1,5 @@
+export sal_explicit, sal_stepper!
+
 function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
   while isbadleap(spcs, rxns, events)
     τ = contract!(events, τ, α)

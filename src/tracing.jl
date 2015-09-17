@@ -1,3 +1,5 @@
+export PopulationTrace, SimulationResult, plot_trajectory
+
 immutable PopulationState
     name::ASCIIString
     time::Float64

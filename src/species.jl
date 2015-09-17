@@ -1,3 +1,5 @@
+export Species
+
 type Species
     id::ASCIIString
     pop::Int

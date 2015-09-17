@@ -1,3 +1,5 @@
+export Network
+
 type Network
     id::ASCIIString
     spcs::Vector{Species}

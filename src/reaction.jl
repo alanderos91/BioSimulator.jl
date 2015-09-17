@@ -1,3 +1,5 @@
+export Reaction
+
 type Reaction
     id::ASCIIString
     rate::ASCIIString

@@ -1,3 +1,5 @@
+export Simulation
+
 immutable Simulation
     id::ASCIIString
     initial::Vector{Species}
