@@ -17,7 +17,7 @@ immutable PopulationTrace
 end
 
 function PopulationTrace()
-  return PopulationTrace(PopulationState[])
+  return PopulationTrace(PopulationTrace[])
 end
 
 function PopulationTrace(x::Species)
@@ -36,12 +36,41 @@ function Base.isempty(t::PopulationTrace)
   return isempty(t.states)
 end
 
+function Base.length(t::PopulationTrace)
+  return length(t.states)
+end
+
+function species(t::PopulationTrace)
+  return t.states[1].name
+end
+
+function toarrays(tr::PopulationTrace)
+  tval = Float64[]
+  pval = Int[]
+
+  for state in tr.states
+    push!(tval, state.time)
+    push!(pval, state.value)
+  end
+  return tval, pval
+end
+
 function Base.show(io::IO, t::PopulationTrace)
   @printf io "   Name        Time       Value  \n"
   @printf io "----------  ----------  ---------\n"
   for state in t.states
     show(io, state)
   end
+end
+
+function init_traces(spcs::Vector{Species})
+  traces = Dict{ASCIIString, PopulationTrace}()
+  for s in spcs
+    if s.istracked
+      traces[s.id] = PopulationTrace(s)
+    end
+  end
+  return traces
 end
 
 function update_traces!(traces::Dict{ASCIIString, PopulationTrace}, t::Float64, spcs::Vector{Species}, store_trace::Bool)
@@ -83,29 +112,27 @@ end
 
 import Gadfly.ElementOrFunctionOrLayers
 
-function plot_trajectory(tr::PopulationTrace, elements::ElementOrFunctionOrLayers...)
+function plot(tr::PopulationTrace, elements::ElementOrFunctionOrLayers...)
   if !isempty(tr)
-    name = tr.states[1].name
-    tval = Float64[]
-    pval = Int[]
-
-    for state in tr.states
-      push!(tval, state.time)
-      push!(pval, state.value)
-    end
-
+    name = species(tr)
+    tval, pval = toarrays(tr)
     return plot(x=tval, y=pval, elements...)
   else
     # TODO
   end
 end
 
-
-
-immutable SimulationResult
-  algorithm::ASCIIString
-  traces::Dict{ASCIIString, PopulationTrace}
+immutable SimulationResults
+  model::ASCIIString
+  results::Vector{Dict{ASCIIString,PopulationTrace}}
   metadata::Dict{Any,Any}
+end
+
+function Base.show(io::IO, sr::SimulationResults)
+  @printf io "[ %s ]\n" sr.model
+  for (key,val) in sr.metadata
+    @printf io " * %s: %s\n" key val
+  end
 end
 
 function regularize(trs::Dict{ASCIIString,PopulationTrace}, stepsize::Float64, t_final::Float64)
@@ -116,9 +143,18 @@ function regularize(trs::Dict{ASCIIString,PopulationTrace}, stepsize::Float64, t
   return ntrs
 end
 
-function regularize(sr::SimulationResult, stepsize::Float64, t_final::Float64)
+function regularize(rslt::Vector{Dict{ASCIIString,PopulationTrace}}, stepsize::Float64, t_final::Float64)
+  results = Dict{ASCIIString,PopulationTrace}[]
+  for r in rslt
+    d = regularize(r, stepsize, t_final)
+    push!(results, d)
+  end
+  return results
+end
+
+function regularize(sr::SimulationResults, stepsize::Float64, t_final::Float64)
   alg = sr.algorithm
   md = sr.metadata
-  ntrs = regularize(sr.traces, stepsize, t_final)
-  return SimulationResult(alg, ntrs, md)
+  results = regularize(sr.results, stepsize, t_final)
+  return SimulationResults(alg, results, md)
 end
