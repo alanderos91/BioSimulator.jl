@@ -1,47 +1,25 @@
-export ssa_explicit, ssa_stepper!
+export ssa
 
-function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, jump::Float64)
+function sample(rxns::Vector{Reaction}, jump::Float64)
   ss = 0.0
-  flag = true
-
-  for r in rxns
-    ss = ss + r.propensity
-    if jump <= ss
-      update!(spcs, r)
-      flag = false
-      break
+  for i = 1:length(rxns)
+    ss = ss + rxns[i].propensity
+    if ss >= jump
+      return i
     end
   end
-
-  if flag
-    error("No reaction ocurred...")
-  end
+  return 0
 end
 
-function ssa!(spcs::Vector{Species}, rxns::Vector{Reaction}, params::Dict{ASCIIString, Float64}, t_final::Float64)
-  t = 0.0
-
-  while t < t_final
-    u1 = rand()
-    u2 = rand()
-    a_total = 0.0
-
-    for r in rxns
-      r.propensity = mass_action(r, spcs, params)
-      a_total = a_total + r.propensity
-    end
-
-    τ = -log(u1) / a_total
-    jump = a_total * u2
-
-    ssa_step!(spcs, rxns, jump)
-    t = t + τ
-  end
-
-  return spcs
+function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, a_total::Float64)
+  u = rand()
+  jump = a_total * u
+  j = sample(rxns, jump)
+  j > 0 ? update!(spcs, rxns[j]) : error("No reaction occurred!")
+  return;
 end
 
-function ssa_explicit(model::Simulation, t_final::Float64; tracing::Bool=false)
+function ssa(model::Simulation, t_final::Float64; tracing::Bool=false, output::Symbol=:explicit, stepsize::Float64=0.0)
 
   traces = Dict{ASCIIString, PopulationTrace}()
   for s in model.initial
@@ -49,6 +27,7 @@ function ssa_explicit(model::Simulation, t_final::Float64; tracing::Bool=false)
       traces[s.id] = PopulationTrace(s)
     end
   end
+  md = Dict()
 
   #Unpack model
   spcs = model.state
@@ -58,60 +37,31 @@ function ssa_explicit(model::Simulation, t_final::Float64; tracing::Bool=false)
   t = 0.0
 
   while t < t_final
-    u1 = rand()
-    u2 = rand()
     a_total = 0.0
-
     for r in rxns
-      r.propensity = mass_action(r, spcs, params)
+      propensity!(r, spcs, params)
       a_total = a_total + r.propensity
     end
 
-    τ = -log(u1) / a_total
+    τ = rand(Exponential(1/a_total))
     if t + τ <= t_final
-      jump = a_total * u2
-      ssa_step!(spcs, rxns, jump)
+      ssa_step!(spcs, rxns, a_total)
     end
-
     t = t + τ
 
     update_traces!(traces, t, spcs, tracing)
   end
 
-  result = SimulationResult("SSA (Explicit)", traces, Dict{Any,Any}())
-
-  result.metadata["duration"] = t_final
-
-  return result
-end
-
-function ssa_stepper!(model::Simulation, steps::Int, stepsize::Float64; tracing::Bool=false)
-  # TODO: How to initialize wrt to `tracing` var
-
-  traces = Dict{ASCIIString, PopulationTrace}()
-  for s in model.initial
-    if s.istracked
-      traces[s.id] = PopulationTrace(s)
-    end
+  md["duration"] = t_final
+  if output == :explicit
+    md["output"] = "Explicit"
+  elseif output == :fixed && stepsize > 0.0
+    md["output"] = "Fixed-Interval"
+    md["stepsize"] = stepsize
+    traces = regularize(traces, stepsize, t_final)
   end
 
-  # Unpack model
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
-
-  for i = 1:steps
-    ssa!(spcs, rxns, params, stepsize)
-
-    update_traces!(traces, i * stepsize, spcs, tracing)
-  end
-
-  result = SimulationResult("SSA (Fixed)", traces, Dict{Any,Any}())
-
-  result.metadata["duration"] = steps * stepsize
-  result.metadata["stepsize"] = stepsize
-
-  return result
+  return SimulationResult("SSA", traces, md)
 end
 
 function update!(spcs::Vector{Species}, r::Reaction)

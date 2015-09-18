@@ -65,7 +65,6 @@ function regularize(tr::PopulationTrace, stepsize::Float64, t_final::Float64)
   s = tr[1]
   count = 0
   maxcount = round(Int, t_final / stepsize) + 1
-  println(maxcount)
   i = 1
 
   while count < maxcount
@@ -112,7 +111,7 @@ end
 function regularize(trs::Dict{ASCIIString,PopulationTrace}, stepsize::Float64, t_final::Float64)
   ntrs = Dict{ASCIIString, PopulationTrace}()
   for (key, trace) in trs
-    ntrs[key] = discretize(trace, stepsize, t_final)
+    ntrs[key] = regularize(trace, stepsize, t_final)
   end
   return ntrs
 end
@@ -120,6 +119,6 @@ end
 function regularize(sr::SimulationResult, stepsize::Float64, t_final::Float64)
   alg = sr.algorithm
   md = sr.metadata
-  ntrs = discreteize(sr.traces, stepsize, t_final)
+  ntrs = regularize(sr.traces, stepsize, t_final)
   return SimulationResult(alg, ntrs, md)
 end
