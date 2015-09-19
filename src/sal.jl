@@ -125,9 +125,9 @@ function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drd
 
   for j in eachindex(rxns)
     r = rxns[j]
-    ratesym::ASCIIString = r.rate
+    key = r.rate
     r_j = r.propensity
-    c::Float64 = param[ratesym]
+    c = param[key]
 
     a = ϵ * max(r_j, c)
     b = abs(drdt[j])
@@ -148,4 +148,15 @@ function generate_events!(events::Vector{Int}, rxns::Vector{Reaction}, drdt::Vec
     events[i] = round(Int, rand(x))
   end
   return;
+end
+
+function contract!(events::Vector{Int}, τ::Float64, α::Float64)
+    @inbounds for i in eachindex(events)
+        k = 0
+        @inbounds for j in 1:events[i]
+            k = rand() < α ? k + 1 : k
+        end
+        events[i] = k
+    end
+    return τ * α
 end
