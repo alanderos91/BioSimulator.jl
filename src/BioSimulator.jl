@@ -10,6 +10,7 @@ include("network.jl")
 include("simulation.jl")
 
 include("tracing.jl")
+include("util.jl")
 
 include("mass_action.jl")
 include("ssa.jl")

@@ -55,17 +55,8 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
     push!(results, traces)
   end
 
-  md["algorithm"] = "SSA"
-  md["iterations"] = itr
-  md["duration"] = t_final
-  if output == :explicit
-    md["output"] = "Explicit"
-  elseif output == :fixed && stepsize > 0.0
-    md["output"] = "Fixed-Interval"
-    md["stepsize"] = stepsize
-    results = regularize(results, stepsize, t_final)
-  end
-
+  set_metadata!(md, "SSA", t_final, itr, output, stepsize)
+  if output == :fixed results = regularize(results, stepsize, t_final) end
   return SimulationResults(model.id, results, md)
 end
 
