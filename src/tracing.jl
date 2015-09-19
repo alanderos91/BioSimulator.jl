@@ -1,4 +1,4 @@
-export PopulationTrace, SimulationResult, plot_trajectory, discretize
+export PopulationTrace, SimulationResult, plot, discretize, DataFrame
 
 immutable PopulationState
   name::ASCIIString
@@ -79,7 +79,7 @@ function update_traces!(traces::Dict{ASCIIString, PopulationTrace}, t::Float64, 
   end
 end
 
-function update!(tr, t, s, store_trace)
+function update!(tr::PopulationTrace, t::Float64, s::Species, store_trace::Bool)
   state = PopulationState(s.id, t, s.pop)
 
   if store_trace
@@ -116,7 +116,29 @@ function plot(tr::PopulationTrace, elements::ElementOrFunctionOrLayers...)
   if !isempty(tr)
     name = species(tr)
     tval, pval = toarrays(tr)
-    return plot(x=tval, y=pval, elements...)
+    return Gadfly.plot(x=tval, y=pval, elements...)
+  else
+    # TODO
+  end
+end
+
+function DataFrame(tr::PopulationTrace; itr::Int=1)
+  if !isempty(tr)
+    s = species(tr)
+    tval, pval = toarrays(tr)
+    return DataFrames.DataFrame(Time=tval, Population=pval, Species=s, Realization=itr)
+  else
+    # TODO
+  end
+end
+
+function DataFrame(traces::Dict{ASCIIString,PopulationTrace}; itr::Int=1)
+  if !isempty(traces)
+    df = DataFrames.DataFrame()
+    for tr in values(traces)
+      df = vcat(df, DataFrame(tr, itr=itr))
+    end
+    return df
   else
     # TODO
   end
@@ -153,8 +175,16 @@ function regularize(rslt::Vector{Dict{ASCIIString,PopulationTrace}}, stepsize::F
 end
 
 function regularize(sr::SimulationResults, stepsize::Float64, t_final::Float64)
-  alg = sr.algorithm
+  alg = sr.model
   md = sr.metadata
   results = regularize(sr.results, stepsize, t_final)
   return SimulationResults(alg, results, md)
+end
+
+function DataFrame(sr::SimulationResults)
+  df = DataFrames.DataFrame()
+  for i = 1:length(sr.results)
+    df = vcat(df, DataFrame(sr.results[i], itr=i))
+  end
+  return df
 end

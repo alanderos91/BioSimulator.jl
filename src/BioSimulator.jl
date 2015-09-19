@@ -1,6 +1,7 @@
 module BioSimulator
 
 using Distributions
+using DataFrames
 using Gadfly
 
 include("species.jl")
