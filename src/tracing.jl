@@ -183,7 +183,7 @@ end
 
 function DataFrame(sr::SimulationResults)
   df = DataFrames.DataFrame()
-  for i = 1:length(sr.results)
+  for i in eachindex(sr.results)
     df = vcat(df, DataFrame(sr.results[i], itr=i))
   end
   return df

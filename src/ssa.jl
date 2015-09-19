@@ -2,7 +2,7 @@ export ssa
 
 function sample(rxns::Vector{Reaction}, jump::Float64)
   ss = 0.0
-  for i = 1:length(rxns)
+  for i in eachindex(rxns)
     ss = ss + rxns[i].propensity
     if ss >= jump
       return i
@@ -61,7 +61,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
 end
 
 function update!(spcs::Vector{Species}, r::Reaction)
-  for i in 1:length(spcs)
+  for i in eachindex(spcs)
     spcs[i].pop = spcs[i].pop + (r.post[i] - r.pre[i])
   end
   return;

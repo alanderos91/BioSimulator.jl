@@ -73,23 +73,23 @@ function sal(model::Simulation, t_final::Float64;
 end
 
 function update!(spcs::Vector{Species}, r::Reaction, k::Int)
-  for i = 1:length(spcs)
+  for i in eachindex(spcs)
     spcs[i].pop = spcs[i].pop + k * (r.post[i] - r.pre[i])
   end
   return;
 end
 
 function update!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int})
-  for i = 1:length(rxns)
+  for i in eachindex(rxns)
     update!(spcs, rxns[i], events[i])
   end
   return;
 end
 
 function isbadleap(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int})
-  for i = 1:length(spcs)
+  for i in eachindex(spcs)
     val = spcs[i].pop
-    for j = 1:length(rxns)
+    for j in eachindex(rxns)
       val = val + events[j] * (rxns[j].post[i] - rxns[j].pre[i])
 
       if val < 0
@@ -104,13 +104,13 @@ end
 function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Species}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64})
   fill!(drdt, 0.0)
 
-  for i = 1:length(drdt)
-    for j = 1:length(rxns)
+  for i in eachindex(drdt)
+    for j in eachindex(rxns)
       r = rxns[j]
       c = param[rxns[j].rate]
       r_j = rxns[j].propensity
 
-      for k = 1:length(r.pre)
+      for k in eachindex(r.pre)
         ν = rxns[j].post[k] - rxns[j].pre[k]
         ∂r∂x = mass_action_deriv(c, r.pre, spcs, k)
         drdt[i] = drdt[i] + r_j * ∂r∂x * ν
@@ -122,9 +122,8 @@ end
 
 function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drdt::Vector{Float64}, ϵ::Float64)
   τ = Inf
-  n = length(rxns)
 
-  for j = 1:n
+  for j in eachindex(rxns)
     r = rxns[j]
     ratesym::ASCIIString = r.rate
     r_j = r.propensity
@@ -142,7 +141,7 @@ function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drd
 end
 
 function generate_events!(events::Vector{Int}, rxns::Vector{Reaction}, drdt::Vector{Float64}, τ::Float64)
-  for i = 1:length(rxns)
+  for i in eachindex(rxns)
     λ = τ * rxns[i].propensity + 0.5 * τ * τ * drdt[i]
     x = Poisson(λ)
 

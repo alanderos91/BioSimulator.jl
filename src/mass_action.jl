@@ -1,7 +1,7 @@
 function mass_action_helper(stoich::Vector{Int}, x::Vector{Species})
   acc = 1.0
 
-  for i = 1:length(stoich)
+  for i in eachindex(stoich)
     for j = 1:stoich[i]
       acc = acc * (x[i].pop - (j - 1))
     end
@@ -12,7 +12,7 @@ end
 
 function mass_action_helper(stoich::Vector{Int}, x::Vector{Species}, k::Int)
   acc = 1.0
-  for i = 1:length(stoich)
+  for i in eachindex(stoich)
     if i != k
       for j = 1:stoich[i]
         acc = acc * (x[i].pop - (j - 1))
