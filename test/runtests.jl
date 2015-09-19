@@ -1,7 +1,8 @@
 using BioSimulator
 using Base.Test
 
-tests = ["mass_action"]
+tests = ["mass_action",
+         "species"]
 
 println("Running tests:")
 

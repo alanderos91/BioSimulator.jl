@@ -32,7 +32,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
   # Results array
   results = Dict{ASCIIString, PopulationTrace}[]
   for i = 1:itr
-    copy!(spcs, init)
+    reset!(spcs, init)
     traces = init_traces(spcs)
 
     t = 0.0
