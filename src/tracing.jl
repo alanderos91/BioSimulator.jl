@@ -1,4 +1,4 @@
-export PopulationTrace, SimulationResult, plot, discretize, DataFrame
+export PopulationTrace, SimulationResult, plot, regularize, DataFrame
 
 immutable PopulationState
   name::ASCIIString
