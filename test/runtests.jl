@@ -2,7 +2,8 @@ using BioSimulator
 using Base.Test
 
 tests = ["mass_action",
-         "species"]
+         "species",
+         "time_derivatives"]
 
 println("Running tests:")
 

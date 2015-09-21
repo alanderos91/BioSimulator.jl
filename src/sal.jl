@@ -25,6 +25,8 @@ function sal(model::Simulation, t_final::Float64;
   params = model.param
 
   md = Dict()
+  ssa_steps = 0
+  sal_steps = 0
 
   # Results array
   results = Dict{ASCIIString, PopulationTrace}[]
@@ -50,6 +52,7 @@ function sal(model::Simulation, t_final::Float64;
         τ = rand(Exponential(1/a_total))
         if t + τ <= t_final
           ssa_step!(spcs, rxns, a_total)
+          ssa_steps = ssa_steps + 1
         end
       else
         compute_time_derivatives!(drdt, spcs, rxns, params)
@@ -58,6 +61,7 @@ function sal(model::Simulation, t_final::Float64;
         if t + τ <= t_final
           generate_events!(events, rxns, drdt, τ)
           τ = sal_step!(spcs, rxns, events, τ, ctrct)
+          sal_steps = sal_steps + 1
         end
       end
 
@@ -68,6 +72,8 @@ function sal(model::Simulation, t_final::Float64;
   end
 
   set_metadata!(md, "SAL", t_final, itr, output, stepsize)
+  md["SSA steps"] = ssa_steps
+  md["SAL steps"] = sal_steps
   if output == :fixed results = regularize(results, stepsize, t_final) end
   return SimulationResults(model.id, results, md)
 end
@@ -102,22 +108,25 @@ function isbadleap(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector
 end
 
 function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Species}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64})
-  fill!(drdt, 0.0)
-
   for i in eachindex(drdt)
-    for j in eachindex(rxns)
-      r = rxns[j]
-      c = param[rxns[j].rate]
-      r_j = rxns[j].propensity
-
-      for k in eachindex(r.pre)
-        ν = rxns[j].post[k] - rxns[j].pre[k]
-        ∂r∂x = mass_action_deriv(c, r.pre, spcs, k)
-        drdt[i] = drdt[i] + r_j * ∂r∂x * ν
-      end
+    r = rxns[i]
+    acc = 0.0
+    for k in eachindex(spcs)
+      ∂r∂x_k = mass_action_deriv(r, spcs, param, k)
+      dxdt_k = mean_derivative(rxns, k)
+      acc = acc + ∂r∂x_k * dxdt_k
     end
+    drdt[i] = acc
   end
-  return;
+  return drdt
+end
+
+function mean_derivative(rxns::Vector{Reaction}, k::Int)
+  acc = 0.0
+  for j in eachindex(rxns)
+    acc = acc + rxns[j].propensity * (rxns[j].post[k] - rxns[j].pre[k])
+  end
+  return acc
 end
 
 function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drdt::Vector{Float64}, ϵ::Float64)

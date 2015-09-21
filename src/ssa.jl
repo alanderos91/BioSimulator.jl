@@ -28,6 +28,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
   params = model.param
 
   md = Dict()
+  ssa_steps = 0
 
   # Results array
   results = Dict{ASCIIString, PopulationTrace}[]
@@ -47,6 +48,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
       τ = rand(Exponential(1/a_total))
       if t + τ <= t_final
         ssa_step!(spcs, rxns, a_total)
+        ssa_steps = ssa_steps + 1
       end
       t = t + τ
 
@@ -56,6 +58,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
   end
 
   set_metadata!(md, "SSA", t_final, itr, output, stepsize)
+  md["SSA steps"] = ssa_steps
   if output == :fixed results = regularize(results, stepsize, t_final) end
   return SimulationResults(model.id, results, md)
 end
