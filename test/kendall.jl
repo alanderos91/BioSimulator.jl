@@ -1,3 +1,6 @@
+using BioSimulator
+using Base.Test
+
 function kendall_mean(i,t,alpha,mu,nu)
    x = exp((alpha-mu)*t)
   return i * x + nu/(alpha-mu)*(x-1)
