@@ -4,16 +4,21 @@ using Distributions
 using DataFrames
 using Gadfly
 
-include("species.jl")
-include("reaction.jl")
-include("network.jl")
-include("simulation.jl")
+# Model Types
+include(joinpath("model","species.jl"))
+include(joinpath("model","reaction.jl"))
+include(joinpath("model","network.jl"))
+include(joinpath("model","simulation.jl"))
 
-include("tracing.jl")
-include("util.jl")
+# Kinetics
+include(joinpath("kinetics","mass_action.jl"))
 
-include("mass_action.jl")
-include("ssa.jl")
-include("sal.jl")
+# Algorithms
+include(joinpath("algorithm","ssa.jl"))
+include(joinpath("algorithm","sal.jl"))
+
+# Output
+include(joinpath("output","tracing.jl"))
+include(joinpath("output","util.jl"))
 
 end # module
