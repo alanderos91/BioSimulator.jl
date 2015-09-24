@@ -19,7 +19,7 @@ function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, a_total::Float
   return;
 end
 
-function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=false, output::Symbol=:explicit, stepsize::Float64=0.0)
+function ssa(model::Simulation, t_final::Float64; itr::Int=1)
 
   #Unpack model
   init = model.initial
