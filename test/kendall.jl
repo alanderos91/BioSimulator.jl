@@ -34,13 +34,16 @@ m = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
 
 # Run SSA and SAL once to compile
 srand(5137)
-ssa1 = ssa(Simulation(network), t_final)
+ssa(Simulation(network), t_final)
 srand(5137)
+dssa(Simulation(network), t_final)
 #sal1 = sal(Simulation(network), t_final)
 
 # Run model with SSA for 10^5 iterations
 srand(5137)
-@time ssa2 = ssa(Simulation(network), t_final, tracing=true, output=:fixed, stepsize=Δt, itr=10^5)
+@time ssa1 = ssa(Simulation(network), t_final, tracing=true, output=:fixed, stepsize=Δt, itr=10^5)
+@test_approx_eq_eps computed_mean(ssa1) m[end] 2.0
+@time ssa2 = dssa(Simulation(network), t_final, dt=0.1, itr=10^5)
 @test_approx_eq_eps computed_mean(ssa2) m[end] 2.0
 
 # Run model with SAL for 10^5 iterations

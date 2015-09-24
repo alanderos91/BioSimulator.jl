@@ -51,6 +51,10 @@ function update!(tr::PopulationTrajectory, t::Float64, s::Species)
   push!(tr, PopulationState(t, s.pop))
 end
 
+function update!(tr::PopulationTrajectory, t::Float64, s::Species, j::Int)
+  tr[j] = PopulationState(t, s.pop)
+end
+
 function discretize(tr::PopulationTrajectory; dt::Float64=1.0, t_start::Float64=0.0)
   t_final = tr[end].tval
   n = round(Int, (t_final - t_start) / dt) + 1
