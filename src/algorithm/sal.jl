@@ -213,9 +213,7 @@ end
 function generate_events!(events::Vector{Int}, rxns::Vector{Reaction}, drdt::Vector{Float64}, τ::Float64)
   for i in eachindex(rxns)
     λ = τ * rxns[i].propensity + 0.5 * τ * τ * drdt[i]
-    x = Poisson(λ)
-
-    events[i] = round(Int, rand(x))
+    events[i] = rand(Poisson(λ))
   end
   return;
 end
