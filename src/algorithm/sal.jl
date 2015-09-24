@@ -1,4 +1,4 @@
-export sal
+export sal, dsal
 
 function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
   while isbadleap(spcs, rxns, events)
@@ -11,9 +11,6 @@ end
 
 function sal(model::Simulation, t_final::Float64;
              itr::Int=1,
-             tracing::Bool=false,
-             output::Symbol=:explicit,
-             stepsize::Float64=0.0,
              tol::Float64=0.125,
              thrsh::Float64=100.0,
              ctrct::Float64=0.75)
@@ -24,12 +21,7 @@ function sal(model::Simulation, t_final::Float64;
   rxns = model.rxns
   params = model.param
 
-  md = Dict()
-  ssa_steps = 0
-  sal_steps = 0
-
-  # Results array
-  results = Dict{ASCIIString, PopulationTrace}[]
+  job = SimulationJob(itr)
 
   # Create additional arrays
   drdt = zeros(Float64, length(rxns))
@@ -37,9 +29,13 @@ function sal(model::Simulation, t_final::Float64;
 
   for i = 1:itr
     reset!(spcs, init)
-    traces = init_traces(spcs)
+
+    result = SimulationResult(spcs)
+    ssa_steps = 0
+    sal_steps = 0
 
     t = 0.0
+
     while t < t_final
       a_total = 0.0
       for r in rxns
@@ -64,18 +60,83 @@ function sal(model::Simulation, t_final::Float64;
           sal_steps = sal_steps + 1
         end
       end
-
       t = t + τ
-      update_traces!(traces, t, spcs, tracing)
-    end
-    push!(results, traces)
-  end
 
-  set_metadata!(md, "SAL", t_final, itr, output, stepsize)
-  md["SSA steps"] = ssa_steps
-  md["SAL steps"] = sal_steps
-  if output == :fixed results = regularize(results, stepsize, t_final) end
-  return SimulationResults(model.id, results, md)
+      update!(result, t, spcs)
+    end
+    job[i] = result
+  end
+  return job
+end
+
+function dsal(model::Simulation, t_final::Float64;
+             itr::Int=1,
+             dt::Float64=1.0,
+             tol::Float64=0.125,
+             thrsh::Float64=100.0,
+             ctrct::Float64=0.75)
+
+  #Unpack model
+  init = model.initial
+  spcs = model.state
+  rxns = model.rxns
+  params = model.param
+
+  n = round(Int, t_final / dt) + 1
+
+  job = SimulationJob(itr)
+
+  # Create additional arrays
+  drdt = zeros(Float64, length(rxns))
+  events = zeros(Int, length(rxns))
+
+  for i = 1:itr
+    reset!(spcs, init)
+
+    result = SimulationResult(spcs, n)
+    ssa_steps = 0
+    sal_steps = 0
+
+    t = 0.0
+    t_next = 0.0
+    j = 1
+
+    while t < t_final
+      a_total = 0.0
+      for r in rxns
+        r.propensity = mass_action(r, spcs, params)
+        a_total = a_total + r.propensity
+      end
+
+      τ = 0.0
+      if a_total < thrsh
+        τ = rand(Exponential(1/a_total))
+        if t + τ <= t_final
+          ssa_step!(spcs, rxns, a_total)
+          ssa_steps = ssa_steps + 1
+        end
+      else
+        compute_time_derivatives!(drdt, spcs, rxns, params)
+        τ = tau_leap(rxns, params, drdt, tol)
+
+        if t + τ <= t_final
+          generate_events!(events, rxns, drdt, τ)
+          τ = sal_step!(spcs, rxns, events, τ, ctrct)
+          sal_steps = sal_steps + 1
+        end
+      end
+      t = t + τ
+
+      while t >= t_next
+        update!(result, t, spcs, j)
+        j = j + 1
+        t_next = t_next + dt
+        if j > n; break; end
+      end
+    end
+    job[i] = result
+  end
+  return job
 end
 
 function update!(spcs::Vector{Species}, r::Reaction, k::Int)
