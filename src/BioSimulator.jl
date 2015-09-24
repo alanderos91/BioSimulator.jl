@@ -18,7 +18,11 @@ include(joinpath("algorithm","ssa.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output
-include(joinpath("output","tracing.jl"))
+include(joinpath("output","pstate.jl"))
+include(joinpath("output","ptrajectory.jl"))
+include(joinpath("output","simresult.jl"))
+include(joinpath("output","simjob.jl"))
 include(joinpath("output","util.jl"))
+#include(joinpath("output","plot.jl"))
 
 end # module

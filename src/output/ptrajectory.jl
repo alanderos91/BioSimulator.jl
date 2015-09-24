@@ -48,7 +48,7 @@ function show(io::IO, tr::PopulationTrajectory)
 end
 
 function update!(tr::PopulationTrajectory, t::Float64, s::Species)
-  push!(tr, PopulationState(t, s))
+  push!(tr, PopulationState(t, s.pop))
 end
 
 function discretize(tr::PopulationTrajectory; dt::Float64=1.0, t_start::Float64=0.0)

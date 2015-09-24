@@ -6,7 +6,7 @@ end
 function SimulationResult(x::Vector{Species})
   d = Dict{ASCIIString,PopulationTrajectory}()
   for i in eachindex(x)
-    d[x.id] = PopulationTrajectory(x)
+    d[x[i].id] = PopulationTrajectory(x[i])
   end
   return SimulationResult(d, Dict{ASCIIString,Any}())
 end
@@ -14,15 +14,21 @@ end
 function SimulationResult(x::Vector{Species}, n::Int)
   d = Dict{ASCIIString,PopulationTrajectory}()
   for i in eachindex(x)
-    d[x.id] = PoulationTrajectory(x.id, n)
+    d[x[i].id] = PoulationTrajectory(x[i].id, n)
   end
   return SimulationResult(d, Dict{ASCIIString,Any}())
 end
 
-function getindex(sr::SimulationResult, key...)
-  getindex(srt.trajectories, value, key)
+function getindex(sr::SimulationResult, key)
+  sr.trajectories[key]
 end
 
-function setindex!(sr::SimulationResult, value, key...)
-  setindex!(sr.trajectories, value, key)
+function setindex!(sr::SimulationResult, value, key)
+  sr.trajectories[key] = value
+end
+
+function update!(sr::SimulationResult, t::Float64, spcs::Vector{Species})
+  for s in spcs
+    update!(sr[s.id], t, s)
+  end
 end

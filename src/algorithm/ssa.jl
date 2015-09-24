@@ -27,14 +27,13 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
   rxns = model.rxns
   params = model.param
 
-  md = Dict()
-  ssa_steps = 0
+  job = SimulationJob()
 
-  # Results array
-  results = Dict{ASCIIString, PopulationTrace}[]
   for i = 1:itr
     reset!(spcs, init)
-    traces = init_traces(spcs)
+
+    result = SimulationResult(spcs)
+    ssa_steps = 0
 
     t = 0.0
 
@@ -52,15 +51,11 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
       end
       t = t + τ
 
-      update_traces!(traces, t, spcs, tracing)
+      update!(result, t, spcs)
     end
-    push!(results, traces)
+    push!(job, result)
   end
-
-  set_metadata!(md, "SSA", t_final, itr, output, stepsize)
-  md["SSA steps"] = ssa_steps
-  if output == :fixed results = regularize(results, stepsize, t_final) end
-  return SimulationResults(model.id, results, md)
+  return job
 end
 
 function update!(spcs::Vector{Species}, r::Reaction)

@@ -6,12 +6,12 @@ function kendall_mean(i,t,alpha,mu,nu)
   return i * x + nu/(alpha-mu)*(x-1)
 end
 
-function computed_mean(sr,itr)
+function computed_mean(sj)
   mval = 0.0
-  for i = 1:itr
-    mval = mval + sr.results[i]["Particle"].states[end].value
+  for r in sj.results
+    mval = mval + r["Particle"].states[end].pop
   end
-  return mval / itr
+  return mval / length(sj.results)
 end
 
 x = [Species("Particle", 5, true)]
@@ -36,14 +36,14 @@ m = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
 srand(5137)
 ssa1 = ssa(Simulation(network), t_final)
 srand(5137)
-sal1 = sal(Simulation(network), t_final)
+#sal1 = sal(Simulation(network), t_final)
 
 # Run model with SSA for 10^5 iterations
 srand(5137)
 @time ssa2 = ssa(Simulation(network), t_final, tracing=true, output=:fixed, stepsize=Δt, itr=10^5)
-@test_approx_eq_eps computed_mean(ssa2,10^5) m[end] 2.0
+@test_approx_eq_eps computed_mean(ssa2) m[end] 2.0
 
 # Run model with SAL for 10^5 iterations
-srand(5137)
-@time sal2 = sal(Simulation(network), t_final, tracing=true, output=:fixed, stepsize=Δt, itr=10^5)
-@test_approx_eq_eps computed_mean(sal2,10^5) m[end] 2.0
+#srand(5137)
+#@time sal2 = sal(Simulation(network), t_final, tracing=true, output=:fixed, stepsize=Δt, itr=10^5)
+#@test_approx_eq_eps computed_mean(sal2,10^5) m[end] 2.0
