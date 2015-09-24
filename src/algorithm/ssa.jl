@@ -27,7 +27,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
   rxns = model.rxns
   params = model.param
 
-  job = SimulationJob()
+  job = SimulationJob(itr)
 
   for i = 1:itr
     reset!(spcs, init)
@@ -53,7 +53,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1, tracing::Bool=fals
 
       update!(result, t, spcs)
     end
-    push!(job, result)
+    job[i] = result
   end
   return job
 end
@@ -67,7 +67,7 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
 
   n = round(Int, t_final / dt) + 1
 
-  job = SimulationJob()
+  job = SimulationJob(itr)
 
   for i = 1:itr
     reset!(spcs, init)
@@ -100,7 +100,7 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
         if j > n; break; end
       end
     end
-    push!(job, result)
+    job[i] = result
   end
   return job
 end
