@@ -98,8 +98,8 @@ function dsal(model::Simulation, t_final::Float64;
     sal_steps = 0
 
     t = 0.0
-    t_next = 0.0
-    j = 1
+    t_next = dt
+    j = 2
 
     while t < t_final
       a_total = 0.0

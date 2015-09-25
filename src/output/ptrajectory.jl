@@ -9,9 +9,11 @@ function PopulationTrajectory(id::ASCIIString)
   return PopulationTrajectory(id, PopulationState[])
 end
 
-function PopulationTrajectory(id::ASCIIString, n::Int)
+function PopulationTrajectory(x::Species, n::Int; t_start::Float64=0.0)
   n < 0 && error("invalid PopulationTrajectory length")
-  return PopulationTrajectory(id, Array{PopulationState}(n))
+  states = Array{PopulationState}(n)
+  states[1] = PopulationState(t_start, x.pop)
+  return PopulationTrajectory(x.id, states)
 end
 
 function PopulationTrajectory(x::Species; t_start::Float64=0.0)

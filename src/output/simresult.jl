@@ -14,7 +14,7 @@ end
 function SimulationResult(x::Vector{Species}, n::Int)
   d = Dict{ASCIIString,PopulationTrajectory}()
   for i in eachindex(x)
-    d[x[i].id] = PopulationTrajectory(x[i].id, n)
+    d[x[i].id] = PopulationTrajectory(x[i], n)
   end
   return SimulationResult(d, Dict{ASCIIString,Any}())
 end
