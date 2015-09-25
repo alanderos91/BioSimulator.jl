@@ -39,7 +39,7 @@ function sal(model::Simulation, t_final::Float64;
     while t < t_final
       a_total = 0.0
       for r in rxns
-        r.propensity = mass_action(r, spcs, params)
+        propensity!(r, spcs, params)
         a_total = a_total + r.propensity
       end
 
@@ -104,7 +104,7 @@ function dsal(model::Simulation, t_final::Float64;
     while t < t_final
       a_total = 0.0
       for r in rxns
-        r.propensity = mass_action(r, spcs, params)
+        propensity!(r, spcs, params)
         a_total = a_total + r.propensity
       end
 
