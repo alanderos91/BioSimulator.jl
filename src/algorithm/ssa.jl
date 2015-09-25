@@ -94,7 +94,7 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
       t = t + τ
 
       while t >= t_next
-        update!(result, t, spcs, j)
+        update!(result, t_next, spcs, j)
         j = j + 1
         t_next = t_next + dt
         if j > n; break; end
