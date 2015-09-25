@@ -43,7 +43,7 @@ end
 function show(io::IO, tr::PopulationTrajectory)
   @printf io "   Name        Time       Value  \n"
   @printf io "----------  ----------  ---------\n"
-  for state in t.states
+  for state in tr.states
     @printf " %8s   " tr.id
     show(io, state)
   end
