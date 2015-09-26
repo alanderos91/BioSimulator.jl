@@ -38,6 +38,8 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1)
     t = 0.0
 
     while t < t_final
+      update!(result, t, spcs)
+
       a_total = 0.0
       for r in rxns
         propensity!(r, spcs, params)
@@ -45,13 +47,10 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1)
       end
 
       τ = rand(Exponential(1/a_total))
-      if t + τ <= t_final
-        ssa_step!(spcs, rxns, a_total)
-        ssa_steps = ssa_steps + 1
-      end
       t = t + τ
-
-      update!(result, t, spcs)
+      if t > t_final; break; end
+      ssa_step!(spcs, rxns, a_total)
+      ssa_steps = ssa_steps + 1
     end
     job[i] = result
   end
@@ -76,10 +75,16 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
     ssa_steps = 0
 
     t = 0.0
-    t_next = dt
-    j = 2
+    t_next = 0.0
+    j = 1
 
     while t < t_final
+      while t >= t_next
+        update!(result, t_next, spcs, j)
+        j = j + 1
+        t_next = t_next + dt
+        if j > n; break; end
+      end
       a_total = 0.0
       for r in rxns
         propensity!(r, spcs, params)
@@ -87,19 +92,12 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
       end
 
       τ = rand(Exponential(1/a_total))
-      if t + τ <= t_final
-        ssa_step!(spcs, rxns, a_total)
-        ssa_steps = ssa_steps + 1
-      end
       t = t + τ
-
-      while t >= t_next
-        update!(result, t_next, spcs, j)
-        j = j + 1
-        t_next = t_next + dt
-        if j > n; break; end
-      end
+      if t > t_final; break; end
+      ssa_step!(spcs, rxns, a_total)
+      ssa_steps = ssa_steps + 1
     end
+    update!(result, t_next, spcs, j)
     job[i] = result
   end
   return job

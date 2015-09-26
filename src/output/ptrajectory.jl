@@ -11,9 +11,7 @@ end
 
 function PopulationTrajectory(x::Species, n::Int; t_start::Float64=0.0)
   n < 0 && error("invalid PopulationTrajectory length")
-  states = Array{PopulationState}(n)
-  states[1] = PopulationState(t_start, x.pop)
-  return PopulationTrajectory(x.id, states)
+  return PopulationTrajectory(x.id, Array{PopulationState}(n))
 end
 
 function PopulationTrajectory(x::Species; t_start::Float64=0.0)
