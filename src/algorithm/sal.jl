@@ -24,8 +24,9 @@ function sal(model::Simulation, t_final::Float64;
   job = SimulationJob(itr)
 
   # Create additional arrays
-  drdt = zeros(Float64, length(rxns))
-  events = zeros(Int, length(rxns))
+  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle counts
+  drdt = zeros(Float64, length(rxns)) # Rates of change for reaction propensities
+  events = zeros(Int, length(rxns))   # Number of reaction events for each channel
 
   for i = 1:itr
     reset!(spcs, init)
@@ -37,33 +38,33 @@ function sal(model::Simulation, t_final::Float64;
     t = 0.0
 
     while t < t_final
+      update!(result, t, spcs)
+
       a_total = 0.0
       for r in rxns
         propensity!(r, spcs, params)
         a_total = a_total + r.propensity
       end
 
-      τ = 0.0
       if a_total < thrsh
         τ = rand(Exponential(1/a_total))
-        if t + τ <= t_final
-          ssa_step!(spcs, rxns, a_total)
-          ssa_steps = ssa_steps + 1
-        end
+        t = t + τ
+        if t > t_final; break; end
+        ssa_step!(spcs, rxns, a_total)
+        ssa_steps = ssa_steps + 1
       else
-        compute_time_derivatives!(drdt, spcs, rxns, params)
+        compute_mean_derivatives!(dxdt, rxns)
+        compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
         τ = tau_leap(rxns, params, drdt, tol)
+        τ = min(τ, t_final - t)
+        generate_events!(events, rxns, drdt, τ)
+        τ = sal_step!(spcs, rxns, events, τ, ctrct)
 
-        if t + τ <= t_final
-          generate_events!(events, rxns, drdt, τ)
-          τ = sal_step!(spcs, rxns, events, τ, ctrct)
-          sal_steps = sal_steps + 1
-        end
+        sal_steps = sal_steps + 1
+        t = t + τ
       end
-      t = t + τ
-
-      update!(result, t, spcs)
     end
+    update!(result, t_final, spcs)
     job[i] = result
   end
   return job
@@ -87,8 +88,9 @@ function dsal(model::Simulation, t_final::Float64;
   job = SimulationJob(itr)
 
   # Create additional arrays
-  drdt = zeros(Float64, length(rxns))
-  events = zeros(Int, length(rxns))
+  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle counts
+  drdt = zeros(Float64, length(rxns)) # Rates of change for reaction propensities
+  events = zeros(Int, length(rxns))   # Number of reaction events for each channel
 
   for i = 1:itr
     reset!(spcs, init)
@@ -98,42 +100,41 @@ function dsal(model::Simulation, t_final::Float64;
     sal_steps = 0
 
     t = 0.0
-    t_next = dt
-    j = 2
+    t_next = 0.0
+    j = 1
 
     while t < t_final
-      a_total = 0.0
-      for r in rxns
-        propensity!(r, spcs, params)
-        a_total = a_total + r.propensity
-      end
-
-      τ = 0.0
-      if a_total < thrsh
-        τ = rand(Exponential(1/a_total))
-        if t + τ <= t_final
-          ssa_step!(spcs, rxns, a_total)
-          ssa_steps = ssa_steps + 1
-        end
-      else
-        compute_time_derivatives!(drdt, spcs, rxns, params)
-        τ = tau_leap(rxns, params, drdt, tol)
-
-        if t + τ <= t_final
-          generate_events!(events, rxns, drdt, τ)
-          τ = sal_step!(spcs, rxns, events, τ, ctrct)
-          sal_steps = sal_steps + 1
-        end
-      end
-      t = t + τ
-
       while t >= t_next
         update!(result, t_next, spcs, j)
         j = j + 1
         t_next = t_next + dt
         if j > n; break; end
       end
+      a_total = 0.0
+      for r in rxns
+        propensity!(r, spcs, params)
+        a_total = a_total + r.propensity
+      end
+
+      if a_total < thrsh
+        τ = rand(Exponential(1/a_total))
+        t = t + τ
+        if t > t_final; break; end
+        ssa_step!(spcs, rxns, a_total)
+        ssa_steps = ssa_steps + 1
+      else
+        compute_mean_derivatives!(dxdt, rxns)
+        compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
+        τ = tau_leap(rxns, params, drdt, tol)
+        τ = min(τ, t_final - t)
+        generate_events!(events, rxns, drdt, τ)
+        τ = sal_step!(spcs, rxns, events, τ, ctrct)
+
+        sal_steps = sal_steps + 1
+        t = t + τ
+      end
     end
+    update!(result, t_next, spcs, j)
     job[i] = result
   end
   return job
@@ -168,26 +169,25 @@ function isbadleap(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector
   return false
 end
 
-function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Species}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64})
+function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Species}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, dxdt::Vector{Float64})
   for i in eachindex(drdt)
-    r = rxns[i]
-    acc = 0.0
+    drdt[i] = 0.0
     for k in eachindex(spcs)
-      ∂r∂x_k = mass_action_deriv(r, spcs, param, k)
-      dxdt_k = mean_derivative(rxns, k)
-      acc = acc + ∂r∂x_k * dxdt_k
+      ∂r∂x_k = mass_action_deriv(rxns[i], spcs, param, k)
+      drdt[i] = drdt[i] + ∂r∂x_k * dxdt[k]
     end
-    drdt[i] = acc
   end
   return drdt
 end
 
-function mean_derivative(rxns::Vector{Reaction}, k::Int)
-  acc = 0.0
-  for j in eachindex(rxns)
-    acc = acc + rxns[j].propensity * (rxns[j].post[k] - rxns[j].pre[k])
+function compute_mean_derivatives!(dxdt::Vector{Float64}, rxns::Vector{Reaction})
+  for k in eachindex(dxdt)
+    dxdt[k] = 0.0
+    for j in eachindex(rxns)
+      dxdt[k] = dxdt[k] + rxns[j].propensity * (rxns[j].post[k] - rxns[j].pre[k])
+    end
   end
-  return acc
+  return dxdt
 end
 
 function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drdt::Vector{Float64}, ϵ::Float64)
