@@ -52,6 +52,7 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1)
       ssa_step!(spcs, rxns, a_total)
       ssa_steps = ssa_steps + 1
     end
+    update!(result, t_final, spcs)
     job[i] = result
   end
   return job
