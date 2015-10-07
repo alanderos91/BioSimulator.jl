@@ -26,6 +26,7 @@ network = Network("Kendall's Process", x, r, p);
 
 t_final = 4.0
 Δt = 0.1
+seed = 5357
 
 # Compute mean for comparison
 points = round(Int, t_final/Δt) + 1
@@ -33,27 +34,27 @@ t = linspace(0.0,t_final, points)
 m = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
 
 # Run SSA and SAL once to compile
-srand(5137); ssa(Simulation(network), t_final)
-srand(5137); dssa(Simulation(network), t_final)
-srand(5137); sal(Simulation(network), t_final)
-srand(5137); dsal(Simulation(network), t_final)
+ssa(Simulation(network), t_final)
+dssa(Simulation(network), t_final)
+sal(Simulation(network), t_final)
+dsal(Simulation(network), t_final)
 
 print("[ SSA  ]")
-srand(5137)
+srand(seed)
 @time ssa1 = ssa(Simulation(network), t_final, itr=10^5)
-@test_approx_eq_eps computed_mean(ssa1) m[end] 2.0
+@test_approx_eq_eps computed_mean(ssa1) m[end] 1.0
 
-srand(5137)
+srand(seed)
 print("[ dSSA ]")
 @time ssa2 = dssa(Simulation(network), t_final, dt=0.1, itr=10^5)
-@test_approx_eq_eps computed_mean(ssa2) m[end] 2.0
+@test_approx_eq_eps computed_mean(ssa2) m[end] 1.0
 
-srand(5137)
+srand(seed)
 print("[ SAL  ]")
 @time sal1 = sal(Simulation(network), t_final, itr=10^5)
-#@test_approx_eq_eps computed_mean(sal1) m[end] 2.0
+@test_approx_eq_eps computed_mean(sal1) m[end] 1.0
 
-srand(5137)
+srand(seed)
 print("[ dSAL ]")
-@time sal2 = dsal(Simulation(network), t_final, itr=10^5)
-#@test_approx_eq_eps computed_mean(sal2) m[end] 2.0
+@time sal2 = dsal(Simulation(network), t_final, dt=0.1, itr=10^5)
+@test_approx_eq_eps computed_mean(sal2) m[end] 1.0
