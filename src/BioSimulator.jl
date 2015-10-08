@@ -3,6 +3,7 @@ module BioSimulator
 using Distributions
 using DataFrames
 using Gadfly
+using LightGraphs
 
 # Model Types
 include(joinpath("model","species.jl"))
@@ -16,6 +17,7 @@ include(joinpath("kinetics","mass_action.jl"))
 # Algorithms
 include(joinpath("algorithm","ssa.jl"))
 include(joinpath("algorithm","frm.jl"))
+include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output

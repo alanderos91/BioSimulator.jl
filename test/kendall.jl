@@ -34,10 +34,18 @@ t = linspace(0.0,t_final, points)
 m = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
 
 # Run SSA and SAL once to compile
-ssa(Simulation(network), t_final)
-dssa(Simulation(network), t_final)
-sal(Simulation(network), t_final)
-dsal(Simulation(network), t_final)
+print("Precompiling..."); @time begin
+  ssa(Simulation(network), t_final)
+  dssa(Simulation(network), t_final)
+
+  frm(Simulation(network), t_final)
+
+  nrm(Simulation(network), t_final)
+  dnrm(Simulation(network), t_final)
+
+  sal(Simulation(network), t_final)
+  dsal(Simulation(network), t_final)
+end
 
 print("[ SSA  ]")
 srand(seed)
@@ -48,6 +56,21 @@ srand(seed)
 print("[ dSSA ]")
 @time ssa2 = dssa(Simulation(network), t_final, dt=t_final, itr=10^5)
 @test_approx_eq_eps computed_mean(ssa2) m[end] 1.0
+
+#print("[ FRM  ]")
+#srand(seed)
+#@time frm1 = frm(Simulation(network), t_final, itr=10^5)
+#@test_approx_eq_eps computed_mean(frm1) m[end] 1.0
+
+print("[ NRM  ]")
+srand(seed)
+@time nrm1 = nrm(Simulation(network), t_final, itr=10^5)
+@test_approx_eq_eps computed_mean(nrm1) m[end] 1.0
+
+print("[ dNRM ]")
+srand(seed)
+@time nrm2 = dnrm(Simulation(network), t_final, itr=10^5)
+@test_approx_eq_eps computed_mean(nrm2) m[end] 1.0
 
 srand(seed)
 print("[ SAL  ]")
