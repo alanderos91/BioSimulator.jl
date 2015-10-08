@@ -46,7 +46,7 @@ srand(seed)
 
 srand(seed)
 print("[ dSSA ]")
-@time ssa2 = dssa(Simulation(network), t_final, dt=0.1, itr=10^5)
+@time ssa2 = dssa(Simulation(network), t_final, dt=t_final, itr=10^5)
 @test_approx_eq_eps computed_mean(ssa2) m[end] 1.0
 
 srand(seed)
@@ -56,5 +56,5 @@ print("[ SAL  ]")
 
 srand(seed)
 print("[ dSAL ]")
-@time sal2 = dsal(Simulation(network), t_final, dt=0.1, itr=10^5)
+@time sal2 = dsal(Simulation(network), t_final, dt=t_final, itr=10^5)
 @test_approx_eq_eps computed_mean(sal2) m[end] 1.0
