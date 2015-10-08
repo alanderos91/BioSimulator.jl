@@ -15,6 +15,7 @@ include(joinpath("kinetics","mass_action.jl"))
 
 # Algorithms
 include(joinpath("algorithm","ssa.jl"))
+include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output
