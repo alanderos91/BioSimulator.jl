@@ -19,6 +19,14 @@ function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, a_total::Float
   return;
 end
 
+function ssa_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, intensity)
+  τ = rand(Exponential(1/intensity))
+  t = t + τ
+  if t > t_final; return τ; end
+  ssa_step!(spcs, rxns, intensity)
+  return τ
+end
+
 function ssa(model::Simulation, t_final::Float64; itr::Int=1)
 
   #Unpack model
@@ -39,17 +47,9 @@ function ssa(model::Simulation, t_final::Float64; itr::Int=1)
 
     while t < t_final
       update!(result, t, spcs)
-
-      a_total = 0.0
-      for r in rxns
-        propensity!(r, spcs, params)
-        a_total = a_total + r.propensity
-      end
-
-      τ = rand(Exponential(1/a_total))
+      intensity = compute_propensities!(rxns, spcs, params)
+      τ = ssa_update!(spcs, rxns, t, t_final, intensity)
       t = t + τ
-      if t > t_final; break; end
-      ssa_step!(spcs, rxns, a_total)
       ssa_steps = ssa_steps + 1
     end
     update!(result, t_final, spcs)
@@ -86,19 +86,16 @@ function dssa(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
         t_next = t_next + dt
         if j > n; break; end
       end
-      a_total = 0.0
-      for r in rxns
-        propensity!(r, spcs, params)
-        a_total = a_total + r.propensity
-      end
-
-      τ = rand(Exponential(1/a_total))
+      intensity = compute_propensities!(rxns, spcs, params)
+      τ = ssa_update!(spcs, rxns, t, t_final, intensity)
       t = t + τ
-      if t > t_final; break; end
-      ssa_step!(spcs, rxns, a_total)
       ssa_steps = ssa_steps + 1
     end
-    update!(result, t_next, spcs, j)
+    while j <= n
+      update!(result, t_next, spcs, j)
+      j = j + 1
+      t_next = t_next + dt
+    end
     job[i] = result
   end
   return job

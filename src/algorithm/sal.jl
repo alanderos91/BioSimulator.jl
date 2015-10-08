@@ -9,6 +9,17 @@ function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector
   return τ
 end
 
+function sal_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
+  compute_mean_derivatives!(dxdt, rxns)
+  compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
+  τ = tau_leap(rxns, params, drdt, tol)
+  τ = min(τ, t_final - t)
+  generate_events!(events, rxns, drdt, τ)
+  τ = sal_step!(spcs, rxns, events, τ, ctrct)
+
+  return τ
+end
+
 function sal(model::Simulation, t_final::Float64;
              itr::Int=1,
              tol::Float64=0.125,
@@ -40,28 +51,16 @@ function sal(model::Simulation, t_final::Float64;
     while t < t_final
       update!(result, t, spcs)
 
-      a_total = 0.0
-      for r in rxns
-        propensity!(r, spcs, params)
-        a_total = a_total + r.propensity
-      end
+      intensity = compute_propensities!(rxns, spcs, params)
 
-      if a_total < thrsh
-        τ = rand(Exponential(1/a_total))
+      if intensity < thrsh
+        τ = ssa_update!(spcs, rxns, t, t_final, intensity)
         t = t + τ
-        if t > t_final; break; end
-        ssa_step!(spcs, rxns, a_total)
         ssa_steps = ssa_steps + 1
       else
-        compute_mean_derivatives!(dxdt, rxns)
-        compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
-        τ = tau_leap(rxns, params, drdt, tol)
-        τ = min(τ, t_final - t)
-        generate_events!(events, rxns, drdt, τ)
-        τ = sal_step!(spcs, rxns, events, τ, ctrct)
-
-        sal_steps = sal_steps + 1
+        τ = sal_update!(spcs, rxns, t, t_final, params, dxdt, drdt, events, tol, ctrct)
         t = t + τ
+        sal_steps = sal_steps + 1
       end
     end
     update!(result, t_final, spcs)
@@ -71,11 +70,11 @@ function sal(model::Simulation, t_final::Float64;
 end
 
 function dsal(model::Simulation, t_final::Float64;
-             itr::Int=1,
-             dt::Float64=1.0,
-             tol::Float64=0.125,
-             thrsh::Float64=100.0,
-             ctrct::Float64=0.75)
+              itr::Int=1,
+              dt::Float64=1.0,
+              tol::Float64=0.125,
+              thrsh::Float64=100.0,
+              ctrct::Float64=0.75)
 
   #Unpack model
   init = model.initial
@@ -110,31 +109,23 @@ function dsal(model::Simulation, t_final::Float64;
         t_next = t_next + dt
         if j > n; break; end
       end
-      a_total = 0.0
-      for r in rxns
-        propensity!(r, spcs, params)
-        a_total = a_total + r.propensity
-      end
+      intensity = compute_propensities!(rxns, spcs, params)
 
-      if a_total < thrsh
-        τ = rand(Exponential(1/a_total))
+      if intensity < thrsh
+        τ = ssa_update!(spcs, rxns, t, t_final, intensity)
         t = t + τ
-        if t > t_final; break; end
-        ssa_step!(spcs, rxns, a_total)
         ssa_steps = ssa_steps + 1
       else
-        compute_mean_derivatives!(dxdt, rxns)
-        compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
-        τ = tau_leap(rxns, params, drdt, tol)
-        τ = min(τ, t_final - t)
-        generate_events!(events, rxns, drdt, τ)
-        τ = sal_step!(spcs, rxns, events, τ, ctrct)
-
-        sal_steps = sal_steps + 1
+        τ = sal_update!(spcs, rxns, t, t_final, params, dxdt, drdt, events, tol, ctrct)
         t = t + τ
+        sal_steps = sal_steps + 1
       end
     end
-    update!(result, t_next, spcs, j)
+    while j <= n
+      update!(result, t_next, spcs, j)
+      j = j + 1
+      t_next = t_next + dt
+    end
     job[i] = result
   end
   return job
@@ -219,12 +210,12 @@ function generate_events!(events::Vector{Int}, rxns::Vector{Reaction}, drdt::Vec
 end
 
 function contract!(events::Vector{Int}, τ::Float64, α::Float64)
-    @inbounds for i in eachindex(events)
-        k = 0
-        @inbounds for j in 1:events[i]
-            k = rand() < α ? k + 1 : k
-        end
-        events[i] = k
+  @inbounds for i in eachindex(events)
+    k = 0
+    @inbounds for j in 1:events[i]
+      k = rand() < α ? k + 1 : k
     end
-    return τ * α
+    events[i] = k
+  end
+  return τ * α
 end

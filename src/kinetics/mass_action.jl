@@ -57,3 +57,12 @@ function propensity!(r::Reaction, x::Vector{Species}, param::Dict{ASCIIString,Fl
   r.propensity = mass_action(r, x, param)
   return;
 end
+
+function compute_propensities!(rxns::Vector{Reaction}, x::Vector{Species}, param::Dict{ASCIIString,Float64})
+  intensity = 0.0
+  for r in rxns
+    propensity!(r, x, param)
+    intensity = intensity + r.propensity
+  end
+  return intensity
+end
