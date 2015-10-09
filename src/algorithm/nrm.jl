@@ -83,7 +83,7 @@ function dnrm(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
   return job
 end
 
-function nrm_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, g, pq, param)
+function nrm_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t::Float64, t_final::Float64, g::LightGraphs.DiGraph, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, param::Dict{ASCIIString,Float64})
   μ, t = Collections.peek(pq)
   if t > t_final; return t; end
   μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
@@ -92,37 +92,42 @@ function nrm_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, 
 end
 
 function init_dep_graph(rxns::Vector{Reaction})
-  g = DiGraph(length(rxns))
-  for j in eachindex(rxns)
+  m = length(rxns)
+  d = length(rxns[1].pre)
+  g = DiGraph(m)
+
+  @inbounds for j in eachindex(rxns)
     r = rxns[j]
-    #add_edge!(g, j, j)
+    pre = r.pre
+    post = r.post
 
-    # Search for reactions R_i with reactant or product of R_j as reactant
-    for k in eachindex(r.pre)
-      if (r.pre[k] == 0) && (r.post[k] == 0); continue; end
-
-      for i in eachindex(rxns)
-        #if i == j; continue; end
-        if (rxns[i].pre[k] != 0); add_edge!(g, j, i); end
+    # Search for reactions r_i with reactant or product of r_j as reactant
+    @inbounds for k in eachindex(pre)
+      if pre[k] != 0 || post[k] != 0
+        @inbounds for i in eachindex(rxns)
+          if rxns[i].pre[k] != 0; add_edge!(g, j, i); end
+        end
       end
     end
   end
   return g
 end
 
-function update_dep_graph!(g, rxns::Vector{Reaction}, pq, spcs::Vector{Species}, param, μ, t)
+function update_dep_graph!(g::LightGraphs.DiGraph, rxns::Vector{Reaction}, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, spcs::Vector{Species}, param::Dict{ASCIIString,Float64}, μ::Int, t::Float64)
   dependents = neighbors(g, μ)
+  r = rxns[μ]
 
   # Compute propensity of the reaction that fired and update the next firing time
-  propensity!(rxns[μ], spcs, param)
-  pq[μ] = t + rand(Exponential(1 / rxns[μ].propensity))
+  propensity!(r, spcs, param)
+  pq[μ] = t + rand(Exponential(1 / r.propensity))
 
   # Compute propensities and firing times for dependent reactions
-  for α in dependents
-    old_propensity = rxns[α].propensity
-    propensity!(rxns[α], spcs, param)
+  @inbounds for α in dependents
+    _r = rxns[α]
+    old_propensity = _r.propensity
+    propensity!(_r, spcs, param)
     if α != μ
-      pq[α] = t + (old_propensity / rxns[α].propensity) * (pq[α] - t)
+      pq[α] = t + (old_propensity / _r.propensity) * (pq[α] - t)
     end
   end
   return g
@@ -136,8 +141,8 @@ function init_pq(rxns::Vector{Reaction})
   return pq
 end
 
-function init_pq!(pq, rxns::Vector{Reaction})
-  for j in eachindex(rxns)
+function init_pq!(pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, rxns::Vector{Reaction})
+  @inbounds for j in eachindex(rxns)
     pq[j] = rand(Exponential(1 / rxns[j].propensity))
   end
 end

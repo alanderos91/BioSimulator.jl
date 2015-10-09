@@ -10,8 +10,10 @@ p = Dict{ASCIIString, Float64}("alpha" => 2.0,
 kendall = Network("Kendall's Process", x, r, p);
 
 # Compile
+print("Precompiling...")
 @time nrm(Simulation(kendall), 4.0)
-Profile.clear_malloc_data()
 
+print("Profiling...")
+Profile.clear_malloc_data()
 # Test
-@time nrm(Simulation(kendall), 4.0)
+@time nrm(Simulation(kendall), 4.0, itr=10^5)

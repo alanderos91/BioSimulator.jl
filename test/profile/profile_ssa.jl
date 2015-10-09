@@ -14,4 +14,4 @@ kendall = Network("Kendall's Process", x, r, p);
 Profile.clear_malloc_data()
 
 # Test
-@time ssa(Simulation(kendall), 4.0)
+@time ssa(Simulation(kendall), 4.0, itr=10^5)
