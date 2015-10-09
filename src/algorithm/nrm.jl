@@ -1,41 +1,4 @@
-export nrm, dnrm
-
-function nrm(model::Simulation, t_final::Float64; itr::Int=1)
-  #Unpack model
-  init = model.initial
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
-
-  job = SimulationJob(itr)
-
-  g = init_dep_graph(rxns)
-  pq = init_pq(rxns) # Allocate the priority queue with zeros
-
-  for i = 1:itr
-    reset!(spcs, init)
-
-    result = SimulationResult(spcs)
-    nrm_steps = 0
-
-    t = 0.0
-
-    # Compute propensities and initialize the priority queue with firing times
-    compute_propensities!(rxns, spcs, params)
-    init_pq!(pq, rxns)
-
-    while t < t_final
-      update!(result, t, spcs)
-      t = nrm_update!(spcs, rxns, t, t_final, g, pq, params)
-      nrm_steps = nrm_steps + 1
-    end
-    update!(result, t_final, spcs)
-    job[i] = result
-  end
-  return job
-end
-
-function dnrm(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
+function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
   #Unpack model
   init = model.initial
   spcs = model.state
@@ -52,7 +15,7 @@ function dnrm(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
   for i = 1:itr
     reset!(spcs, init)
 
-    result = SimulationResult(spcs, n)
+    result = init_sr(output, spcs, n)
     nrm_steps = 0
 
     t = 0.0
@@ -64,20 +27,11 @@ function dnrm(model::Simulation, t_final::Float64; itr::Int=1, dt::Float64=1.0)
     init_pq!(pq, rxns)
 
     while t < t_final
-      while t >= t_next
-        update!(result, t_next, spcs, j)
-        j = j + 1
-        t_next = t_next + dt
-        if j > n; break; end
-      end
+      t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
       t = nrm_update!(spcs, rxns, t, t_final, g, pq, params)
       nrm_steps = nrm_steps + 1
     end
-    while j <= n
-      update!(result, t_next, spcs, j)
-      j = j + 1
-      t_next = t_next + dt
-    end
+    update!(output, result, n, t, t_final, dt, j, spcs)
     job[i] = result
   end
   return job
