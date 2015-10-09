@@ -1,81 +1,4 @@
-export sal, dsal
-
-function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
-  while isbadleap(spcs, rxns, events)
-    τ = contract!(events, τ, α)
-  end
-
-  update!(spcs, rxns, events)
-  return τ
-end
-
-function sal_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
-  compute_mean_derivatives!(dxdt, rxns)
-  compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
-  τ = tau_leap(rxns, params, drdt, tol)
-  τ = min(τ, t_final - t)
-  generate_events!(events, rxns, drdt, τ)
-  τ = sal_step!(spcs, rxns, events, τ, ctrct)
-
-  return τ
-end
-
-function sal(model::Simulation, t_final::Float64;
-             itr::Int=1,
-             tol::Float64=0.125,
-             thrsh::Float64=100.0,
-             ctrct::Float64=0.75)
-
-  #Unpack model
-  init = model.initial
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
-
-  job = SimulationJob(itr)
-
-  # Create additional arrays
-  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle counts
-  drdt = zeros(Float64, length(rxns)) # Rates of change for reaction propensities
-  events = zeros(Int, length(rxns))   # Number of reaction events for each channel
-
-  for i = 1:itr
-    reset!(spcs, init)
-
-    result = SimulationResult(spcs)
-    ssa_steps = 0
-    sal_steps = 0
-
-    t = 0.0
-
-    while t < t_final
-      update!(result, t, spcs)
-
-      intensity = compute_propensities!(rxns, spcs, params)
-
-      if intensity < thrsh
-        τ = ssa_update!(spcs, rxns, t, t_final, intensity)
-        t = t + τ
-        ssa_steps = ssa_steps + 1
-      else
-        τ = sal_update!(spcs, rxns, t, t_final, params, dxdt, drdt, events, tol, ctrct)
-        t = t + τ
-        sal_steps = sal_steps + 1
-      end
-    end
-    update!(result, t_final, spcs)
-    job[i] = result
-  end
-  return job
-end
-
-function dsal(model::Simulation, t_final::Float64;
-              itr::Int=1,
-              dt::Float64=1.0,
-              tol::Float64=0.125,
-              thrsh::Float64=100.0,
-              ctrct::Float64=0.75)
-
+function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, tol::Float64, thrsh::Float64, ctrct::Float64)
   #Unpack model
   init = model.initial
   spcs = model.state
@@ -94,7 +17,7 @@ function dsal(model::Simulation, t_final::Float64;
   for i = 1:itr
     reset!(spcs, init)
 
-    result = SimulationResult(spcs, n)
+    result = init_sr(output, spcs, n)
     ssa_steps = 0
     sal_steps = 0
 
@@ -103,12 +26,7 @@ function dsal(model::Simulation, t_final::Float64;
     j = 1
 
     while t < t_final
-      while t >= t_next
-        update!(result, t_next, spcs, j)
-        j = j + 1
-        t_next = t_next + dt
-        if j > n; break; end
-      end
+      t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
       intensity = compute_propensities!(rxns, spcs, params)
 
       if intensity < thrsh
@@ -121,11 +39,7 @@ function dsal(model::Simulation, t_final::Float64;
         sal_steps = sal_steps + 1
       end
     end
-    while j <= n
-      update!(result, t_next, spcs, j)
-      j = j + 1
-      t_next = t_next + dt
-    end
+    update!(output, result, n , t, t_final, dt, j, spcs)
     job[i] = result
   end
   return job
@@ -218,4 +132,24 @@ function contract!(events::Vector{Int}, τ::Float64, α::Float64)
     events[i] = k
   end
   return τ * α
+end
+
+function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
+  while isbadleap(spcs, rxns, events)
+    τ = contract!(events, τ, α)
+  end
+
+  update!(spcs, rxns, events)
+  return τ
+end
+
+function sal_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
+  compute_mean_derivatives!(dxdt, rxns)
+  compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
+  τ = tau_leap(rxns, params, drdt, tol)
+  τ = min(τ, t_final - t)
+  generate_events!(events, rxns, drdt, τ)
+  τ = sal_step!(spcs, rxns, events, τ, ctrct)
+
+  return τ
 end
