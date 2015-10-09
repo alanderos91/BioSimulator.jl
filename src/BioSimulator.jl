@@ -14,12 +14,6 @@ include(joinpath("model","simulation.jl"))
 # Kinetics
 include(joinpath("kinetics","mass_action.jl"))
 
-# Algorithms
-include(joinpath("algorithm","ssa.jl"))
-include(joinpath("algorithm","frm.jl"))
-include(joinpath("algorithm","nrm.jl"))
-include(joinpath("algorithm","sal.jl"))
-
 # Output
 include(joinpath("output","pstate.jl"))
 include(joinpath("output","ptrajectory.jl"))
@@ -30,5 +24,11 @@ include(joinpath("output","util.jl"))
 
 # Interface
 include("interface.jl")
+
+# Algorithms
+include(joinpath("algorithm","ssa.jl"))
+include(joinpath("algorithm","frm.jl"))
+include(joinpath("algorithm","nrm.jl"))
+include(joinpath("algorithm","sal.jl"))
 
 end # module
