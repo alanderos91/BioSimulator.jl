@@ -28,4 +28,7 @@ include(joinpath("output","simjob.jl"))
 include(joinpath("output","util.jl"))
 #include(joinpath("output","plot.jl"))
 
+# Interface
+include("interface.jl")
+
 end # module
