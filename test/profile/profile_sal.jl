@@ -10,8 +10,8 @@ p = Dict{ASCIIString, Float64}("alpha" => 2.0,
 kendall = Network("Kendall's Process", x, r, p);
 
 # Compile
-@time sal(Simulation(kendall), 4.0)
+@time simulate(Simulation(kendall), 4.0, :sal, itr=1)
 Profile.clear_malloc_data()
 
 # Test
-@time sal(Simulation(kendall), 4.0)
+@time simulate(Simulation(kendall), 4.0, :sal, itr=10^5)

@@ -11,7 +11,7 @@ kendall = Network("Kendall's Process", x, r, p);
 
 # Compile
 print("Precompiling...")
-@time simulate(Simulation(kendall), 4.0, :ssa, itr=1)
+@time simulate(Simulation(kendall), 4.0, :nrm, itr=1)
 
 print("Profiling...")
 Profile.clear_malloc_data()
