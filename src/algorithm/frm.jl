@@ -26,7 +26,7 @@ function frm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
       t = t + τ
       frm_steps = frm_steps + 1
     end
-    update!(output, result, n, t, t_final, dt, j, spcs)
+    update!(output, result, n, t_next, dt, j, spcs)
     job[i] = result
   end
   return job
