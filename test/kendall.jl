@@ -33,7 +33,7 @@ points = round(Int, t_final/Δt) + 1
 t = linspace(0.0,t_final, points)
 theoretical = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
 
-algorithms = [:ssa, :ossa, :nrm, :sal, :frm]
+algorithms = [:ssa, :odm, :nrm, :sal, :frm]
 
 # Run SSA and SAL once to compile
 print("Precompiling..."); @time begin

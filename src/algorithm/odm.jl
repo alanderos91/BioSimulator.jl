@@ -5,7 +5,7 @@ immutable Loose <: Coupling end
 
 export Tight, Loose
 
-function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, c::Coupling, steps::Int, samples::Int)
+function odm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, c::Coupling, steps::Int, samples::Int)
 	# Unpack model
 	init = model.initial
 	spcs = model.state
@@ -20,7 +20,7 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 
 	# Presimulate to sort reactions according to multiscale property.
 	# This will modify spcs and rxns
-	init_ossa!(spcs, rxns, params, init, steps, samples)
+	init_odm!(spcs, rxns, params, init, steps, samples)
 
 	for i = 1:itr
 		reset!(spcs, init)
@@ -37,7 +37,7 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 
 		while t < t_final
 			t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
-			τ, intensity = ossa_update!(c, spcs, rxns, params, intensity, g)
+			τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
 			t = t + τ
 			ssa_steps = ssa_steps + 1
 		end
@@ -47,7 +47,7 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 	return job
 end
 
-function ossa_update!(c::Coupling, spcs::Vector{Species}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
+function odm_update!(c::Coupling, spcs::Vector{Species}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
 	τ = rand(Exponential(1 / intensity))
 	jump = intensity * rand()
 	μ = sample(rxns, jump)
@@ -95,7 +95,7 @@ function presimulate!(spcs, rxns, params, init, n, itr)
 	return rxns
 end
 
-function init_ossa!(spcs, rxns, params, init, n, itr)
+function init_odm!(spcs, rxns, params, init, n, itr)
 	rxns = presimulate!(spcs, rxns, params, init, n, itr)
 	sort!(rxns, alg=Base.MergeSort, lt=isless, rev=true)
 	return rxns
