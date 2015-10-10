@@ -53,5 +53,5 @@ for a in algorithms
   print(" *  Uniform ", uppercase(string(a)))
   srand(seed); @time result = simulate(Simulation(kendall), t_final, a, o=Uniform(), dt=0.1, itr=10^5)
   computed = computed_mean(result)
-  @test_approx_eq_eps computed theoretical[end] 1e1
+  @test_approx_eq_eps computed theoretical[end] 1e0
 end
