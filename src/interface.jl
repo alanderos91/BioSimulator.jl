@@ -52,7 +52,10 @@ function simulate(model::Simulation, t_final::Float64, with::Symbol=:ssa; o::Out
 	if with == :ssa
 		ssa(model, t_final, o, dt, itr)
 	elseif with == :ossa
-		ossa(model, t_final, o, dt, itr)
+		c = haskey(d, :c) ? d[:c] : Tight()
+		steps = haskey(d, :steps) ? d[:steps] : 100
+		samples = haskey(d, :samples) ? d[:samples] : 1
+		ossa(model, t_final, o, dt, itr, c, steps, samples)
 	elseif with == :frm
 		frm(model, t_final, o, dt, itr)
 	elseif with == :nrm

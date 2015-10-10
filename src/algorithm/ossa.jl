@@ -1,4 +1,11 @@
-function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
+abstract Coupling
+
+immutable Tight <: Coupling end
+immutable Loose <: Coupling end
+
+export Tight, Loose
+
+function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, c::Coupling, steps::Int, samples::Int)
 	# Unpack model
 	init = model.initial
 	spcs = model.state
@@ -9,8 +16,11 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 
 	job = SimulationJob(itr)
 
-	g = init_dep_graph(rxns)
-	pq = init_apq(rxns)
+	g = typeof(c) <: Loose ? init_dep_graph(rxns) : DiGraph()
+
+	# Presimulate to sort reactions according to multiscale property.
+	# This will modify spcs and rxns
+	init_ossa!(spcs, rxns, params, init, steps, samples)
 
 	for i = 1:itr
 		reset!(spcs, init)
@@ -22,13 +32,12 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 		t_next = 0.0
 		j = 1
 
-		# Compute propensities and initialize the priority queue with propensities
+		# Compute propensities
 		intensity = compute_propensities!(rxns, spcs, params)
-		init_apq!(pq, rxns)
 
 		while t < t_final
 			t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
-			τ, intensity = ossa_update!(spcs, rxns, params, intensity, g, pq)
+			τ, intensity = ossa_update!(c, spcs, rxns, params, intensity, g)
 			t = t + τ
 			ssa_steps = ssa_steps + 1
 		end
@@ -38,48 +47,60 @@ function ossa(model::Simulation, t_final::Float64, output::OutputType, dt::Float
 	return job
 end
 
-function init_apq(rxns::Vector{Reaction})
-	pq = Collections.PriorityQueue(Int,Float64,Base.Reverse)
-	for j in eachindex(rxns)
-		pq[j] = 0.0
-	end
-	return pq
-end
-
-function init_apq!(pq, rxns::Vector{Reaction})
-	@inbounds for j in eachindex(rxns)
-		pq[j] = rxns[j].propensity
-	end
-end
-
-function ossa_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph, pq)
+function ossa_update!(c::Coupling, spcs::Vector{Species}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
 	τ = rand(Exponential(1 / intensity))
 	jump = intensity * rand()
-	μ = sample(pq, jump)
+	μ = sample(rxns, jump)
 	μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
 
-	# Update propensities
+	intensity = update_propensities!(c, rxns, spcs, param, g)
+	return τ, intensity
+end
+
+function update_propensities!(c::Loose, rxns, spcs, param)
 	dependents = neighbors(g, μ)
 
 	@inbounds for α in dependents
 		intensity = intensity - rxns[α].propensity
-		propensity!(rxns[α], spcs, param); pq[α] = rxns[α].propensity
+		propensity!(rxns[α], spcs, param);
 		intensity = intensity + rxns[α].propensity
 	end
-	return τ, intensity
+	return intensity
 end
 
-function sample(pq, jump)
-	ss = 0.0
-	# This will iterate through the priority queue in order of decreasing
-	# elements. The value i is the i-th largest element, j is the index
-	# of the corresponding reaction, and a is the i-th largest propensity.
-	for i = 1:length(pq)
-		j, a = pq.xs[i]
-		ss = ss + a
-		if ss >= jump
-			return j
+function update_propensities!(c::Tight, rxns, spcs, param, g)
+	return compute_propensities!(rxns, spcs, param)
+end
+
+function presimulate!(spcs, rxns, params, init, n, itr)
+	events = zeros(Float64, length(rxns))
+
+	for i = 1:itr
+		reset!(spcs, init)
+		for k = 1:n
+			intensity = compute_propensities!(rxns, spcs, params)
+			τ = rand(Exponential(1 / intensity))
+			u = rand()
+		  jump = intensity * u
+		  j = sample(rxns, jump)
+		  j > 0 ? update!(spcs, rxns[j]) : error("No reaction occurred!")
+			events[j] = events[j] + 1
 		end
 	end
-	return 0
+
+	for i in eachindex(rxns)
+		rxns[i].propensity = events[i]
+	end
+
+	return rxns
+end
+
+function init_ossa!(spcs, rxns, params, init, n, itr)
+	rxns = presimulate!(spcs, rxns, params, init, n, itr)
+	sort!(rxns, alg=Base.MergeSort, lt=isless, rev=true)
+	return rxns
+end
+
+function isless(x::Reaction, y::Reaction)
+	return x.propensity < y.propensity
 end
