@@ -51,6 +51,8 @@ function simulate(model::Simulation, t_final::Float64, with::Symbol=:ssa; o::Out
 
 	if with == :ssa
 		ssa(model, t_final, o, dt, itr)
+	elseif with == :ossa
+		ossa(model, t_final, o, dt, itr)
 	elseif with == :frm
 		frm(model, t_final, o, dt, itr)
 	elseif with == :nrm

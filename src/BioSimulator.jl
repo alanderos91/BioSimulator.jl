@@ -27,6 +27,7 @@ include("interface.jl")
 
 # Algorithms
 include(joinpath("algorithm","ssa.jl"))
+include(joinpath("algorithm","ossa.jl"))
 include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
