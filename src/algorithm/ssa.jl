@@ -1,35 +1,39 @@
 function ssa(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
   # Unpack model
   init = model.initial
+  sname = model.sname
+  tracked = model.tracked
   spcs = model.state
   rxns = model.rxns
   params = model.param
 
   n = round(Int, t_final / dt) + 1
+  maxrows = itr * n
+  j = 1
 
-  job = SimulationJob(itr)
+  df = if isa(output, Explicit); init_df(sname, tracked, 0); elseif isa(output, Uniform); init_df(sname, tracked, maxrows); end
 
   for i = 1:itr
-    reset!(spcs, init)
+    copy!(spcs, init)
 
-    result = init_sr(output, spcs, n)
     ssa_steps = 0
 
     t = 0.0
     t_next = 0.0
-    j = 1
+
+    limit = i * n
 
     while t < t_final
-      t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
+      t_next, j = update!(output, df, limit, t, t_next, dt, j, sname, tracked, spcs)
       intensity = compute_propensities!(rxns, spcs, params)
       τ = ssa_update!(spcs, rxns, t, t_final, intensity)
       t = t + τ
       ssa_steps = ssa_steps + 1
     end
-    update!(output, result, n, t_next, dt, j, spcs)
-    job[i] = result
+    t_next, j = update!(output, df, limit, t_next, dt, j, sname, tracked, spcs)
+
   end
-  return job
+  return df
 end
 
 function sample(rxns::Vector{Reaction}, jump::Float64)
@@ -43,7 +47,7 @@ function sample(rxns::Vector{Reaction}, jump::Float64)
   return 0
 end
 
-function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, a_total::Float64)
+function ssa_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, a_total::Float64)
   u = rand()
   jump = a_total * u
   j = sample(rxns, jump)
@@ -51,7 +55,7 @@ function ssa_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, a_total::Float
   return;
 end
 
-function ssa_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, intensity)
+function ssa_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, t_final, intensity)
   τ = rand(Exponential(1/intensity))
   t = t + τ
   if t > t_final; return τ; end
@@ -59,9 +63,9 @@ function ssa_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, 
   return τ
 end
 
-function update!(spcs::Vector{Species}, r::Reaction)
+function update!(spcs::Vector{Int}, r::Reaction)
   for i in eachindex(spcs)
-    spcs[i].pop = spcs[i].pop + (r.post[i] - r.pre[i])
+    spcs[i] = spcs[i] + (r.post[i] - r.pre[i])
   end
   return;
 end

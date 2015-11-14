@@ -1,6 +1,7 @@
 function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, tol::Float64, thrsh::Float64, ctrct::Float64)
   #Unpack model
   init = model.initial
+  tracked = model.tracked
   spcs = model.state
   rxns = model.rxns
   params = model.param
@@ -15,9 +16,9 @@ function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
   events = zeros(Int, length(rxns))   # Number of reaction events for each channel
 
   for i = 1:itr
-    reset!(spcs, init)
+    copy!(spcs, init)
 
-    result = init_sr(output, spcs, n)
+    result = init_sr(output, tracked, n)
     ssa_steps = 0
     sal_steps = 0
 
@@ -26,7 +27,7 @@ function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
     j = 1
 
     while t < t_final
-      t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
+      t_next, j = update!(output, result, n, t, t_next, dt, j, tracked, spcs)
       intensity = compute_propensities!(rxns, spcs, params)
 
       if intensity < thrsh
@@ -39,29 +40,29 @@ function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
         sal_steps = sal_steps + 1
       end
     end
-    update!(output, result, n, t_next, dt, j, spcs)
+    update!(output, result, n, t_next, dt, j, tracked, spcs)
     job[i] = result
   end
   return job
 end
 
-function update!(spcs::Vector{Species}, r::Reaction, k::Int)
+function update!(spcs::Vector{Int}, r::Reaction, k::Int)
   for i in eachindex(spcs)
-    spcs[i].pop = spcs[i].pop + k * (r.post[i] - r.pre[i])
+    spcs[i] = spcs[i] + k * (r.post[i] - r.pre[i])
   end
   return;
 end
 
-function update!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int})
+function update!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int})
   for i in eachindex(rxns)
     update!(spcs, rxns[i], events[i])
   end
   return;
 end
 
-function isbadleap(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int})
+function isbadleap(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int})
   for i in eachindex(spcs)
-    val = spcs[i].pop
+    val = spcs[i]
     for j in eachindex(rxns)
       val = val + events[j] * (rxns[j].post[i] - rxns[j].pre[i])
 
@@ -74,7 +75,7 @@ function isbadleap(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector
   return false
 end
 
-function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Species}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, dxdt::Vector{Float64})
+function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Int}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, dxdt::Vector{Float64})
   for i in eachindex(drdt)
     drdt[i] = 0.0
     for k in eachindex(spcs)
@@ -134,7 +135,7 @@ function contract!(events::Vector{Int}, τ::Float64, α::Float64)
   return τ * α
 end
 
-function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
+function sal_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
   while isbadleap(spcs, rxns, events)
     τ = contract!(events, τ, α)
   end
@@ -143,7 +144,7 @@ function sal_step!(spcs::Vector{Species}, rxns::Vector{Reaction}, events::Vector
   return τ
 end
 
-function sal_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
+function sal_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
   compute_mean_derivatives!(dxdt, rxns)
   compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
   τ = tau_leap(rxns, params, drdt, tol)

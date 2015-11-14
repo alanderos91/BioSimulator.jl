@@ -9,20 +9,34 @@ end
 function computed_mean(sj)
   mval = 0.0
   for r in sj.results
-    mval = mval + r["Particle"].states[end].pop
+    mval = mval + r["X"].states[end].pop
   end
   return mval / length(sj.results)
 end
 
-x = [Species("Particle", 5, true)]
-r = [Reaction("Birth", "alpha", [1], [2]),
-     Reaction("Death", "mu", [1], [0]),
-     Reaction("Immigration", "nu", [0], [1])]
-p = Dict{ASCIIString, Float64}("alpha" => 2.0,
-                               "mu" => 1.0,
-                               "nu" => 0.5)
+# Values
+x = 5
+α = 2.0
+μ = 1.0
+ν = 0.5
 
-kendall = Network("Kendall's Process", x, r, p);
+# Model Definition
+network = Network("Kendall's Process")
+
+add_species!(network, "X", x)
+
+add_reaction!(network, "Birth", "alpha")
+add_reactant!(network, "Birth", "X", 1)
+add_product!(network, "Birth", "X", 2)
+set_parameter!(network, "alpha", α)
+
+add_reaction!(network, "Death", "mu")
+add_reactant!(network, "Death", "X")
+set_parameter!(network, "mu", μ)
+
+add_reaction!(network, "Immigration", "nu")
+add_product!(network, "Immigration", "X")
+set_parameter!(network, "nu", ν)
 
 t_final = 4.0
 Δt = 0.1
@@ -31,27 +45,27 @@ seed = 5357
 # Compute mean for comparison
 points = round(Int, t_final/Δt) + 1
 t = linspace(0.0,t_final, points)
-theoretical = kendall_mean(x[1].pop,t,p["alpha"],p["mu"],p["nu"])
+theoretical = kendall_mean(x,t,α,μ,ν)
 
 algorithms = [:ssa, :odm, :nrm, :sal, :frm]
 
 # Run SSA and SAL once to compile
 print("Precompiling..."); @time begin
   for a in algorithms
-    simulate(Simulation(kendall), t_final, a, o=Explicit(), itr=1)
-    simulate(Simulation(kendall), t_final, a, o=Uniform(), dt=0.1, itr=1)
+    simulate(Simulation(network), t_final, a, o=Explicit(), itr=1)
+    simulate(Simulation(network), t_final, a, o=Uniform(), dt=0.1, itr=1)
   end
 end
 
 println("Running tests...")
 for a in algorithms
   print(" * Explicit ", uppercase(string(a)))
-  srand(seed); @time result = simulate(Simulation(kendall), t_final, a, o=Explicit(), itr=10^5)
+  srand(seed); @time result = simulate(Simulation(network), t_final, a, o=Explicit(), itr=100_000)
   computed = computed_mean(result)
   @test_approx_eq_eps computed theoretical[end] 1e0
 
   print(" *  Uniform ", uppercase(string(a)))
-  srand(seed); @time result = simulate(Simulation(kendall), t_final, a, o=Uniform(), dt=0.1, itr=10^5)
+  srand(seed); @time result = simulate(Simulation(network), t_final, a, o=Uniform(), dt=0.1, itr=100_000)
   computed = computed_mean(result)
   @test_approx_eq_eps computed theoretical[end] 1e0
 end

@@ -8,6 +8,7 @@ export Tight, Loose
 function odm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, c::Coupling, steps::Int, samples::Int)
 	# Unpack model
 	init = model.initial
+  tracked = model.tracked
 	spcs = model.state
 	rxns = model.rxns
 	params = model.param
@@ -23,9 +24,9 @@ function odm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
 	init_odm!(spcs, rxns, params, init, steps, samples)
 
 	for i = 1:itr
-		reset!(spcs, init)
+		copy!(spcs, init)
 
-		result = init_sr(output, spcs, n)
+		result = init_sr(output, tracked, n)
 		ssa_steps = 0
 
 		t = 0.0
@@ -36,18 +37,18 @@ function odm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
 		intensity = compute_propensities!(rxns, spcs, params)
 
 		while t < t_final
-			t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
+			t_next, j = update!(output, result, n, t, t_next, dt, j, tracked, spcs)
 			τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
 			t = t + τ
 			ssa_steps = ssa_steps + 1
 		end
-		update!(output, result, n, t_next, dt, j, spcs)
+		update!(output, result, n, t_next, dt, j, tracked, spcs)
 		job[i] = result
 	end
 	return job
 end
 
-function odm_update!(c::Coupling, spcs::Vector{Species}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
+function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
 	τ = rand(Exponential(1 / intensity))
 	jump = intensity * rand()
 	μ = sample(rxns, jump)
@@ -76,7 +77,7 @@ function presimulate!(spcs, rxns, params, init, n, itr)
 	events = zeros(Float64, length(rxns))
 
 	for i = 1:itr
-		reset!(spcs, init)
+		copy!(spcs, init)
 		for k = 1:n
 			intensity = compute_propensities!(rxns, spcs, params)
 			τ = rand(Exponential(1 / intensity))

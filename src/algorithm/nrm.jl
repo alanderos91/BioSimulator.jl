@@ -1,6 +1,7 @@
 function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
   #Unpack model
   init = model.initial
+  tracked = model.tracked
   spcs = model.state
   rxns = model.rxns
   params = model.param
@@ -13,9 +14,9 @@ function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
   pq = init_pq(rxns) # Allocate the priority queue with zeros
 
   for i = 1:itr
-    reset!(spcs, init)
+    copy!(spcs, init)
 
-    result = init_sr(output, spcs, n)
+    result = init_sr(output, tracked, n)
     nrm_steps = 0
 
     t = 0.0
@@ -27,17 +28,17 @@ function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
     init_pq!(pq, rxns)
 
     while t < t_final
-      t_next, j = update!(output, result, n, t, t_next, dt, j, spcs)
+      t_next, j = update!(output, result, n, t, t_next, dt, j, tracked, spcs)
       t = nrm_update!(spcs, rxns, t, t_final, g, pq, params)
       nrm_steps = nrm_steps + 1
     end
-    update!(output, result, n, t_next, dt, j, spcs)
+    update!(output, result, n, t_next, dt, j, tracked, spcs)
     job[i] = result
   end
   return job
 end
 
-function nrm_update!(spcs::Vector{Species}, rxns::Vector{Reaction}, t::Float64, t_final::Float64, g::LightGraphs.DiGraph, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, param::Dict{ASCIIString,Float64})
+function nrm_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t::Float64, t_final::Float64, g::LightGraphs.DiGraph, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, param::Dict{ASCIIString,Float64})
   μ, t = Collections.peek(pq)
   if t > t_final; return t; end
   μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
@@ -67,7 +68,7 @@ function init_dep_graph(rxns::Vector{Reaction})
   return g
 end
 
-function update_dep_graph!(g::LightGraphs.DiGraph, rxns::Vector{Reaction}, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, spcs::Vector{Species}, param::Dict{ASCIIString,Float64}, μ::Int, t::Float64)
+function update_dep_graph!(g::LightGraphs.DiGraph, rxns::Vector{Reaction}, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, spcs::Vector{Int}, param::Dict{ASCIIString,Float64}, μ::Int, t::Float64)
   dependents = neighbors(g, μ)
   r = rxns[μ]
 
