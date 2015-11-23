@@ -6,8 +6,10 @@ using Gadfly
 using LightGraphs
 
 abstract OutputType
-immutable Explicit <: OutputType end
-immutable Uniform  <: OutputType end
+immutable Explicit  <: OutputType end
+immutable Uniform   <: OutputType end
+immutable Mean      <: OutputType end
+immutable Histogram <: OutputType end
 
 # Interface
 include(joinpath("interface","species.jl"))
@@ -32,7 +34,7 @@ include(joinpath("output", "update.jl"))
 #include(joinpath("output","simresult.jl"))
 #include(joinpath("output","simjob.jl"))
 
-export Network, Simulation, Explicit, Uniform,
+export Network, Simulation, Explicit, Uniform, Mean, Histogram,
   simulate,
   add_species!,   rmv_species!,
   add_reaction!,  rmv_reaction!,

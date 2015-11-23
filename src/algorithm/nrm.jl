@@ -1,6 +1,7 @@
 function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
-  #Unpack model
+  # Unpack model
   init = model.initial
+  sname = model.sname
   tracked = model.tracked
   spcs = model.state
   rxns = model.rxns
@@ -8,7 +9,25 @@ function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
 
   n = round(Int, t_final / dt) + 1
 
-  job = SimulationJob(itr)
+  u  = if isa(output, Explicit)
+         Updater(dt, tracked, 0)
+       elseif isa(output, Uniform)
+         Updater(dt, tracked, n)
+       elseif isa(output, Mean)
+         Updater(dt, tracked, n)
+       elseif isa(output, Histogram)
+         Updater(dt, tracked, itr)
+       end
+
+  df = if isa(output, Explicit)
+         init_df(sname, tracked, 0)
+       elseif isa(output, Uniform)
+         init_df(sname, tracked, itr * n)
+       elseif isa(output, Mean)
+         init_df(sname, tracked, n)
+       elseif isa(output, Histogram)
+         init_df(sname, tracked, itr)
+       end
 
   g = init_dep_graph(rxns)
   pq = init_pq(rxns) # Allocate the priority queue with zeros
@@ -16,26 +35,23 @@ function nrm(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
   for i = 1:itr
     copy!(spcs, init)
 
-    result = init_sr(output, tracked, n)
     nrm_steps = 0
 
     t = 0.0
-    t_next = 0.0
-    j = 1
+    u.t_next = 0.0
 
     # Compute propensities and initialize the priority queue with firing times
     compute_propensities!(rxns, spcs, params)
     init_pq!(pq, rxns)
 
     while t < t_final
-      t_next, j = update!(output, result, n, t, t_next, dt, j, tracked, spcs)
+      update!(output, df, t, u, spcs)
       t = nrm_update!(spcs, rxns, t, t_final, g, pq, params)
       nrm_steps = nrm_steps + 1
     end
-    update!(output, result, n, t_next, dt, j, tracked, spcs)
-    job[i] = result
+    final_update!(output, df, t, u, spcs)
   end
-  return job
+  return df
 end
 
 function nrm_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t::Float64, t_final::Float64, g::LightGraphs.DiGraph, pq::Collections.PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}, param::Dict{ASCIIString,Float64})

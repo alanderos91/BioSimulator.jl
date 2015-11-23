@@ -8,10 +8,26 @@ function ssa(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
   params = model.param
 
   n = round(Int, t_final / dt) + 1
-  maxrows = itr * n
-  j = 1
 
-  df = if isa(output, Explicit); init_df(sname, tracked, 0); elseif isa(output, Uniform); init_df(sname, tracked, maxrows); end
+  u  = if isa(output, Explicit)
+         Updater(dt, tracked, 0)
+       elseif isa(output, Uniform)
+         Updater(dt, tracked, n)
+       elseif isa(output, Mean)
+         Updater(dt, tracked, n)
+       elseif isa(output, Histogram)
+         Updater(dt, tracked, itr)
+       end
+
+  df = if isa(output, Explicit)
+         init_df(sname, tracked, 0)
+       elseif isa(output, Uniform)
+         init_df(sname, tracked, itr * n)
+       elseif isa(output, Mean)
+         init_df(sname, tracked, n)
+       elseif isa(output, Histogram)
+         init_df(sname, tracked, itr)
+       end
 
   for i = 1:itr
     copy!(spcs, init)
@@ -19,19 +35,15 @@ function ssa(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
     ssa_steps = 0
 
     t = 0.0
-    t_next = 0.0
-
-    limit = i * n
 
     while t < t_final
-      t_next, j = update!(output, df, limit, t, t_next, dt, j, sname, tracked, spcs)
+      update!(output, df, t, u, spcs)
       intensity = compute_propensities!(rxns, spcs, params)
       τ = ssa_update!(spcs, rxns, t, t_final, intensity)
       t = t + τ
       ssa_steps = ssa_steps + 1
     end
-    t_next, j = update!(output, df, limit, t_next, dt, j, sname, tracked, spcs)
-
+    final_update!(output, df, t, u, spcs)
   end
   return df
 end

@@ -1,6 +1,7 @@
 function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, tol::Float64, thrsh::Float64, ctrct::Float64)
-  #Unpack model
+  # Unpack model
   init = model.initial
+  sname = model.sname
   tracked = model.tracked
   spcs = model.state
   rxns = model.rxns
@@ -8,26 +9,42 @@ function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
 
   n = round(Int, t_final / dt) + 1
 
-  job = SimulationJob(itr)
+  u  = if isa(output, Explicit)
+         Updater(dt, tracked, 0)
+       elseif isa(output, Uniform)
+         Updater(dt, tracked, n)
+       elseif isa(output, Mean)
+         Updater(dt, tracked, n)
+       elseif isa(output, Histogram)
+         Updater(dt, tracked, itr)
+       end
+
+  df = if isa(output, Explicit)
+         init_df(sname, tracked, 0)
+       elseif isa(output, Uniform)
+         init_df(sname, tracked, itr * n)
+       elseif isa(output, Mean)
+         init_df(sname, tracked, n)
+       elseif isa(output, Histogram)
+         init_df(sname, tracked, itr)
+       end
 
   # Create additional arrays
-  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle counts
+  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle count
   drdt = zeros(Float64, length(rxns)) # Rates of change for reaction propensities
   events = zeros(Int, length(rxns))   # Number of reaction events for each channel
 
   for i = 1:itr
     copy!(spcs, init)
 
-    result = init_sr(output, tracked, n)
     ssa_steps = 0
     sal_steps = 0
 
     t = 0.0
-    t_next = 0.0
-    j = 1
+    u.t_next = 0.0
 
     while t < t_final
-      t_next, j = update!(output, result, n, t, t_next, dt, j, tracked, spcs)
+      update!(output, df, t, u, spcs)
       intensity = compute_propensities!(rxns, spcs, params)
 
       if intensity < thrsh
@@ -40,10 +57,9 @@ function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float6
         sal_steps = sal_steps + 1
       end
     end
-    update!(output, result, n, t_next, dt, j, tracked, spcs)
-    job[i] = result
+    final_update!(output, df, t, u, spcs)
   end
-  return job
+  return df
 end
 
 function update!(spcs::Vector{Int}, r::Reaction, k::Int)
