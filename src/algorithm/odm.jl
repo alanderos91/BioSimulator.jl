@@ -5,13 +5,13 @@ immutable Loose <: Coupling end
 
 export Tight, Loose
 
-type ODM <: Algorithm
+type ODM{T} <: Algorithm
   itr::Int
 
   tf::Float64
   dt::Float64
 
-  c::Coupling
+  c::T
   pre_steps::Int
   samples::Int
 
@@ -20,14 +20,14 @@ type ODM <: Algorithm
   steps::Int
 
   g::DiGraph
+end
 
-  function ODM(itr, tf, dt, args)
-    c       = get(args, :c,       Tight())
-    steps   = get(args, :steps,   100)
-    samples = get(args, :samples, 1)
+function ODM(itr, tf, dt, args)
+  c       = get(args, :c,       Tight())
+  steps   = get(args, :steps,   100)
+  samples = get(args, :samples, 1)
 
-    new(itr, tf, dt, c, steps, samples, 0.0, 0.0, 0, DiGraph())
-  end
+  ODM{typeof(c)}(itr, tf, dt, c, steps, samples, 0.0, 0.0, 0, DiGraph())
 end
 
 function init(alg::ODM, rxns, spcs, initial, params)
@@ -48,7 +48,8 @@ function reset(alg::ODM, rxns, spcs, params)
 end
 
 function step(alg::ODM, rxns, spcs, params)
-  (τ, intensity) = odm_update!(alg.c, spcs, rxns, params, alg.intensity, alg.g)
+  intensity = alg.intensity; c = alg.c; g = alg.g
+  τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
   alg.t = alg.t + τ
   alg.steps = alg.steps + 1
   alg.intensity = intensity
@@ -62,10 +63,10 @@ function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, par
 	μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
 
 	intensity = update_propensities!(c, rxns, spcs, param, g, μ, intensity)
-	return (τ, intensity)
+	return τ, intensity
 end
 
-function update_propensities!(c::Loose, rxns, spcs, param, g, μ, intensity)
+function update_propensities!(::Loose, rxns, spcs, param, g, μ, intensity)
 	dependents = neighbors(g, μ)
 
 	@inbounds for α in dependents
@@ -76,7 +77,7 @@ function update_propensities!(c::Loose, rxns, spcs, param, g, μ, intensity)
 	return intensity
 end
 
-function update_propensities!(c::Tight, rxns, spcs, param, g, μ, intensity)
+function update_propensities!(::Tight, rxns, spcs, param, g, μ, intensity)
 	return compute_propensities!(rxns, spcs, param)
 end
 
