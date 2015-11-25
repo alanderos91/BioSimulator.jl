@@ -8,7 +8,7 @@ type SSA <: Algorithm
   intensity::Float64
   steps::Int
 
-  function SSA(itr, tf, dt; kwargs...)
+  function SSA(itr, tf, dt, args)
     new(itr, tf, dt, 0.0, 0.0, 0)
   end
 end

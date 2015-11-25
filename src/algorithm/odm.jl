@@ -21,8 +21,7 @@ type ODM <: Algorithm
 
   g::DiGraph
 
-  function ODM(itr, tf, dt; kwargs...)
-    args    = Dict{Symbol,Any}(kwargs)
+  function ODM(itr, tf, dt, args)
     c       = get(args, :c,       Tight())
     steps   = get(args, :steps,   100)
     samples = get(args, :samples, 1)
@@ -49,24 +48,24 @@ function reset(alg::ODM, rxns, spcs, params)
 end
 
 function step(alg::ODM, rxns, spcs, params)
-  τ, intensity = odm_update!(alg.c, spcs, rxns, params, alg.intensity, alg.g)
+  (τ, intensity) = odm_update!(alg.c, spcs, rxns, params, alg.intensity, alg.g)
   alg.t = alg.t + τ
   alg.steps = alg.steps + 1
   alg.intensity = intensity
   return;
 end
 
-function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
+function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, param, intensity, g)
 	τ = rand(Exponential(1 / intensity))
 	jump = intensity * rand()
 	μ = sample(rxns, jump)
 	μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
 
-	intensity = update_propensities!(c, rxns, spcs, param, g)
-	return τ, intensity
+	intensity = update_propensities!(c, rxns, spcs, param, g, μ, intensity)
+	return (τ, intensity)
 end
 
-function update_propensities!(c::Loose, rxns, spcs, param)
+function update_propensities!(c::Loose, rxns, spcs, param, g, μ, intensity)
 	dependents = neighbors(g, μ)
 
 	@inbounds for α in dependents
@@ -77,7 +76,7 @@ function update_propensities!(c::Loose, rxns, spcs, param)
 	return intensity
 end
 
-function update_propensities!(c::Tight, rxns, spcs, param, g)
+function update_propensities!(c::Tight, rxns, spcs, param, g, μ, intensity)
 	return compute_propensities!(rxns, spcs, param)
 end
 

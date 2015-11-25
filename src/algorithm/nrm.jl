@@ -13,7 +13,7 @@ type NRM <: Algorithm
   g::DiGraph
   pq::PriorityQueue
 
-  function NRM(itr, tf, dt; kwargs...)
+  function NRM(itr, tf, dt, args)
     new(itr, tf, dt, 0.0, 0.0, 0, DiGraph(), PriorityQueue())
   end
 end

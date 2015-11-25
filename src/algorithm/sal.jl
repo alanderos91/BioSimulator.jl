@@ -17,8 +17,7 @@ type SAL <: Algorithm
   drdt::Vector{Float64}
   events::Vector{Int}
 
-  function SAL(itr, tf, dt; kwargs...)
-    args  = Dict{Symbol,Any}(kwargs)
+  function SAL(itr, tf, dt, args)
     tol   = get(args, :tol,   0.125)
     thrsh = get(args, :thrsh, 100.0)
     ctrct = get(args, :ctrct, 0.75)

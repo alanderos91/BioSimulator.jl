@@ -8,7 +8,7 @@ type FRM <: Algorithm
   intensity::Float64
   steps::Int
 
-  function FRM(itr, tf, dt; kwargs...)
+  function FRM(itr, tf, dt, args)
     new(itr, tf, dt, 0.0, 0.0, 0)
   end
 end

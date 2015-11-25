@@ -66,16 +66,18 @@ function _rvector(reactions, inds)
 end
 
 function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
+  args = Dict{Symbol,Any}(kwargs)
+  
   if with == :ssa
-    algorithm = SSA(itr, tf, dt, kwargs...)
+    algorithm = SSA(itr, tf, dt, args)
   elseif with == :odm
-    algorithm = ODM(itr, tf, dt, kwargs...)
+    algorithm = ODM(itr, tf, dt, args)
   elseif with == :frm
-    algorithm = FRM(itr, tf, dt, kwargs...)
+    algorithm = FRM(itr, tf, dt, args)
   elseif with == :nrm
-    algorithm = NRM(itr, tf, dt, kwargs...)
+    algorithm = NRM(itr, tf, dt, args)
   elseif with == :sal
-    algorithm = SAL(itr, tf, dt, kwargs...)
+    algorithm = SAL(itr, tf, dt, args)
   else
     error("$with is an unrecognized algorithm.")
   end
