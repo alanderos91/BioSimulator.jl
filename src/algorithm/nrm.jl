@@ -1,4 +1,5 @@
 import Base.Collections: PriorityQueue, peek
+import Base.Order: ForwardOrdering
 
 type NRM <: Algorithm
   itr::Int
@@ -11,10 +12,10 @@ type NRM <: Algorithm
   steps::Int
 
   g::DiGraph
-  pq::PriorityQueue
+  pq::PriorityQueue{Int,Float64,ForwardOrdering}
 
   function NRM(itr, tf, dt, args)
-    new(itr, tf, dt, 0.0, 0.0, 0, DiGraph(), PriorityQueue())
+    new(itr, tf, dt, 0.0, 0.0, 0, DiGraph(), PriorityQueue(Int,Float64))
   end
 end
 
