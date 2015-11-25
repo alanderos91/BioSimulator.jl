@@ -1,65 +1,58 @@
-function sal(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, tol::Float64, thrsh::Float64, ctrct::Float64)
-  # Unpack model
-  init = model.initial
-  sname = model.sname
-  tracked = model.tracked
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
+type SAL <: Algorithm
+  itr::Int
 
-  n = round(Int, t_final / dt) + 1
+  tf::Float64
+  dt::Float64
 
-  u  = if isa(output, Explicit)
-         Updater(dt, tracked, 0)
-       elseif isa(output, Uniform)
-         Updater(dt, tracked, n)
-       elseif isa(output, Mean)
-         Updater(dt, tracked, n)
-       elseif isa(output, Histogram)
-         Updater(dt, tracked, itr)
-       end
+  tol::Float64
+  thrsh::Float64
+  ctrct::Float64
 
-  df = if isa(output, Explicit)
-         init_df(sname, tracked, 0)
-       elseif isa(output, Uniform)
-         init_df(sname, tracked, itr * n)
-       elseif isa(output, Mean)
-         init_df(sname, tracked, n)
-       elseif isa(output, Histogram)
-         init_df(sname, tracked, itr)
-       end
+  t::Float64
+  intensity::Float64
+  ssa_steps::Int
+  sal_steps::Int
 
-  # Create additional arrays
-  dxdt = zeros(Float64, length(spcs)) # Rates of change for mean particle count
-  drdt = zeros(Float64, length(rxns)) # Rates of change for reaction propensities
-  events = zeros(Int, length(rxns))   # Number of reaction events for each channel
+  dxdt::Vector{Float64}
+  drdt::Vector{Float64}
+  events::Vector{Int}
 
-  for i = 1:itr
-    copy!(spcs, init)
+  function SAL(itr, tf, dt; kwargs...)
+    args  = Dict{Symbol,Any}(kwargs)
+    tol   = get(args, :tol,   0.125)
+    thrsh = get(args, :thrsh, 100.0)
+    ctrct = get(args, :ctrct, 0.75)
 
-    ssa_steps = 0
-    sal_steps = 0
-
-    t = 0.0
-    u.t_next = 0.0
-
-    while t < t_final
-      update!(output, df, t, u, spcs)
-      intensity = compute_propensities!(rxns, spcs, params)
-
-      if intensity < thrsh
-        τ = ssa_update!(spcs, rxns, t, t_final, intensity)
-        t = t + τ
-        ssa_steps = ssa_steps + 1
-      else
-        τ = sal_update!(spcs, rxns, t, t_final, params, dxdt, drdt, events, tol, ctrct)
-        t = t + τ
-        sal_steps = sal_steps + 1
-      end
-    end
-    final_update!(output, df, t, u, spcs)
+    new(itr, tf, dt, tol, thrsh, ctrct, 0.0, 0.0, 0, 0, Float64[], Float64[], Int[])
   end
-  return df
+end
+
+function init(alg::SAL, rxns, spcs, initial, params)
+  alg.dxdt   = zeros(Float64, length(spcs))
+  alg.drdt   = zeros(Float64, length(rxns))
+  alg.events = zeros(Int,     length(rxns))
+
+  return;
+end
+function reset(alg::SAL, rxns, spcs, params)
+  alg.t         = 0.0
+  alg.ssa_steps = 0
+  alg.sal_steps = 0
+  return;
+end
+
+function step(alg::SAL, rxns, spcs, params)
+  alg.intensity = compute_propensities!(rxns, spcs, params)
+  if alg.intensity < alg.thrsh
+    τ = ssa_update!(spcs, rxns, alg.t, alg.tf, alg.intensity)
+    alg.t = alg.t + τ
+    alg.ssa_steps = alg.ssa_steps + 1
+  else
+    τ = sal_update!(spcs, rxns, alg.t, alg.tf, params, alg.dxdt, alg.drdt, alg.events, alg.tol, alg.ctrct)
+    alg.t = alg.t + τ
+    alg.sal_steps = alg.sal_steps + 1
+  end
+  return;
 end
 
 function update!(spcs::Vector{Int}, r::Reaction, k::Int)
@@ -160,11 +153,11 @@ function sal_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int
   return τ
 end
 
-function sal_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, t_final, params, dxdt, drdt, events, tol, ctrct)
+function sal_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf, params, dxdt, drdt, events, tol, ctrct)
   compute_mean_derivatives!(dxdt, rxns)
   compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
   τ = tau_leap(rxns, params, drdt, tol)
-  τ = min(τ, t_final - t)
+  τ = min(τ, tf - t)
   generate_events!(events, rxns, drdt, τ)
   τ = sal_step!(spcs, rxns, events, τ, ctrct)
 

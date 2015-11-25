@@ -1,54 +1,35 @@
-function ssa(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int)
-  # Unpack model
-  init = model.initial
-  sname = model.sname
-  tracked = model.tracked
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
+type SSA <: Algorithm
+  itr::Int
 
-  n = round(Int, t_final / dt) + 1
+  tf::Float64
+  dt::Float64
 
-  u  = if isa(output, Explicit)
-         Updater(dt, tracked, 0)
-       elseif isa(output, Uniform)
-         Updater(dt, tracked, n)
-       elseif isa(output, Mean)
-         Updater(dt, tracked, n)
-       elseif isa(output, Histogram)
-         Updater(dt, tracked, itr)
-       end
+  t::Float64
+  intensity::Float64
+  steps::Int
 
-  df = if isa(output, Explicit)
-         init_df(sname, tracked, 0)
-       elseif isa(output, Uniform)
-         init_df(sname, tracked, itr * n)
-       elseif isa(output, Mean)
-         init_df(sname, tracked, n)
-       elseif isa(output, Histogram)
-         init_df(sname, tracked, itr)
-       end
-
-  for i = 1:itr
-    copy!(spcs, init)
-
-    ssa_steps = 0
-
-    t = 0.0
-
-    while t < t_final
-      update!(output, df, t, u, spcs)
-      intensity = compute_propensities!(rxns, spcs, params)
-      τ = ssa_update!(spcs, rxns, t, t_final, intensity)
-      t = t + τ
-      ssa_steps = ssa_steps + 1
-    end
-    final_update!(output, df, t, u, spcs)
+  function SSA(itr, tf, dt; kwargs...)
+    new(itr, tf, dt, 0.0, 0.0, 0)
   end
-  return df
 end
 
-function sample(rxns::Vector{Reaction}, jump::Float64)
+init(alg::SSA, rrxns, spcs, initial, params) = return;
+
+function reset(alg::SSA, rxns, spcs, params)
+  alg.t     = 0.0
+  alg.steps = 0
+  return;
+end
+
+function step(alg::SSA, rxns, spcs, params)
+  alg.intensity = compute_propensities!(rxns, spcs, params)
+  τ = ssa_update!(spcs, rxns, alg.t, alg.tf, alg.intensity)
+  alg.t = alg.t + τ
+  alg.steps = alg.steps + 1
+  return;
+end
+
+function sample(rxns::Vector{Reaction}, jump)
   ss = 0.0
   for i in eachindex(rxns)
     ss = ss + rxns[i].propensity
@@ -59,18 +40,18 @@ function sample(rxns::Vector{Reaction}, jump::Float64)
   return 0
 end
 
-function ssa_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, a_total::Float64)
+function ssa_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, intensity)
   u = rand()
-  jump = a_total * u
+  jump = intensity * u
   j = sample(rxns, jump)
   j > 0 ? update!(spcs, rxns[j]) : error("No reaction occurred!")
   return;
 end
 
-function ssa_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, t_final, intensity)
+function ssa_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf, intensity)
   τ = rand(Exponential(1/intensity))
   t = t + τ
-  if t > t_final; return τ; end
+  if t > tf; return τ; end
   ssa_step!(spcs, rxns, intensity)
   return τ
 end

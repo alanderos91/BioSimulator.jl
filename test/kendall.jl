@@ -53,8 +53,8 @@ algorithms = [:ssa, :odm, :nrm, :sal, :frm]
 # Run SSA and SAL once to compile
 print("Precompiling..."); @time begin
   for a in algorithms
-    simulate(Simulation(network), t_final, a, o=Explicit(), itr=1)
-    simulate(Simulation(network), t_final, a, o=Uniform(), dt=0.1, itr=1)
+    simulate(network, tf=t_final, with=a, output=Explicit(), itr=1)
+    simulate(network, tf=t_final, with=a, output=Uniform(), dt=0.1, itr=1)
   end
 end
 
@@ -66,7 +66,7 @@ for a in algorithms
   # @test_approx_eq_eps computed theoretical[end] 1e0
 
   print(" *  Uniform ", uppercase(string(a)))
-  srand(seed); @time result = simulate(Simulation(network), t_final, a, o=Uniform(), dt=0.1, itr=100_000)
+  srand(seed); @time result = simulate(network, tf=t_final, with=a, output=Uniform(), dt=0.1, itr=100_000)
   computed = aggregate(result, :Time, mean)
   @test_approx_eq_eps computed[:X_mean][end] theoretical[end] 1e0
 end

@@ -1,6 +1,5 @@
 abstract Algorithm
 
-maxiter(alg::Algorithm)    = alg.itr
-timestate(alg::Algorithm)  = alg.t
-finaltime(alg::Algorithm)  = alg.tf
-stepsize(alg::Algorithm)   = alg.dt
+init(alg::Algorithm, rxns, spcs, params) = return;
+reset(alg::Algorithm, rxns, spcs, params) = return;
+step(alg::Algorithm, rxns, spcs, params) = return;

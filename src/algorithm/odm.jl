@@ -5,63 +5,55 @@ immutable Loose <: Coupling end
 
 export Tight, Loose
 
-function odm(model::Simulation, t_final::Float64, output::OutputType, dt::Float64, itr::Int, c::Coupling, steps::Int, samples::Int)
-  # Unpack model
-  init = model.initial
-  sname = model.sname
-  tracked = model.tracked
-  spcs = model.state
-  rxns = model.rxns
-  params = model.param
+type ODM <: Algorithm
+  itr::Int
 
-  n = round(Int, t_final / dt) + 1
+  tf::Float64
+  dt::Float64
 
-  u  = if isa(output, Explicit)
-         Updater(dt, tracked, 0)
-       elseif isa(output, Uniform)
-         Updater(dt, tracked, n)
-       elseif isa(output, Mean)
-         Updater(dt, tracked, n)
-       elseif isa(output, Histogram)
-         Updater(dt, tracked, itr)
-       end
+  c::Coupling
+  pre_steps::Int
+  samples::Int
 
-  df = if isa(output, Explicit)
-         init_df(sname, tracked, 0)
-       elseif isa(output, Uniform)
-         init_df(sname, tracked, itr * n)
-       elseif isa(output, Mean)
-         init_df(sname, tracked, n)
-       elseif isa(output, Histogram)
-         init_df(sname, tracked, itr)
-       end
+  t::Float64
+  intensity::Float64
+  steps::Int
 
-	g = typeof(c) <: Loose ? init_dep_graph(rxns) : DiGraph()
+  g::DiGraph
 
-	# Presimulate to sort reactions according to multiscale property.
-	# This will modify spcs and rxns
-	init_odm!(spcs, rxns, params, init, steps, samples)
+  function ODM(itr, tf, dt; kwargs...)
+    args    = Dict{Symbol,Any}(kwargs)
+    c       = get(args, :c,       Tight())
+    steps   = get(args, :steps,   100)
+    samples = get(args, :samples, 1)
 
-	for i = 1:itr
-		copy!(spcs, init)
+    new(itr, tf, dt, c, steps, samples, 0.0, 0.0, 0, DiGraph())
+  end
+end
 
-		ssa_steps = 0
+function init(alg::ODM, rxns, spcs, initial, params)
+  alg.g = typeof(alg.c) <: Loose ? init_dep_graph(rxns) : DiGraph()
 
-		t = 0.0
-		u.t_next = 0.0
+  # Presimulate to sort reactions according to multiscale property.
+  # This will modify spcs and rxns
+  init_odm!(spcs, rxns, params, initial, alg.pre_steps, alg.samples)
+  return;
+end
 
-		# Compute propensities
-		intensity = compute_propensities!(rxns, spcs, params)
+function reset(alg::ODM, rxns, spcs, params)
+  alg.t     = 0.0
+  alg.steps = 0
+  alg.intensity = compute_propensities!(rxns, spcs, params)
 
-		while t < t_final
-			update!(output, df, t, u, spcs)
-			τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
-			t = t + τ
-			ssa_steps = ssa_steps + 1
-		end
-		final_update!(output, df, t, u, spcs)
-	end
-	return df
+  return;
+end
+
+function step(alg::ODM, rxns, spcs, params)
+  τ, intensity = odm_update!(alg.c, spcs, rxns, params, alg.intensity, alg.g)
+  alg.t = alg.t + τ
+  alg.steps = alg.steps + 1
+  alg.intensity = intensity
+  return;
 end
 
 function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, param, intensity::Float64, g::LightGraphs.DiGraph)
@@ -89,11 +81,11 @@ function update_propensities!(c::Tight, rxns, spcs, param, g)
 	return compute_propensities!(rxns, spcs, param)
 end
 
-function presimulate!(spcs, rxns, params, init, n, itr)
+function presimulate!(spcs, rxns, params, initial, n, itr)
 	events = zeros(Float64, length(rxns))
 
 	for i = 1:itr
-		copy!(spcs, init)
+		copy!(spcs, initial)
 		for k = 1:n
 			intensity = compute_propensities!(rxns, spcs, params)
 			τ = rand(Exponential(1 / intensity))
@@ -112,8 +104,8 @@ function presimulate!(spcs, rxns, params, init, n, itr)
 	return rxns
 end
 
-function init_odm!(spcs, rxns, params, init, n, itr)
-	rxns = presimulate!(spcs, rxns, params, init, n, itr)
+function init_odm!(spcs, rxns, params, initial, n, itr)
+	rxns = presimulate!(spcs, rxns, params, initial, n, itr)
 	sort!(rxns, alg=Base.MergeSort, lt=isless, rev=true)
 	return rxns
 end
