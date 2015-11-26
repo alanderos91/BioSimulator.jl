@@ -1,7 +1,8 @@
 function init_df(sname, tracked, n)
+  tracked_species = sname[tracked]
   x1 = [Float64]; x2 = [Int for i=1:length(tracked)]
-  df = DataFrame(vcat(x1, x2), vcat([:Time], sname[tracked]), n)
-  for s in sname
+  df = DataFrame(vcat(x1, x2), vcat([:Time], tracked_species), n)
+  for s in tracked_species
     df[s] = zeros(Int, size(df,1))
   end
   return df
