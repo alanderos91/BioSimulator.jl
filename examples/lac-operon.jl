@@ -72,42 +72,42 @@ add_reactant!(network, r1, gI)
 add_product!( network, r1, gI)
 add_product!( network, r1, rI)
 
-add_reaction!(network, r2,  "c2");  set_parameter!(network, "c1",   c2)
+add_reaction!(network, r2,  "c2");  set_parameter!(network, "c2",   c2)
 add_reactant!(network, r2, rI)
 add_product!( network, r2, rI)
 add_product!( network, r2, I)
 
-add_reaction!(network, r3,  "c3");  set_parameter!(network, "c1",   c3)
+add_reaction!(network, r3,  "c3");  set_parameter!(network, "c3",   c3)
 add_reactant!(network, r3, I)
 add_reactant!(network, r3, lactose)
 add_product!( network, r3, Ilactose)
 
-add_reaction!(network, r4,  "c4");  set_parameter!(network, "c1",   c4)
+add_reaction!(network, r4,  "c4");  set_parameter!(network, "c4",   c4)
 add_reactant!(network, r4, Ilactose)
 add_product!( network, r4, I)
 add_product!( network, r4, lactose)
 
-add_reaction!(network, r5,  "c5");  set_parameter!(network, "c1",   c5)
+add_reaction!(network, r5,  "c5");  set_parameter!(network, "c5",   c5)
 add_reactant!(network, r5, I)
 add_reactant!(network, r5, o)
 add_product!( network, r5, Io)
 
-add_reaction!(network, r6,  "c6");  set_parameter!(network, "c1",   c6)
+add_reaction!(network, r6,  "c6");  set_parameter!(network, "c6",   c6)
 add_reactant!(network, r6, Io)
 add_product!( network, r6, I)
 add_product!( network, r6, o)
 
-add_reaction!(network, r7,  "c7");  set_parameter!(network, "c1",   c7)
+add_reaction!(network, r7,  "c7");  set_parameter!(network, "c7",   c7)
 add_reactant!(network, r7, o)
 add_reactant!(network, r7, RNAp)
 add_product!( network, r7, RNApo)
 
-add_reaction!(network, r8,  "c8");  set_parameter!(network, "c1",   c8)
+add_reaction!(network, r8,  "c8");  set_parameter!(network, "c8",   c8)
 add_reactant!(network, r8, RNApo)
 add_product!( network, r8, o)
 add_product!( network, r8, RNAp)
 
-add_reaction!(network, r9,  "c9");  set_parameter!(network, "c1",   c9)
+add_reaction!(network, r9,  "c9");  set_parameter!(network, "c9",   c9)
 add_reactant!(network, r9, RNApo)
 add_product!( network, r9, o)
 add_product!( network, r9, RNAp)
@@ -139,7 +139,7 @@ add_reactant!(network, r15, r)
 add_reaction!(network, r16, "c16"); set_parameter!(network, "c16", c16)
 add_reactant!(network, r16, Z)
 
-@time df1 = simulate(network, tf=500.0, with=:ssa, dt=1.0, itr=1);
+@time df1 = simulate(network, tf=500.0, with=:ssa, dt=1.0, itr=1_000);
       df = aggregate(df1, :Time, [mean,std]);
 
       new_df = DataFrame(Time    = repeat(convert(Vector, df[:Time]), outer=[4]),
@@ -158,3 +158,13 @@ add_reactant!(network, r16, Z)
                          Species = repeat([lactose, r, Z, I], inner=[501]));
 
 plot(new_df, x=:Time, y=:Mean, ymin=:Min, ymax=:Max, color=:Species, Geom.line)
+
+df2  = df[ df[:Time] .== 500.0, :]
+dfh = DataFrame()
+for s in names(df2)
+  if s == :Time; continue; end
+  df = DataFrame(Time=df2[:Time], Count=df2[s], Species=s)
+  dfh = vcat(dfh,df)
+end
+
+plot(dfh, x=:Count, Geom.density)
