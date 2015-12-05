@@ -2,144 +2,69 @@ import Base.show
 
 type Network
   id::ASCIIString
-  species::Dict{ASCIIString,Species}
-  reactions::Dict{ASCIIString,ReactionDef}
-  parameters::Dict{ASCIIString,Float64}
+  species::Dict{Symbol,Species}
+  reactions::Dict{Symbol,Reaction}
+  parameters::Dict{Symbol,Parameter}
 
   function Network(id)
     s = Dict{ASCIIString,Species}()
-    r = Dict{ASCIIString,ReactionDef}()
-    p = Dict{ASCIIString,Float64}()
+    r = Dict{ASCIIString,Reaction}()
+    p = Dict{ASCIIString,Parameter}()
     return new(id, s, r, p)
   end
 end
 
 function Base.show(io::IO, x::Network)
-  print(io, "[ Model: ",x.id," ]\n")
-  print(io, " Species:    ", length(x.species),"\n")
-  print(io, " Reactions:  ", length(x.reactions),"\n")
-  print(io, " Parameters: ", length(x.parameters))
+  @printf io "[ Model: %s ]\n" x.id
+  @printf io " no. species:    %d\n" length(x.species)
+  @printf io " no. reactions:  %d\n" length(x.reactions)
+  @printf io " no. parameters: %d"   length(x.parameters)
 end
 
-function add_species!(network, sname, initial::Integer=0, istracked::Bool=true)
-  d = getfield(network, :species)
-  if haskey(d, sname)
-    warn(string("Species ",sname," already defined."))
+function add_object!(model, object, fieldname)
+  dict = getfield(model, fieldname)
+  id   = object.id
+  if haskey(dict, id)
+    warn()
   else
-    s = Species(sname, initial, istracked)
-    setindex!(d, s, sname)
+    setindex!(dict, object, id)
   end
-  return d
+  return dict
 end
 
-function rmv_species!(network, sname)
-  d = getfield(network, :species)
-  if haskey(d, sname)
-    delete!(d, sname)
-    _remove_all_instances!(network, sname)
-  else
-    warn(string("Species ",sname," not defined."))
-  end
-  return d
+function (<=)(model::Network, object::Species)
+  add_object!(model, object, :species)
 end
 
-function add_reaction!(network, rname, pname)
-  d = getfield(network, :reactions)
-  if haskey(d, rname)
-    warn(string("Reaction ",rname," already defined."))
-  else
-    r = ReactionDef(rname, pname)
-    setindex!(d, r, rname); add_parameter!(network, pname)
-  end
-  return d
+function (<=)(model::Network, object::Reaction)
+  # TODO: Check if species list is empty
+  # TODO: Check if species in reaction exist in model
+  add_object!(model, object, :reactions)
 end
 
-function rmv_reaction!(network, rname)
-  d = getfield(network, :reactions)
-  if haskey(d, rname)
-    r = getindex(d, rname)
-    delete!(d, rname); rmv_parameter!(network, r.rate)
-  else
-    warn(string("Reaction ",rname," not defined."))
-  end
-  return d
+function (<=)(model::Network, object::Parameter)
+  add_object!(model, object, :parameters)
 end
 
-function add_reactant!(network, rname, sname, coeff::Integer=1)
-  sd = getfield(network, :species)
-  rd = getfield(network, :reactions)
-  if haskey(sd, sname)
-    if haskey(rd, rname)
-      r = getindex(rd, rname)
-      add_participant!(r, sname, coeff, :reactants)
-    else
-      warn(string("Reaction ",rname," not defined."))
-    end
-  else
-    warn(string("Species ",sname," not defined."))
-  end
-  return rd
-end
-
-function rmv_reactant!(network, rname, sname)
-  rd = getfield(network, :reactions)
-  if haskey(rd, rname)
-    r = getindex(rd, rname)
-    rmv_participant!(r, sname, :reactants)
-  else
-    warn(string("Reaction ",rname," not defined."))
-  end
-  return rd
-end
-
-function add_product!(network, rname, sname, coeff::Integer=1)
-  sd = getfield(network, :species)
-  rd = getfield(network, :reactions)
-  if haskey(sd, sname)
-    if haskey(rd, rname)
-      r = getindex(rd, rname)
-      add_participant!(r, sname, coeff, :products)
-    else
-      warn(string("Reaction ",rname," not defined."))
-    end
-  else
-    warn(string("Species ",sname," not defined."))
-  end
-  return rd
-end
-
-function rmv_product!(network, rname, sname)
-  rd = getfield(network, :reactions)
-  if haskey(rd, rname)
-    r = getindex(rd, rname)
-    rmv_participant!(r, sname, :products)
-  else
-    warn(string("Reaction ",rname," not defined."))
-  end
-  return rd
-end
-
-function add_parameter!(network, pname, value::Float64=0.0)
-  d = getfield(network, :parameters)
-  if !haskey(d, pname)
-    setindex!(d, value, pname)
-  end
-end
-
-function set_parameter!(network, pname, value)
-  d = getfield(network, :parameters)
-  setindex!(d, value, pname)
-end
-
-function rmv_parameter!(network, pname)
-  d = getfield(network, :parameters)
-  delete!(d, pname)
-end
-
-function _remove_all_instances!(network, sname)
-  rd = getfield(network, :reactions)
-  for r in values(rd)
-    rmv_participant!(r, sname, :reactants)
-    rmv_participant!(r, sname, :products)
-  end
-end
+# function rmv_object!(model, object, fieldname)
+#   dict = getfield(model, fieldname)
+#   if haskey(dict, id)
+#     delete!(dict, id)
+#   else
+#     warn()
+#   end
+#   return dict
+# end
+#
+# function (>=)(model::Network, object::Species)
+#   # Remove references to species
+#   rmv_object!(model, object, :species)
+# end
+#
+# function (>=)(model::Network, object::Reaction)
+#   rmv_object!(model, object, :reaction)
+# end
+#
+# function (>=)(model::Network, object::Parameter)
+#   rmv_object!(model, object, :species)
+# end
