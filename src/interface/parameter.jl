@@ -1,6 +1,6 @@
 import Base.show, Base.convert, Base.promote_rule
-import Base.+, Base.-, Base.*, Base./, Base.^
-import Base.exp, Base.log, Base.abs, Base.-, Base.<, Base.>, Base.<=, Base.>=
+import Base.+, Base.-, Base.*, Base./, Base.^, Base.<, Base.>, Base.<=, Base.>=, Base.==
+import Base.exp, Base.log, Base.abs, Base.-
 
 type Parameter
   id::Symbol
@@ -31,7 +31,8 @@ for op in [:(Base.(:+)),
            :(Base.(:<)),
            :(Base.(:>)),
            :(Base.(:<=)),
-           :(Base.(:>=))]
+           :(Base.(:>=)),
+           :(Base.(:(==)))]
 
   @eval ($op)(p::Parameter, q::Parameter) = ($op)(p.value, q.value)
   @eval ($op)(p::Parameter, x::Integer)   = ($op)(p.value, x)
