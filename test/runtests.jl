@@ -1,9 +1,13 @@
 using BioSimulator
 using Base.Test
 
+# Load test models
+include("test_models.jl")
+
+# List of tests
 tests = ["mass_action",
-         "species",
-         "time_derivatives"]
+         "time_derivatives",
+         "kendall"]
 
 println("Running tests:")
 

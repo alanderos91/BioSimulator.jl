@@ -1,15 +1,16 @@
-x = [Species("Particle", 5, true)]
+m = Simulation(kendall())
+x = m.state
+r = m.rxns
+p = m.param
 
-r1 = Reaction("Birth", "alpha", [1], [2])
-r2 = Reaction("Death", "mu", [1], [0])
-r3 = Reaction("Immigration", "nu", [0], [1])
-r = [r1, r2, r3]
+X = x[1]
 
-p = Dict{ASCIIString, Float64}("alpha" => 2.0, "mu" => 1.0, "nu" => 0.5)
-network = Network("Kendall's Process", x, r, p);
+α = p[:α]
+μ = p[:μ]
+ν = p[:ν]
 
 # d/dt (x_1)
-dxdt = [(1 * 2.0 * 5) + (-1 * 1.0 * 5) + (1 * 0.5)]
+dxdt = [(1 * α * X) + (-1 * μ * X) + (1 * ν)]
 
 # d/dt (r)
 drdt = zeros(Float64, 3)
