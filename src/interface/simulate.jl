@@ -1,12 +1,12 @@
 
-  type Reaction
-    id::ASCIIString
-    rate::ASCIIString
+  type ReactionChannel
+    id::Symbol
+    rate::Symbol
     propensity::Float64
     pre::Vector{Int}
     post::Vector{Int}
 
-    function Reaction(id::ASCIIString, rate::ASCIIString, pre::Vector{Int}, post::Vector{Int})
+    function ReactionChannel(id, rate, pre, post)
       if any(pre .< 0) || any(post .< 0)
         error("Stoichiometric coefficients must be positive.")
       end
@@ -14,16 +14,18 @@
     end
   end
 
+  typealias ReactionVector Vector{ReactionChannel}
+
   immutable Simulation
       id::ASCIIString
       initial::Vector{Int}
       sname::Vector{Symbol}
       tracked::Vector{Int}
-      inds::Dict{ASCIIString,Int}
+      inds::Dict{Symbol,Int}
 
       state::Vector{Int}
-      rxns::Vector{Reaction}
-      param::Dict{ASCIIString,Float64}
+      rxns::ReactionVector
+      param::Dict{Symbol,Parameter}
   end
 
   function Simulation(x::Network)
@@ -36,13 +38,13 @@
     state = Array(Int,  length(species))
     sname = Array(Symbol, length(species))
     tracked = Int[]
-    inds = Dict{ASCIIString,Int}()
+    inds = Dict{Symbol,Int}()
 
     i = 1
     for (key,s) in species
       inds[key] = i
-      state[i] = s.initial
-      sname[i] = symbol(s.id)
+      state[i] = s.population
+      sname[i] = s.id
       if s.istracked; push!(tracked, i); end
       i = i + 1
     end
@@ -50,26 +52,22 @@
   end
 
   function _rvector(reactions, inds)
-    rxns = Array(Reaction, length(reactions))
+    rxns = Array(ReactionChannel, length(reactions))
 
     j = 1
     for (key,r) in reactions
-      pre = Array(Int, length(inds))
+      pre  = Array(Int, length(inds))
       post = Array(Int, length(inds))
-      for (sname,i) in inds
-        if haskey(r.reactants, sname)
-          pre[i] = r.reactants[sname]
-        else
-          pre[i] = 0
-        end
 
-        if haskey(r.products, sname)
-          post[i] = r.products[sname]
-        else
-          post[i] = 0
-        end
+      d1 = getfield(r, :reactants)
+      d2 = getfield(r, :products)
+
+      for (sname,i) in inds
+        pre[i]  = get(d1, sname, 0)
+        post[i] = get(d2, sname, 0)
       end
-      rxns[j] = Reaction(r.id, r.rate, pre, post)
+
+      rxns[j] = ReactionChannel(r.id, r.rate, pre, post)
       j = j + 1
     end
     return rxns
