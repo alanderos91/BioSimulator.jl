@@ -41,7 +41,7 @@ new_df = DataFrame(Time    = repeat(convert(Vector, df[:Time]), outer=[4]),
                                  df[:SE_mean] + df[:SE_std],
                                  df[:P_mean]  + df[:P_std]),
 
-                   Species = repeat([substrate, enzyme, subenz, product], inner=[51]))
+                   Species = repeat([:S, :E, :SE, :P], inner=[51]))
 
 # Plot results
 plot(new_df, x=:Time, y=:Mean, ymin=:Min, ymax=:Max, color=:Species, Geom.line, Geom.point, Geom.errorbar)
