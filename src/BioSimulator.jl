@@ -14,6 +14,7 @@ immutable Histogram <: OutputType end
 # Interface
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))
+include(joinpath("interface","parameter.jl"))
 include(joinpath("interface","network.jl"))
 include(joinpath("interface","simulate.jl"))
 
@@ -35,11 +36,6 @@ include(joinpath("output", "update.jl"))
 #include(joinpath("output","simjob.jl"))
 
 export Network, Simulation, Explicit, Uniform, Mean, Histogram,
-  simulate,
-  add_species!,   rmv_species!,
-  add_reaction!,  rmv_reaction!,
-  add_reactant!,  rmv_reactant!,
-  add_product!,   rmv_product!,
-  add_parameter!, set_parameter!, rmv_parameter!
+  simulate, Species, Reaction, parameter
 
 end # module
