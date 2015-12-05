@@ -56,7 +56,7 @@ function step(alg::ODM, rxns, spcs, params)
   return;
 end
 
-function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::Vector{Reaction}, param, intensity, g)
+function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::ReactionVector, param, intensity, g)
 	τ = rand(Exponential(1 / intensity))
 	jump = intensity * rand()
 	μ = sample(rxns, jump)
@@ -110,6 +110,6 @@ function init_odm!(spcs, rxns, params, initial, n, itr)
 	return rxns
 end
 
-function isless(x::Reaction, y::Reaction)
+function isless(x::ReactionChannel, y::ReactionChannel)
 	return x.propensity < y.propensity
 end

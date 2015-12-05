@@ -22,16 +22,16 @@ function mass_action_helper(stoich::Vector{Int}, x::Vector{Int}, k::Int)
   return acc
 end
 
-function mass_action(c::Float64, stoich::Vector{Int}, x::Vector{Int})
+function mass_action(c::Parameter, stoich::Vector{Int}, x::Vector{Int})
   return c * mass_action_helper(stoich, x)
 end
 
-function mass_action(r::Reaction, x::Vector{Int}, params::Dict{ASCIIString, Float64})
+function mass_action(r::ReactionChannel, x::Vector{Int}, params::Parameters)
   c = params[r.rate]
   return mass_action(c, r.pre, x)
 end
 
-function mass_action_deriv(c::Float64, stoich::Vector{Int}, x::Vector{Int}, k::Int)
+function mass_action_deriv(c::Parameter, stoich::Vector{Int}, x::Vector{Int}, k::Int)
   acc = 1.0
   if stoich[k] == 0
     acc = 0.0
@@ -48,17 +48,17 @@ function mass_action_deriv(c::Float64, stoich::Vector{Int}, x::Vector{Int}, k::I
   return c * acc
 end
 
-function mass_action_deriv(r::Reaction, x::Vector{Int}, params::Dict{ASCIIString, Float64}, k::Int)
+function mass_action_deriv(r::ReactionChannel, x::Vector{Int}, params::Parameters, k::Int)
   c = params[r.rate]
   return mass_action_deriv(c, r.pre, x, k)
 end
 
-function propensity!(r::Reaction, x::Vector{Int}, param::Dict{ASCIIString,Float64})
+function propensity!(r::ReactionChannel, x::Vector{Int}, param::Parameters)
   r.propensity = mass_action(r, x, param)
   return;
 end
 
-function compute_propensities!(rxns::Vector{Reaction}, x::Vector{Int}, param::Dict{ASCIIString,Float64})
+function compute_propensities!(rxns::ReactionVector, x::Vector{Int}, param::Parameters)
   intensity = 0.0
   for r in rxns
     propensity!(r, x, param)

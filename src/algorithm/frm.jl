@@ -31,7 +31,7 @@ function step(alg::FRM, rxns, spcs, params)
   return;
 end
 
-function frm_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf)
+function frm_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf)
   τ = Inf; μ = 0
   for j in eachindex(rxns)
     τj = rand(Exponential(1/rxns[j].propensity))
