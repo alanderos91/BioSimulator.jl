@@ -1,11 +1,11 @@
-type Reaction
-  id::ASCIIString
-  rate::ASCIIString
+type ReactionChannel
+  id::Symbol
+  rate::Symbol
   propensity::Float64
   pre::Vector{Int}
   post::Vector{Int}
 
-  function Reaction(id::ASCIIString, rate::ASCIIString, pre::Vector{Int}, post::Vector{Int})
+  function ReactionChannel(id, rate, pre, post)
     if any(pre .< 0) || any(post .< 0)
       error("Stoichiometric coefficients must be positive.")
     end
@@ -13,16 +13,18 @@ type Reaction
   end
 end
 
-immutable Simulation
-    id::ASCIIString
-    initial::Vector{Int}
-    sname::Vector{Symbol}
-    tracked::Vector{Int}
-    inds::Dict{ASCIIString,Int}
+typealias ReactionVector Vector{ReactionChannel}
 
-    state::Vector{Int}
-    rxns::Vector{Reaction}
-    param::Dict{ASCIIString,Float64}
+immutable Simulation
+  id::ASCIIString
+  initial::Vector{Int}
+  sname::Vector{Symbol}
+  tracked::Vector{Int}
+  inds::Dict{Symbol,Int}
+
+  state::Vector{Int}
+  rxns::ReactionVector
+  param::Dict{Symbol,Parameter}
 end
 
 function Simulation(x::Network)
@@ -35,13 +37,13 @@ function _svector(species)
   state = Array(Int,  length(species))
   sname = Array(Symbol, length(species))
   tracked = Int[]
-  inds = Dict{ASCIIString,Int}()
+  inds = Dict{Symbol,Int}()
 
   i = 1
   for (key,s) in species
     inds[key] = i
-    state[i] = s.initial
-    sname[i] = symbol(s.id)
+    state[i] = s.population
+    sname[i] = s.id
     if s.istracked; push!(tracked, i); end
     i = i + 1
   end
@@ -49,17 +51,22 @@ function _svector(species)
 end
 
 function _rvector(reactions, inds)
-  rxns = Array(Reaction, length(reactions))
+  rxns = Array(ReactionChannel, length(reactions))
 
   j = 1
   for (key,r) in reactions
-    pre = Array(Int, length(inds))
+    pre  = Array(Int, length(inds))
     post = Array(Int, length(inds))
+
+    d1 = getfield(r, :reactants)
+    d2 = getfield(r, :products)
+
     for (sname,i) in inds
-      pre[i]  = get(r.reactants, sname, 0)
-      post[i] = get(r.products,  sname, 0)
+      pre[i]  = get(d1, sname, 0)
+      post[i] = get(d2, sname, 0)
     end
-    rxns[j] = Reaction(r.id, r.rate, pre, post)
+
+    rxns[j] = ReactionChannel(r.id, r.rate, pre, post)
     j = j + 1
   end
   return rxns
@@ -67,7 +74,7 @@ end
 
 function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
   args = Dict{Symbol,Any}(kwargs)
-  
+
   if with == :ssa
     algorithm = SSA(itr, tf, dt, args)
   elseif with == :odm
@@ -81,7 +88,6 @@ function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), d
   else
     error("$with is an unrecognized algorithm.")
   end
-
   _run(Simulation(model), algorithm, output)
 end
 
