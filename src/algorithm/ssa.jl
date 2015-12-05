@@ -29,7 +29,7 @@ function step(alg::SSA, rxns, spcs, params)
   return;
 end
 
-function sample(rxns::Vector{Reaction}, jump)
+function sample(rxns::ReactionVector, jump)
   ss = 0.0
   for i in eachindex(rxns)
     ss = ss + rxns[i].propensity
@@ -40,7 +40,7 @@ function sample(rxns::Vector{Reaction}, jump)
   return 0
 end
 
-function ssa_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, intensity)
+function ssa_step!(spcs::Vector{Int}, rxns::ReactionVector, intensity)
   u = rand()
   jump = intensity * u
   j = sample(rxns, jump)
@@ -48,7 +48,7 @@ function ssa_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, intensity)
   return;
 end
 
-function ssa_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf, intensity)
+function ssa_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf, intensity)
   τ = rand(Exponential(1/intensity))
   t = t + τ
   if t > tf; return τ; end
@@ -56,7 +56,7 @@ function ssa_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf, intensity
   return τ
 end
 
-function update!(spcs::Vector{Int}, r::Reaction)
+function update!(spcs::Vector{Int}, r::ReactionChannel)
   for i in eachindex(spcs)
     spcs[i] = spcs[i] + (r.post[i] - r.pre[i])
   end

@@ -54,21 +54,21 @@ function step(alg::SAL, rxns, spcs, params)
   return;
 end
 
-function update!(spcs::Vector{Int}, r::Reaction, k::Int)
+function update!(spcs::Vector{Int}, r::ReactionChannel, k::Int)
   for i in eachindex(spcs)
     spcs[i] = spcs[i] + k * (r.post[i] - r.pre[i])
   end
   return;
 end
 
-function update!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int})
+function update!(spcs::Vector{Int}, rxns::ReactionVector, events::Vector{Int})
   for i in eachindex(rxns)
     update!(spcs, rxns[i], events[i])
   end
   return;
 end
 
-function isbadleap(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int})
+function isbadleap(spcs::Vector{Int}, rxns::ReactionVector, events::Vector{Int})
   for i in eachindex(spcs)
     val = spcs[i]
     for j in eachindex(rxns)
@@ -83,7 +83,7 @@ function isbadleap(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int
   return false
 end
 
-function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Int}, rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, dxdt::Vector{Float64})
+function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Int}, rxns::ReactionVector, param::Parameters, dxdt::Vector{Float64})
   for i in eachindex(drdt)
     drdt[i] = 0.0
     for k in eachindex(spcs)
@@ -94,7 +94,7 @@ function compute_time_derivatives!(drdt::Vector{Float64}, spcs::Vector{Int}, rxn
   return drdt
 end
 
-function compute_mean_derivatives!(dxdt::Vector{Float64}, rxns::Vector{Reaction})
+function compute_mean_derivatives!(dxdt::Vector{Float64}, rxns::ReactionVector)
   for k in eachindex(dxdt)
     dxdt[k] = 0.0
     for j in eachindex(rxns)
@@ -104,7 +104,7 @@ function compute_mean_derivatives!(dxdt::Vector{Float64}, rxns::Vector{Reaction}
   return dxdt
 end
 
-function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drdt::Vector{Float64}, ϵ::Float64)
+function tau_leap(rxns::ReactionVector, param::Parameters, drdt::Vector{Float64}, ϵ::Float64)
   τ = Inf
 
   for j in eachindex(rxns)
@@ -124,7 +124,7 @@ function tau_leap(rxns::Vector{Reaction}, param::Dict{ASCIIString, Float64}, drd
   return τ
 end
 
-function generate_events!(events::Vector{Int}, rxns::Vector{Reaction}, drdt::Vector{Float64}, τ::Float64)
+function generate_events!(events::Vector{Int}, rxns::ReactionVector, drdt::Vector{Float64}, τ::Float64)
   for i in eachindex(rxns)
     λ = τ * rxns[i].propensity + 0.5 * τ * τ * drdt[i]
     events[i] = rand(Poisson(λ))
@@ -143,7 +143,7 @@ function contract!(events::Vector{Int}, τ::Float64, α::Float64)
   return τ * α
 end
 
-function sal_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int}, τ::Float64, α::Float64)
+function sal_step!(spcs::Vector{Int}, rxns::ReactionVector, events::Vector{Int}, τ::Float64, α::Float64)
   while isbadleap(spcs, rxns, events)
     τ = contract!(events, τ, α)
   end
@@ -152,7 +152,7 @@ function sal_step!(spcs::Vector{Int}, rxns::Vector{Reaction}, events::Vector{Int
   return τ
 end
 
-function sal_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t, tf, params, dxdt, drdt, events, tol, ctrct)
+function sal_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf, params, dxdt, drdt, events, tol, ctrct)
   compute_mean_derivatives!(dxdt, rxns)
   compute_time_derivatives!(drdt, spcs, rxns, params, dxdt)
   τ = tau_leap(rxns, params, drdt, tol)

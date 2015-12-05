@@ -44,7 +44,7 @@ function step(alg::NRM, rxns, spcs, params)
   return;
 end
 
-function nrm_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t::Float64, tf::Float64, g::LightGraphs.DiGraph, pq, param::Dict{ASCIIString,Float64})
+function nrm_update!(spcs::Vector{Int}, rxns::ReactionVector, t::Float64, tf::Float64, g::LightGraphs.DiGraph, pq, param::Parameters)
   μ, t = peek(pq)
   if t > tf; return t; end
   μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
@@ -52,7 +52,7 @@ function nrm_update!(spcs::Vector{Int}, rxns::Vector{Reaction}, t::Float64, tf::
   return t
 end
 
-function init_dep_graph(rxns::Vector{Reaction})
+function init_dep_graph(rxns::ReactionVector)
   m = length(rxns)
   d = length(rxns[1].pre)
   g = DiGraph(m)
@@ -74,7 +74,7 @@ function init_dep_graph(rxns::Vector{Reaction})
   return g
 end
 
-function update_dep_graph!(g::LightGraphs.DiGraph, rxns::Vector{Reaction}, pq, spcs::Vector{Int}, param::Dict{ASCIIString,Float64}, μ::Int, t::Float64)
+function update_dep_graph!(g::LightGraphs.DiGraph, rxns::ReactionVector, pq, spcs::Vector{Int}, param::Parameters, μ::Int, t::Float64)
   dependents = neighbors(g, μ)
   r = rxns[μ]
 
@@ -94,7 +94,7 @@ function update_dep_graph!(g::LightGraphs.DiGraph, rxns::Vector{Reaction}, pq, s
   return g
 end
 
-function init_pq(rxns::Vector{Reaction})
+function init_pq(rxns::ReactionVector)
   pq = PriorityQueue(Int,Float64)
   for j in eachindex(rxns)
     pq[j] = 0.0
@@ -102,7 +102,7 @@ function init_pq(rxns::Vector{Reaction})
   return pq
 end
 
-function init_pq!(pq, rxns::Vector{Reaction})
+function init_pq!(pq, rxns::ReactionVector)
   @inbounds for j in eachindex(rxns)
     pq[j] = rand(Exponential(1 / rxns[j].propensity))
   end

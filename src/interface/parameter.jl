@@ -1,6 +1,6 @@
 import Base.show, Base.convert, Base.promote_rule
 import Base.+, Base.-, Base.*, Base./, Base.^
-import Base.exp, Base.log, Base.-, Base.<, Base.>, Base.<=, Base.>=
+import Base.exp, Base.log, Base.abs, Base.-, Base.<, Base.>, Base.<=, Base.>=
 
 type Parameter
   id::Symbol
@@ -8,6 +8,8 @@ type Parameter
 
   description::AbstractString
 end
+
+typealias Parameters Dict{Symbol, Parameter}
 
 function parameter(id::Symbol, value::Float64; description="")
   return Parameter(id, value, description)
@@ -25,20 +27,22 @@ for op in [:(Base.(:+)),
            :(Base.(:-)),
            :(Base.(:*)),
            :(Base.(:/)),
-           :(Base.(:^))]
+           :(Base.(:^)),
+           :(Base.(:<)),
+           :(Base.(:>)),
+           :(Base.(:<=)),
+           :(Base.(:>=))]
 
-  @eval ($op)(p::Parameter, x::Integer) = ($op)(p.value, x)
-  @eval ($op)(p::Parameter, x::Number)  = ($op)(p.value, x)
-  @eval ($op)(x::Number, p::Parameter)  = ($op)(x, p.value)
+  @eval ($op)(p::Parameter, q::Parameter) = ($op)(p.value, q.value)
+  @eval ($op)(p::Parameter, x::Integer)   = ($op)(p.value, x)
+  @eval ($op)(p::Parameter, x::Number)    = ($op)(p.value, x)
+  @eval ($op)(x::Number, p::Parameter)    = ($op)(x, p.value)
 end
 
 for f in [:(Base.exp),
           :(Base.log),
-          :(Base.(:-)),
-          :(Base.(:<)),
-          :(Base.(:>)),
-          :(Base.(:<=)),
-          :(Base.(:>=))]
+          :(Base.abs),
+          :(Base.(:-))]
 
   @eval ($f)(p::Parameter) = ($f)(p.value)
 end
