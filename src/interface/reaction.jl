@@ -1,5 +1,18 @@
 import Base.show
 
+"""
+```
+Reaction(id, rate, r=(), p=())
+```
+
+### Arguments
+- `id`: An identifier for this `Reaction`.
+- `rate`: An identifier for this `Reaction`'s rate constant.
+
+### Optional Arguments
+- `r`: A list of reactants and their coefficients, specified using a `Tuple` of `Pair`s e.g. `(:X1 => 1, :X2 => 1)`.
+- `p`: Like `r`, but a list for reaction products.
+"""
 type Reaction
   id::Symbol
   rate::Symbol

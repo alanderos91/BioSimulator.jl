@@ -13,6 +13,22 @@ type Species
   end
 end
 
+"""
+```
+Species(id, value::Int=0, istracked::Bool=true)
+```
+
+Construct a Species object named `id` with initial copy number `value`.
+
+### Arguments
+- `id`: The name of the Species.
+
+### Optional Arguments
+- `value`: Initial copy number.
+- `istracked`: Indicates whether a simulation should record this `Species`'s population.
+  - `true`: Track this `Species`.
+  - `false`: Do not track this `Species`.
+"""
 function Species(id, value::Int=0; istracked::Bool=true)
   Species(id, value, istracked)
 end

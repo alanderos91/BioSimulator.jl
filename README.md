@@ -3,7 +3,7 @@ BioSimulator.jl
 
 BioSimulator is a stochastic simulation package for biochemical reaction networks.
 
-## API Introduction
+## How To Use
 
 To illustrate a typical workflow in BioSimulator, we will implement a simple birth-death-immigration process (Kendall's Process).
 
@@ -13,52 +13,70 @@ First, we load BioSimulator:
 using BioSimulator
 ```
 
-Now we can begin describing our modeling problem. The `Species` type is used to describe individual species or populations that appear in a network. For this example, we will define one `Species` named `Particle` with initial population `5`:
+and initialize the `Network`:
 
 ```jl
-x1 = Species("Particle", 5, true)
-x = [x1]
+m = Network("Kendall's Process")
 ```
+Now we can begin describing our modeling problem. The `Species` type is used to describe distinct populations (e.g. a certain molecule) in the network. For this example, we will define one `Species` named `X` with initial population `5`:
 
-The `Bool` value used in the constructor is used to indicate whether we want to track the population in simulations. The `Species` is then used to create a single entry `Vector`.
+```jl
+m <= Species(:X, 5, istracked=true)
+```
+The `Network` type overloads the `<=` operator to streamline the model description process. The `Species` type accepts two arguments - an identifier and an initial copy number - as well as an optional argument (`istracked`) indicating whether to track the `Species` through a simulation. This optional argument defaults to `true`.
 
 Now we define the three reactions that can occur in our network - birth, death, and immigration - using the `Reaction` type:
 
 ```jl
-r1 = Reaction("Birth", "alpha", [1], [2])
-r2 = Reaction("Death", "mu", [1], [0])
-r3 = Reaction("Immigration", "nu", [0], [1])
-r = [r1, r2, r3]
-
-p = Dict{ASCIIString,Float64}("alpha" => 2.0, "mu" => 1.0, "nu" => 0.5)
+m <= Reaction(:Birth, :α, r=(:X => 1), p=(:X =>2))
+m <= Reaction(:Death, :μ, r=(:X => 1))
+m <= Reaction(:Immmigration, :ν, p=(:X => 1))
 ```
 
-The first two arguments to the constructor are `String`s identifying the reaction and labeling its reaction rate, respectively. The reaction rate labels must be assigned values in a `Dict` that stores parameters in the network as shown above. The third and fourth arguments are `Vector`s that specify the stoichiometric coefficients of each species as reactants and products, respetively. For example, in the first `Reaction`, one `Particle` occurs as a reactant to produce two `Particle`s. We store the reactions in a `Vector` as before.
+The first argument is an identifier for a reaction, while the second argument assigns an identifier for the rate. The keyword arguments `r` and `p` stand for reactants and products, respectively. A reactant or product list is enclosed in parentheses. These lists consist of (`Symbol`, `Integer`) pairs representing a `Species` and a stoichiometric coefficient.
 
-Now we can create our `Network`:
+Next we create the `Parameter`s referenced in our reaction definitions:
 
 ```jl
-nwk = Network("Kendall's Process", x, r, p)
+m <= Parameter(:α, 2.0, description="birth rate")
+m <= Parameter(:μ, 1.0, description="death rate")
+m <= Parameter(:ν, 0.5, description="immigration rate")
 ```
 
-A `Network` can be used to create a `Simulation`:
+Each `Parameter` requires an identifier and value. An optional `description` string may be provided to help annotate the model.
+
+Finally, we can simulate the model:
 
 ```jl
-sim = Simulation(nwk)
+result = simulate(m, tf=4.0, with=:sal, output=Uniform(), dt=0.1, itr=100_000)
 ```
 
-A `Simulation` is then passed into a function implementing a stochastic algorithm. BioSimulator currently implements the following algorithms:
+This will run 100,000 realizations of our model until simulation time reaches 4 seconds using the Step Anticipation τ-Leaping algorithm (citation). The system's state is recorded every 0.1 seconds. The output returned is a `DataFrame` (from the `DataFrames` package) with columns `Time` and `X`.
 
-* Stochastic Simulation Algorithm (SSA)
-* Step Anticipation $\tau$-leaping (SAL)
-
-We can simulate our model using SAL and see the results as follows:
+We can plot the mean trajectory using the `DataFrames` and `Gadfly` packages:
 
 ```jl
-result1 = sal_explicit(sim, 4.0, tracing=true)
-plot_trajectory(result1.traces["Particle"])
+using DataFrames
+using Gadfly
+
+mean_traj = aggregate(result, :Time, mean)
+plot(mean_traj, x=:Time, y=:X_mean, Geom.line)
 ```
 
-This will result in an image similar to this:
+## Supported Algorithms
 
-(TODO)
+### Exact Algorithms
+* :ssa - Stochastic Simulation Algorithm (Gillespie Algorithm/Direct Method)
+* :odm - Optimized Direct Method
+* :nrm - Next-Reaction Method
+* :frm - First Reaction Method
+
+### Approximate Algorithms
+* :sal - Step Anticipation τ-leaping
+
+## Simulation Output
+
+* `Explicit`  - Record network state every time the algorithm steps through, at every iteration.
+* `Uniform`   - Record network state at evenly spaced intervals, at every iteration (requires `dt` keyword argument).
+* `Mean`      - Record network state at evenly spaced intervals. Computes mean trajectories in-place.
+* `Histogram` - Record network state at the end of each iteration.

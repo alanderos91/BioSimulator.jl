@@ -72,6 +72,22 @@ function _rvector(reactions, inds)
   return rxns
 end
 
+"""
+```
+simulate(m::Newtork; with=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
+```
+
+### Arguments
+- `m`: The network object
+
+### Optional Arguments
+- `with`: The algorithm used in the simulation.
+- `tf`: The stopping time for the simulation.
+- `output`: The type of output returned by this routine. See [Explicit, Uniform, Mean, Histogram].
+- `dt`: The step size between updates, if used.
+- `itr`: The number of realizations.
+- `kwargs`: Optional keyword arguments specific to a particular algorithm. Consult docs for an algorithm for more details.
+"""
 function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
   args = Dict{Symbol,Any}(kwargs)
 
