@@ -4,6 +4,7 @@ using Distributions
 using DataFrames
 using Gadfly
 using LightGraphs
+using GraphViz
 
 abstract OutputType
 immutable Explicit  <: OutputType end
@@ -36,7 +37,8 @@ include(joinpath("algorithm","sal.jl"))
 
 # Output
 include(joinpath("output", "update.jl"))
+include(joinpath("interface", "petrinet.jl"))
 
 export Network, Simulation, Explicit, Uniform, Mean, Histogram,
-  simulate, Species, Reaction, parameter
+  simulate, Species, Reaction, parameter, petrinet
 end # module
