@@ -92,19 +92,19 @@ function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), d
   args = Dict{Symbol,Any}(kwargs)
 
   if with == :ssa
-    algorithm = SSA(itr, tf, dt, args)
+    algorithm = SSA(args)
   elseif with == :odm
-    algorithm = ODM(itr, tf, dt, args)
+    algorithm = ODM(args)
   elseif with == :frm
-    algorithm = FRM(itr, tf, dt, args)
+    algorithm = FRM(args)
   elseif with == :nrm
-    algorithm = NRM(itr, tf, dt, args)
+    algorithm = NRM(args)
   elseif with == :sal
-    algorithm = SAL(itr, tf, dt, args)
+    algorithm = SAL(args)
   else
     error("$with is an unrecognized algorithm.")
   end
-  _run(Simulation(model), algorithm, output)
+  _run(Simulation(model), algorithm, output, dt, tf, itr)
 end
 
 init_updater(::Explicit,  dt, tracked, n, itr) = Updater(dt, tracked, 0)
@@ -126,7 +126,7 @@ function _prepare_df(::Mean, df, n, itr)
   return df
 end
 
-function _run(model::Simulation, alg::Algorithm, output::OutputType)
+function _run(model::Simulation, alg::Algorithm, output::OutputType, dt, tf, itr)
   # Unpack model
   initial = model.initial
   sname   = model.sname
@@ -135,20 +135,22 @@ function _run(model::Simulation, alg::Algorithm, output::OutputType)
   rxns    = model.rxns
   params  = model.param
 
-  n  = round(Int, alg.tf / alg.dt) + 1
+  n  = round(Int, tf / dt) + 1
 
-  u  = init_updater(output, alg.dt, tracked, n, alg.itr) # Initialize updater
-  df = init_df(output, sname, tracked, n, alg.itr)   # Initialize output
+  u  = init_updater(output, dt, tracked, n, itr) # Initialize updater
+  df = init_df(output, sname, tracked, n, itr)   # Initialize output
   init(alg, rxns, spcs, initial, params)
-  for i = 1:alg.itr
+  for i = 1:itr
+    t = 0.0
     copy!(spcs, initial) # Reset copy numbers to initial values
     reset(alg, rxns, spcs, params)    # Reset algorithm variables
-    while alg.t < alg.tf
-      update!(output, df, alg.t, u, spcs)   # Record current state
-      step(alg, rxns, spcs, params) # Carry out one step of the algorithm
+    while t < tf
+      update!(output, df, t, u, spcs)   # Record current state
+      τ = step(alg, rxns, spcs, params, t, tf) # Carry out one step of the algorithm
+      t = t + τ
     end
-    final_update!(output, df, alg.t, u, spcs) # Record final state
+    final_update!(output, df, t, u, spcs) # Record final state
   end
-  _prepare_df(output, df, n, alg.itr)
+  _prepare_df(output, df, n, itr)
   return df
 end

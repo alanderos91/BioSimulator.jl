@@ -2,20 +2,14 @@ import Base.Collections: PriorityQueue, peek
 import Base.Order: ForwardOrdering
 
 type NRM <: Algorithm
-  itr::Int
-
-  tf::Float64
-  dt::Float64
-
-  t::Float64
   intensity::Float64
   steps::Int
 
   g::DiGraph
   pq::PriorityQueue{Int,Float64,ForwardOrdering}
 
-  function NRM(itr, tf, dt, args)
-    new(itr, tf, dt, 0.0, 0.0, 0, DiGraph(), PriorityQueue(Int,Float64))
+  function NRM(args)
+    new(0.0, 0, DiGraph(), PriorityQueue(Int,Float64))
   end
 end
 
@@ -27,7 +21,6 @@ function init(alg::NRM, rxns, spcs, initial, params)
 end
 
 function reset(alg::NRM, rxns, spcs, params)
-  alg.t     = 0.0
   alg.steps = 0
 
   # Compute propensities and initialize the priority queue with firing times
@@ -37,11 +30,11 @@ function reset(alg::NRM, rxns, spcs, params)
   return;
 end
 
-function step(alg::NRM, rxns, spcs, params)
-  alg.t = nrm_update!(spcs, rxns, alg.t, alg.tf, alg.g, alg.pq, params)
+function step(alg::NRM, rxns, spcs, params, t, tf)
+  τ = nrm_update!(spcs, rxns, t, tf, alg.g, alg.pq, params) - t
   alg.steps = alg.steps + 1
 
-  return;
+  return τ;
 end
 
 function nrm_update!(spcs::Vector{Int}, rxns::ReactionVector, t::Float64, tf::Float64, g::LightGraphs.DiGraph, pq, param::Parameters)

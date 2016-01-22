@@ -1,34 +1,26 @@
 type FRM <: Algorithm
-  itr::Int
-
-  tf::Float64
-  dt::Float64
-
-  t::Float64
   intensity::Float64
   steps::Int
 
-  function FRM(itr, tf, dt, args)
-    new(itr, tf, dt, 0.0, 0.0, 0)
+  function FRM(args)
+    new(0.0, 0)
   end
 end
 
 init(alg::FRM, rxns, spcs, initial, params) = return;
 
 function reset(alg::FRM, rxns, spcs, params)
-  alg.t     = 0.0
   alg.steps = 0
 
   return;
 end
 
-function step(alg::FRM, rxns, spcs, params)
+function step(alg::FRM, rxns, spcs, params, t, tf)
   compute_propensities!(rxns, spcs, params)
-  τ = frm_update!(spcs, rxns, alg.t, alg.tf)
-  alg.t = alg.t + τ
+  τ = frm_update!(spcs, rxns, t, tf)
   alg.steps = alg.steps + 1
 
-  return;
+  return τ;
 end
 
 function frm_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf)

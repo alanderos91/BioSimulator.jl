@@ -1,32 +1,24 @@
 type SSA <: Algorithm
-  itr::Int
-
-  tf::Float64
-  dt::Float64
-
-  t::Float64
   intensity::Float64
   steps::Int
 
-  function SSA(itr, tf, dt, args)
-    new(itr, tf, dt, 0.0, 0.0, 0)
+  function SSA(args)
+    new(0.0, 0)
   end
 end
 
 init(alg::SSA, rrxns, spcs, initial, params) = return;
 
 function reset(alg::SSA, rxns, spcs, params)
-  alg.t     = 0.0
   alg.steps = 0
   return;
 end
 
-function step(alg::SSA, rxns, spcs, params)
+function step(alg::SSA, rxns, spcs, params, t, tf)
   alg.intensity = compute_propensities!(rxns, spcs, params)
-  τ = ssa_update!(spcs, rxns, alg.t, alg.tf, alg.intensity)
-  alg.t = alg.t + τ
+  τ = ssa_update!(spcs, rxns, t, tf, alg.intensity)
   alg.steps = alg.steps + 1
-  return;
+  return τ;
 end
 
 function sample(rxns::ReactionVector, jump)

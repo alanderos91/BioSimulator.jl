@@ -13,10 +13,6 @@ immutable Histogram <: OutputType end
 
 abstract Algorithm
 
-_init(alg::Algorithm, rxns, spcs, params)  = return;
-_reset(alg::Algorithm, rxns, spcs, params) = return;
-_step(alg::Algorithm, rxns, spcs, params)  = return;
-
 # Interface
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))

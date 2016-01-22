@@ -1,14 +1,8 @@
 type SAL <: Algorithm
-  itr::Int
-
-  tf::Float64
-  dt::Float64
-
   tol::Float64
   thrsh::Float64
   ctrct::Float64
 
-  t::Float64
   intensity::Float64
   ssa_steps::Int
   sal_steps::Int
@@ -17,12 +11,12 @@ type SAL <: Algorithm
   drdt::Vector{Float64}
   events::Vector{Int}
 
-  function SAL(itr, tf, dt, args)
+  function SAL(args)
     tol   = get(args, :tol,   0.125)
     thrsh = get(args, :thrsh, 100.0)
     ctrct = get(args, :ctrct, 0.75)
 
-    new(itr, tf, dt, tol, thrsh, ctrct, 0.0, 0.0, 0, 0, Float64[], Float64[], Int[])
+    new(tol, thrsh, ctrct, 0.0, 0, 0, Float64[], Float64[], Int[])
   end
 end
 
@@ -34,24 +28,21 @@ function init(alg::SAL, rxns, spcs, initial, params)
   return;
 end
 function reset(alg::SAL, rxns, spcs, params)
-  alg.t         = 0.0
   alg.ssa_steps = 0
   alg.sal_steps = 0
   return;
 end
 
-function step(alg::SAL, rxns, spcs, params)
+function step(alg::SAL, rxns, spcs, params, t, tf)
   alg.intensity = compute_propensities!(rxns, spcs, params)
   if alg.intensity < alg.thrsh
-    τ = ssa_update!(spcs, rxns, alg.t, alg.tf, alg.intensity)
-    alg.t = alg.t + τ
+    τ = ssa_update!(spcs, rxns, t, tf, alg.intensity)
     alg.ssa_steps = alg.ssa_steps + 1
   else
-    τ = sal_update!(spcs, rxns, alg.t, alg.tf, params, alg.dxdt, alg.drdt, alg.events, alg.tol, alg.ctrct)
-    alg.t = alg.t + τ
+    τ = sal_update!(spcs, rxns, t, tf, params, alg.dxdt, alg.drdt, alg.events, alg.tol, alg.ctrct)
     alg.sal_steps = alg.sal_steps + 1
   end
-  return;
+  return τ;
 end
 
 function update!(spcs::Vector{Int}, r::ReactionChannel, k::Int)

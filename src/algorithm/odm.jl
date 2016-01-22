@@ -6,28 +6,22 @@ immutable Loose <: Coupling end
 export Tight, Loose
 
 type ODM{T} <: Algorithm
-  itr::Int
-
-  tf::Float64
-  dt::Float64
-
   c::T
   pre_steps::Int
   samples::Int
 
-  t::Float64
   intensity::Float64
   steps::Int
 
   g::DiGraph
 end
 
-function ODM(itr, tf, dt, args)
+function ODM(args)
   c       = get(args, :c,       Tight())
   steps   = get(args, :steps,   100)
   samples = get(args, :samples, 1)
 
-  ODM{typeof(c)}(itr, tf, dt, c, steps, samples, 0.0, 0.0, 0, DiGraph())
+  ODM{typeof(c)}(c, steps, samples, 0.0, 0, DiGraph())
 end
 
 function init(alg::ODM, rxns, spcs, initial, params)
@@ -40,20 +34,18 @@ function init(alg::ODM, rxns, spcs, initial, params)
 end
 
 function reset(alg::ODM, rxns, spcs, params)
-  alg.t     = 0.0
   alg.steps = 0
   alg.intensity = compute_propensities!(rxns, spcs, params)
 
   return;
 end
 
-function step(alg::ODM, rxns, spcs, params)
+function step(alg::ODM, rxns, spcs, params, t, tf)
   intensity = alg.intensity; c = alg.c; g = alg.g
   τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
-  alg.t = alg.t + τ
   alg.steps = alg.steps + 1
   alg.intensity = intensity
-  return;
+  return τ;
 end
 
 function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::ReactionVector, param, intensity, g)
