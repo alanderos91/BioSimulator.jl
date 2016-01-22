@@ -28,16 +28,18 @@ for op in [:(Base.(:+)),
            :(Base.(:*)),
            :(Base.(:/)),
            :(Base.(:^)),
+           :(Base.max),
+           :(Base.min),
            :(Base.(:<)),
            :(Base.(:>)),
            :(Base.(:<=)),
            :(Base.(:>=)),
            :(Base.(:(==)))]
 
-  @eval ($op)(p::Parameter, q::Parameter) = ($op)(p.value, q.value)
-  @eval ($op)(p::Parameter, x::Integer)   = ($op)(p.value, x)
-  @eval ($op)(p::Parameter, x::Number)    = ($op)(p.value, x)
-  @eval ($op)(x::Number, p::Parameter)    = ($op)(x, p.value)
+    @eval ($op)(p::Parameter, q::Parameter) = ($op)(p.value, q.value)
+    @eval ($op)(p::Parameter, x::Integer)   = ($op)(p.value, x)
+    @eval ($op)(p::Parameter, x::Number)    = ($op)(p.value, x)
+    @eval ($op)(x::Number, p::Parameter)    = ($op)(x, p.value)
 end
 
 for f in [:(Base.exp),
@@ -45,5 +47,5 @@ for f in [:(Base.exp),
           :(Base.abs),
           :(Base.(:-))]
 
-  @eval ($f)(p::Parameter) = ($f)(p.value)
+    @eval ($f)(p::Parameter) = ($f)(p.value)
 end
