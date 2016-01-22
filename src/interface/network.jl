@@ -24,11 +24,7 @@ end
 function add_object!(model, object, fieldname)
   dict = getfield(model, fieldname)
   id   = object.id
-  if haskey(dict, id)
-    warn()
-  else
-    setindex!(dict, object, id)
-  end
+  setindex!(dict, object, id)
   return dict
 end
 
@@ -37,13 +33,28 @@ function (<=)(model::Network, object::Species)
 end
 
 function (<=)(model::Network, object::Reaction)
-  # TODO: Check if species list is empty
-  # TODO: Check if species in reaction exist in model
-  add_object!(model, object, :reactions)
+  reactants = object.reactants
+  products  = object.products
+  try
+      validate(reactants, model)
+      validate(products,  model)
+      add_object!(model, object, :reactions)
+  catch ex
+      rethrow(ex)
+  end
 end
 
 function (<=)(model::Network, object::Parameter)
   add_object!(model, object, :parameters)
+end
+
+function validate(participants, model)
+    species_dict = model.species
+    for species in keys(participants)
+        if !haskey(species_dict, species)
+            error("$(species) is not defined.")
+        end
+    end
 end
 
 # function rmv_object!(model, object, fieldname)
