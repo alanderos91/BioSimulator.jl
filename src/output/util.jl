@@ -36,3 +36,25 @@ function Base.show(io::IO, x::SimulationOutput)
     @printf io "[species data] %d x %d\n" size(x.species_data, 1) size(x.species_data, 2)
     @printf io "[propensity data] %d x %d\n" size(x.propensity_data, 1) size(x.propensity_data, 2)
 end
+
+function plot_species_timeseries(so::SimulationOutput)
+    data = so.species_data
+    df = aggregate(data, :Time, [mean, std])
+    df_summary = DataFrame(Time=Float64[], Mean=Float64[], Min=Float64[], Max=Float64[], Species=UTF8String[])
+
+    for col in names(data)
+      if col == :Time; continue; end
+      col_mean = symbol(col, "_mean")
+      col_std =  symbol(col, "_std")
+
+      temp = DataFrame(
+          Time    = df[:Time],
+          Mean    = df[col_mean],
+          Min     = max(0, df[col_mean] - df[col_std]),
+          Max     = df[col_mean] + df[col_std],
+          Species = string(col)
+      )
+      df_summary = vcat(df_summary, temp)
+    end
+    return plot(df_summary, x=:Time, y=:Mean, ymin=:Min, ymax=:Max, color=:Species, Geom.line, Geom.point, Geom.errorbar)
+end
