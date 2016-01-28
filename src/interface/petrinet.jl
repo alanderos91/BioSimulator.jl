@@ -2,7 +2,7 @@ immutable PetriNet
     g::GraphViz.Graph
 end
 
-function petrinet(model::Network)
+function petrinet(model::Network; rankdir=:LR)
     reactions = model.reactions
     b = IOBuffer()
     modelid = string(model.id)
@@ -15,6 +15,7 @@ function petrinet(model::Network)
     digraph $(modelid) {
     // Graph Attributes
     layout=dot;
+    rankdir=$(rankdir)
     """)
     # add reactions
     for r in values(reactions)
