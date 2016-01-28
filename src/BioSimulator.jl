@@ -8,7 +8,6 @@ using LightGraphs
 abstract OutputType
 immutable Explicit  <: OutputType end
 immutable Uniform   <: OutputType end
-immutable Mean      <: OutputType end
 immutable Histogram <: OutputType end
 
 abstract Algorithm
@@ -31,8 +30,10 @@ include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output
+include(joinpath("output", "observer.jl"))
 include(joinpath("output", "update.jl"))
+include(joinpath("output", "util.jl"))
 
-export Network, Simulation, Explicit, Uniform, Mean, Histogram,
-  simulate, Species, Reaction, parameter
+export Network, Simulation, Explicit, Uniform, Histogram,
+  simulate, Species, Reaction, parameter, get_species_data, get_propensity_data
 end # module

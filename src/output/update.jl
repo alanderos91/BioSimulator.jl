@@ -1,129 +1,73 @@
-function init_df(sname, tracked, n)
-  tracked_species = sname[tracked]
-  x1 = [Float64]; x2 = [Int for i=1:length(tracked)]
-  df = DataFrame(vcat(x1, x2), vcat([:Time], tracked_species), n)
-  for s in tracked_species
-    df[s] = zeros(Int, size(df,1))
-  end
-  return df
+type UpdateManager
+    overseer::Overseer
+
+    dt::Float64
+    next::Float64
+    blocksize::Int
+    block_end::Int
+    maxindex::Int
+    index::Int
+
+    function UpdateManager(overseer, dt, blocksize, itr)
+        new(overseer, dt, 0.0, blocksize, blocksize, blocksize*itr, 1)
+    end
 end
 
-#immutable Output
-#  df::DataFrame
-#  meta::Dict{ASCIIString,Any}
-#end
+overseer(u::UpdateManager)  = u.overseer
+dt(u::UpdateManager)        = u.dt
+next(u::UpdateManager)      = u.next
+blocksize(u::UpdateManager) = u.blocksize
+block_end(u::UpdateManager) = u.block_end
+maxindex(u::UpdateManager)  = u.maxindex
+index(u::UpdateManager)     = u.index
 
-type Updater
-  dt::Float64
-  t_next::Float64
+init_updater(::Explicit,  overseer, dt, n, itr) = UpdateManager(overseer, dt, 0, itr)
+init_updater(::Uniform,   overseer, dt, n, itr) = UpdateManager(overseer, dt, n, itr)
+init_updater(::Histogram, overseer, dt, n, itr) = UpdateManager(overseer, dt, itr, 1)
 
-  tracked::Vector{Int}
-
-  blocksize::Int
-  maxindex::Int
-  index::Int
+function update!(::Explicit, u, t)
+    notify!(overseer(u), index(u), t)
+    u.index += 1
 end
 
-function Updater(dt, tracked, blocksize)
-  return Updater(dt, 0.0, tracked, blocksize, blocksize, 1)
+function update!(::Uniform, u, t)
+    while t >= next(u)
+        i = index(u)
+        if i > block_end(u); return; end
+        notify!(overseer(u), i, next(u))
+        u.next  += dt(u)
+        u.index += 1
+    end
 end
 
-#update!(otype,  o, u, species)
-#update!(otype, df, u, species)
-
-# Safeguard against unsafe operation?
-function update!(::Explicit, df, t, u, species)
-  x = species[u.tracked]
-  push!(df, tuple(t, x...))
-  u.index += 1
+function update!(::Histogram, u, t)
+    return;
 end
 
-function update!(::Uniform, df, t, u, species)
-  tracked = u.tracked
-  while t >= u.t_next
-    if u.index > u.maxindex; return; end
-    i = u.index
+function final_update!(::Explicit, u, t)
+    notify!(overseer(u), index(u), t)
+    u.index += 1
+end
 
-    df[i,1] = u.t_next
-    for j in eachindex(tracked)
-      df[i,1+j] = species[tracked[j]]
+function final_update!(::Uniform, u, t)
+    while index(u) <= block_end(u)
+        i = index(u)
+
+        #if i > block_end(u); return; end
+        notify!(overseer(u), i, next(u))
+        u.next  += dt(u)
+        u.index += 1
     end
 
-    u.t_next += u.dt
-    u.index += 1
-  end
-end
-
-function update!(::Mean, df, t, u, species)
-  tracked = u.tracked
-  while t >= u.t_next
-    i = u.index;
-
-    df[i,1] = u.t_next
-    for j in eachindex(tracked)
-      df[i,1+j] += species[tracked[j]]
+    u.next = 0.0
+    if block_end(u) < maxindex(u)
+        u.block_end = block_end(u) + blocksize(u)
     end
+end
 
-    u.t_next += u.dt
+# Safeguard on indices?
+function final_update!(::Histogram, u, t)
+    i = index(u)
+    notify!(overseer(u), i)
     u.index += 1
-  end
-end
-
-function update!(::Histogram, df, t, u, species)
-  return;
-end
-
-function final_update!(::Explicit, df, t, u, species)
-  x = species[u.tracked]
-  push!(df, tuple(t, x...))
-  u.index += 1
-end
-
-function final_update!(::Uniform, df, t, u, species)
-  tracked = u.tracked
-  while u.index <= u.maxindex
-    i = u.index;
-
-    df[i,1] = u.t_next
-    for j in eachindex(tracked)
-      df[i,1+j] = species[tracked[j]]
-    end
-
-    u.t_next += u.dt
-    u.index += 1
-  end
-
-  u.t_next = 0.0
-  if u.maxindex < size(df,1)
-    u.maxindex = u.maxindex + u.blocksize
-  end
-end
-
-function final_update!(::Mean, df, t, u, species)
-  tracked = u.tracked
-  while u.index <= u.maxindex
-    i = u.index;
-
-    df[i,1] = u.t_next
-    for j in eachindex(tracked)
-      df[i,1+j] += species[tracked[j]]
-    end
-
-    u.t_next += u.dt
-    u.index += 1
-  end
-
-  u.t_next = 0.0
-  u.index = 1
-end
-
-function final_update!(::Histogram, df, t, u, species)
-  i = u.index; tracked = u.tracked
-
-  df[i,1] = t
-  for j in eachindex(tracked)
-    df[i,1+j] = species[tracked[j]]
-  end
-
-  u.index += 1
 end
