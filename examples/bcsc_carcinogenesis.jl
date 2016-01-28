@@ -55,7 +55,8 @@ network <= parameter(:k7, k7)
 network <= parameter(:k8, k8)
 network <= parameter(:k9, k9)
 
-@time df = simulate(network, tf=10 * 365.0, with=:ssa, dt=1.0, output=Uniform(), itr=100);
+@time result = simulate(network, tf=2*365.0, with=:sal, dt=1.0, output=Uniform(), itr=10);
+df = get_species_data(result)
 df = aggregate(df, :Time, mean);
 
 p1 = plot(df, x=:Time, y=:EMT_mean, Geom.line)

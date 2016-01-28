@@ -23,8 +23,10 @@ network <= parameter(:a3, 0.1)
 
 # Simulation
 srand(5357)
-@time df = simulate(network, tf=50.0, with=:sal, dt=1.0, itr=100);
-      df = aggregate(df, :Time, [mean,std])
+@time result = simulate(network, tf=50.0, with=:sal, dt=1.0, itr=100);
+
+df = get_species_data(result)
+df = aggregate(df, :Time, [mean,std])
 
 # Convert default dataframe
 new_df = DataFrame(Time    = repeat(convert(Vector, df[:Time]), outer=[4]),
