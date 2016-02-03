@@ -38,9 +38,9 @@ The first argument is an identifier for a reaction, while the second argument as
 Next we create the `Parameter`s referenced in our reaction definitions:
 
 ```jl
-m <= Parameter(:α, 2.0, description="birth rate")
-m <= Parameter(:μ, 1.0, description="death rate")
-m <= Parameter(:ν, 0.5, description="immigration rate")
+m <= parameter(:α, 2.0, description="birth rate")
+m <= parameter(:μ, 1.0, description="death rate")
+m <= parameter(:ν, 0.5, description="immigration rate")
 ```
 
 Each `Parameter` requires an identifier and value. An optional `description` string may be provided to help annotate the model.
@@ -78,5 +78,4 @@ plot(mean_traj, x=:Time, y=:X_mean, Geom.line)
 
 * `Explicit`  - Record network state every time the algorithm steps through, at every iteration.
 * `Uniform`   - Record network state at evenly spaced intervals, at every iteration (requires `dt` keyword argument).
-* `Mean`      - Record network state at evenly spaced intervals. Computes mean trajectories in-place.
 * `Histogram` - Record network state at the end of each iteration.
