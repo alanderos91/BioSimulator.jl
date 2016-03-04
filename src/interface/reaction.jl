@@ -18,8 +18,9 @@ type Reaction
   rate::Symbol
   reactants::Dict{Symbol,Int}
   products::Dict{Symbol,Int}
+  istracked::Bool
 
-  function Reaction(id, rate; r=(), p=())
+  function Reaction(id, rate; istracked::Bool=false, r=(), p=())
     reactants = Dict{Symbol,Int}(r)
     products  = Dict{Symbol,Int}(p)
 
@@ -30,7 +31,7 @@ type Reaction
     if any(x -> x < 0, values(reactants)) || any(x -> x < 0, values(products))
       error("Coefficients must be positive.")
     end
-    return new(id, rate, Dict(reactants), Dict(products))
+    return new(id, rate, Dict(reactants), Dict(products), istracked)
   end
 end
 
