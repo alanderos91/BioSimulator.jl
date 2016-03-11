@@ -153,7 +153,7 @@ function _run(model::Simulation, alg::Algorithm, output::OutputType, dt, tf, itr
   for i = 1:itr
     t = 0.0
     copy!(spcs, initial) # Reset copy numbers to initial values
-    reset(alg, rxns, spcs, params)    # Reset algorithm variables
+    reset(alg, rxns, spcs, params) # Reset algorithm variables
     while t < tf
       update!(output, u, t)   # Record current state
       τ = step(alg, rxns, spcs, params, t, tf) # Carry out one step of the algorithm
@@ -161,7 +161,9 @@ function _run(model::Simulation, alg::Algorithm, output::OutputType, dt, tf, itr
     end
     final_update!(output, u, t) # Record final state
   end
+  compute_statistics(alg)
 
-  simulation_data = compile_data(overseer)
-  return simulation_data
+  sdata, pdata = compile_data(overseer)
+  mdata = compile_metadata(alg, tf, n, itr)
+  return SimulationOutput(sdata, pdata, mdata)
 end
