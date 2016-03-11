@@ -40,7 +40,7 @@ function flatten(df)
     if ncols == 1
         temp = DataFrame(
             time  = df[:Time],
-            copy_number = df[cols[1]],
+            copynumber = df[cols[1]],
             species = cols[1]
         )
     else
@@ -52,7 +52,7 @@ function flatten(df)
 
         temp = DataFrame(
             time  = repeat(convert(Vector, df[:Time]), outer=[ncols]),
-            copy_number = counts,
+            copynumber = counts,
             species = repeat(cols, inner=[npts * itr])
         )
     end
