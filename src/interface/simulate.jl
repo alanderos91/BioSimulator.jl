@@ -85,7 +85,7 @@ make_observers(::Uniform, sname, stracked, rname, rtracked, spcs, rxns, n, itr) 
 make_observers(::Histogram, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
 
 function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
-    overseer = Overseer(TimeObserver(:Time, n))
+    overseer = Overseer(TimeObserver(:time, n))
 
     for i in eachindex(stracked)
         push!(overseer.s_observers, SpeciesObserver(sname[i], spcs, stracked[i], n))
