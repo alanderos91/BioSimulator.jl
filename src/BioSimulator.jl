@@ -34,10 +34,12 @@ include(joinpath("algorithm","sal.jl"))
 include(joinpath("output", "observer.jl"))
 include(joinpath("output", "update.jl"))
 include(joinpath("output", "util.jl"))
+include(joinpath("output", "plot.jl"))
 include(joinpath("interface", "petrinet.jl"))
 
 export Network, Simulation, Explicit, Uniform, Histogram,
   simulate, Species, Reaction, parameter, get_species_data, get_propensity_data,
   plot_species_timeseries,
-  petrinet
+  petrinet,
+  plot_sample_timeseries, plot_mean_timeseries, plot_histogram
 end # module
