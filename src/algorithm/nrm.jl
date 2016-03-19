@@ -47,7 +47,7 @@ end
 function step(alg::NRM, rxns, spcs, params, t, tf)
     τ = nrm_update!(spcs, rxns, t, tf, alg.g, alg.pq, params) - t
     alg.steps = alg.steps + 1
-
+    τ = min(τ, tf) # need a way to handle simulations that have no updates
     return τ;
 end
 
