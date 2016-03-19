@@ -37,7 +37,7 @@ for a in algorithms
 
   print("   - Uniform ", uppercase(string(a)))
   srand(seed); @time result = simulate(m, tf=t_final, with=a, output=Uniform(), dt=0.1, itr=100_000)
-  computed = aggregate(get_species_data(result), :Time, mean)
+  computed = aggregate(get_species_data(result), :time, mean)
   print("     |observed - theoretical| = ", abs(computed[:X_mean][end] - theoretical[end]), "\n")
   println()
 end
