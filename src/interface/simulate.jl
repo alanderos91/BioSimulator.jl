@@ -88,11 +88,13 @@ function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
     overseer = Overseer(TimeObserver(:time, n))
 
     for i in eachindex(stracked)
-        push!(overseer.s_observers, SpeciesObserver(sname[i], spcs, stracked[i], n))
+        j = stracked[i]
+        push!(overseer.s_observers, SpeciesObserver(sname[j], spcs, stracked[i], n))
     end
 
     for i in eachindex(rtracked)
-        push!(overseer.r_observers, PropensityObserver(rname[i], rxns[rtracked[i]], n))
+        j = stracked[i]
+        push!(overseer.r_observers, PropensityObserver(rname[j], rxns[rtracked[i]], n))
     end
 
     return overseer
