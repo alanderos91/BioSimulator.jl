@@ -7,9 +7,9 @@ type Network
   parameters::Dict{Symbol,Parameter}
 
   function Network(id)
-    s = Dict{ASCIIString,Species}()
-    r = Dict{ASCIIString,Reaction}()
-    p = Dict{ASCIIString,Parameter}()
+    s = Dict{Symbol,Species}()
+    r = Dict{Symbol,Reaction}()
+    p = Dict{Symbol,Parameter}()
     return new(id, s, r, p)
   end
 end
@@ -36,11 +36,11 @@ function (<=)(model::Network, object::Reaction)
   reactants = object.reactants
   products  = object.products
   try
-      validate(reactants, model)
-      validate(products,  model)
-      add_object!(model, object, :reactions)
+    validate(reactants, model)
+    validate(products,  model)
+    add_object!(model, object, :reactions)
   catch ex
-      rethrow(ex)
+    rethrow(ex)
   end
 end
 
@@ -49,33 +49,31 @@ function (<=)(model::Network, object::Parameter)
 end
 
 function validate(participants, model)
-    species_dict = model.species
-    for species in keys(participants)
-        if !haskey(species_dict, species)
-            error("$(species) is not defined.")
-        end
+  species_dict = model.species
+  for species in keys(participants)
+    if !haskey(species_dict, species)
+      error("$(species) is not defined.")
     end
+  end
 end
 
-# function rmv_object!(model, object, fieldname)
-#   dict = getfield(model, fieldname)
-#   if haskey(dict, id)
-#     delete!(dict, id)
-#   else
-#     warn()
-#   end
-#   return dict
-# end
-#
-# function (>=)(model::Network, object::Species)
-#   # Remove references to species
-#   rmv_object!(model, object, :species)
-# end
-#
-# function (>=)(model::Network, object::Reaction)
-#   rmv_object!(model, object, :reaction)
-# end
-#
-# function (>=)(model::Network, object::Parameter)
-#   rmv_object!(model, object, :species)
-# end
+function rmv_object!(model, key, fieldname)
+  dict = getfield(model, fieldname)
+  if haskey(dict, key)
+    delete!(dict, key)
+  else
+    error("$(key) not found in $(fieldname)")
+  end
+  return model
+end
+
+function (>=)(model::Network, x::Pair{Symbol,Symbol})
+  fieldname = x.first
+  key = x.second
+
+  if fieldname == :species
+    # remove all species refs in reactions?
+  end
+  
+  rmv_object!(model, key, fieldname)
+end
