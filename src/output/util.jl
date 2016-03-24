@@ -6,8 +6,9 @@ immutable SimulationOutput
     metadata::Dict{Symbol,Any}
 end
 
-get_species_data(so::SimulationOutput)    = so.species
-get_propensity_data(so::SimulationOutput) = so.propensity
+species(so::SimulationOutput)      = so.species
+propensities(so::SimulationOutput) = so.propensity
+metadata(so::SimulationOutput)     = so. metadata
 
 function compile_data(overseer)
     species_data    = DataFrame()
