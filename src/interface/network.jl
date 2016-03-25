@@ -15,10 +15,10 @@ type Network
 end
 
 function Base.show(io::IO, x::Network)
-  @printf io "[ Model: %s ]\n" x.id
-  @printf io " no. species:    %d\n" length(x.species)
-  @printf io " no. reactions:  %d\n" length(x.reactions)
-  @printf io " no. parameters: %d"   length(x.parameters)
+  print(io, "[ Model: $(x.id) ]\n")
+  print(io, " no. species:    $(length(x.species))\n")
+  print(io, " no. reactions:  $(length(x.reactions))\n")
+  print(io, " no. parameters: $(length(x.parameters))\n")
 end
 
 function add_object!(model, object, fieldname)
@@ -74,6 +74,6 @@ function (>=)(model::Network, x::Pair{Symbol,Symbol})
   if fieldname == :species
     # remove all species refs in reactions?
   end
-  
+
   rmv_object!(model, key, fieldname)
 end
