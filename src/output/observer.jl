@@ -108,3 +108,23 @@ function notify!(overseer, j)
 
     return overseer
 end
+
+make_observers(::Explicit, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, 0)
+
+make_observers(::Uniform, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, n*itr)
+
+function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
+    overseer = Overseer(TimeObserver(:time, n))
+
+    for i in eachindex(stracked)
+        j = stracked[i]
+        push!(overseer.s_observers, SpeciesObserver(sname[j], spcs, stracked[i], n))
+    end
+
+    for i in eachindex(rtracked)
+        j = stracked[i]
+        push!(overseer.r_observers, PropensityObserver(rname[j], rxns[rtracked[i]], n))
+    end
+
+    return overseer
+end

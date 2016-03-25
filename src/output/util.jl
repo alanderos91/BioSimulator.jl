@@ -38,11 +38,11 @@ function compile_data(overseer)
     return species_data, propensity_data
 end
 
-function compile_metadata(algorithm, tf, n, itr)
+function compile_metadata(algorithm, n, itr)
     mdata = Dict{Symbol,Any}()
 
     mdata[:algorithm] = string(typeof(algorithm))
-    mdata[:time] = tf
+    mdata[:time] = end_time(algorithm)
     mdata[:pts] = n
     mdata[:itr] = itr
 

@@ -1,103 +1,3 @@
-type ReactionChannel
-  id::Symbol
-  rate::Symbol
-  propensity::Float64
-  pre::Vector{Int}
-  post::Vector{Int}
-
-  function ReactionChannel(id, rate, pre, post)
-    if any(pre .< 0) || any(post .< 0)
-      error("stoichiometric coefficients must be positive.")
-    end
-    return new(id, rate, 0.0, pre, post)
-  end
-end
-
-typealias ReactionVector Vector{ReactionChannel}
-
-immutable Simulation
-  id::ASCIIString
-  initial::Vector{Int}
-
-  sname::Vector{Symbol}
-  stracked::Vector{Int}
-
-  rname::Vector{Symbol}
-  rtracked::Vector{Int}
-
-  state::Vector{Int}
-  rxns::ReactionVector
-  param::Dict{Symbol,Parameter}
-end
-
-function Simulation(x::Network)
-  state, sname, stracked, inds = _svector(x.species)
-  rxns,  rname, rtracked       = _rvector(x.reactions, inds)
-  return Simulation(x.id, deepcopy(state), sname, stracked, rname, rtracked, state, rxns, deepcopy(x.parameters))
-end
-
-function _svector(species)
-  state    = Array(Int,  length(species))
-  sname    = Array(Symbol, length(species))
-  stracked = Int[]
-  inds     = Dict{Symbol,Int}()
-
-  i = 1
-  for (key,s) in species
-    inds[key] = i
-    state[i] = s.population
-    sname[i] = s.id
-    if s.istracked; push!(stracked, i); end
-    i = i + 1
-  end
-  return state, sname, stracked, inds
-end
-
-function _rvector(reactions, inds)
-  rxns    = Array(ReactionChannel, length(reactions))
-  rname   = Array(Symbol, length(reactions))
-  rtracked = Int[]
-
-  j = 1
-  for (key,r) in reactions
-    rname[j] = r.id
-    pre  = Array(Int, length(inds))
-    post = Array(Int, length(inds))
-
-    d1 = getfield(r, :reactants)
-    d2 = getfield(r, :products)
-
-    for (sname,i) in inds
-      pre[i]  = get(d1, sname, 0)
-      post[i] = get(d2, sname, 0)
-    end
-    if r.istracked; push!(rtracked, j); end
-    rxns[j] = ReactionChannel(r.id, r.rate, pre, post)
-    j = j + 1
-  end
-  return rxns, rname, rtracked
-end
-
-make_observers(::Explicit, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, 0)
-
-make_observers(::Uniform, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, n*itr)
-
-function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
-    overseer = Overseer(TimeObserver(:time, n))
-
-    for i in eachindex(stracked)
-        j = stracked[i]
-        push!(overseer.s_observers, SpeciesObserver(sname[j], spcs, stracked[i], n))
-    end
-
-    for i in eachindex(rtracked)
-        j = stracked[i]
-        push!(overseer.r_observers, PropensityObserver(rname[j], rxns[rtracked[i]], n))
-    end
-
-    return overseer
-end
-
 """
 ```
 simulate(m::Newtork; with=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
@@ -114,56 +14,68 @@ simulate(m::Newtork; with=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs.
 - `itr`: The number of realizations.
 - `kwargs`: Optional keyword arguments specific to a particular algorithm. Consult docs for an algorithm for more details.
 """
-function simulate(model::Network; with::Symbol=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
-  args = Dict{Symbol,Any}(kwargs)
+function simulate(network::Network; with::Symbol=:ssa, T=1.0, output=Uniform(), dt=1.0, itr=1, track=Symbol[], kwargs...)
 
   if with == :ssa
-    algorithm = SSA(args)
+    algorithm = ssa(T; kwargs...)
   elseif with == :odm
-    algorithm = ODM(args)
+    algorithm = odm(T; kwargs...)
   elseif with == :frm
-    algorithm = FRM(args)
+    algorithm = frm(T; kwargs...)
   elseif with == :nrm
-    algorithm = NRM(args)
+    algorithm = nrm(T; kwargs...)
   elseif with == :sal
-    algorithm = SAL(args)
+    algorithm = sal(T; kwargs...)
   else
     error("$with is an unrecognized algorithm.")
   end
-  _run(Simulation(model), algorithm, output, dt, tf, itr)
+
+  # Create the main data structure used in the simulation
+  Xt, species_id, id2ind = make_species_arr(network.species)
+  rv, reaction_id        = make_reaction_arr(network.reactions, id2ind)
+
+  m = Model(network.id, Xt, rv, network.parameters, deepcopy(Xt))
+
+  # Identify which objects to track
+  if isempty(track)
+      tracked_species = [ i for i in 1:length(species_id) ]
+      tracked_reactions = Int[]
+  else
+      tracked_species   = findin(species_id, track)
+      tracked_reactions = findin(reaction_id, track)
+  end
+
+  # Create the respective observers
+  n = round(Int, T / dt) + 1
+  tracker = make_observers(output,
+                            species_id,
+                            tracked_species,
+                            reaction_id,
+                            tracked_reactions,
+                            Xt,
+                            rv,
+                            n,
+                            itr)
+
+  manager = init_updater(output, tracker, dt, n, itr) # Initialize update manager
+
+  simulate(m, algorithm, output, itr, tracker, manager)
 end
 
-function _run(model::Simulation, alg::Algorithm, output::OutputType, dt, tf, itr)
-  # Unpack model
-  initial  = model.initial
-  spcs     = model.state
-  rxns     = model.rxns
-  params   = model.param
-  sname    = model.sname
-  stracked = model.stracked
-  rname    = model.rname
-  rtracked = model.rtracked
+function simulate(m::Model, algorithm::Algorithm, output::OutputType, itr, tracker, manager)
+  initialize!(algorithm)
 
-  n  = round(Int, tf / dt) + 1
-
-  overseer = make_observers(output, sname, stracked, rname, rtracked, spcs, rxns, n, itr)
-  u  = init_updater(output, overseer, dt, n, itr) # Initialize update manager
-
-  init(alg, rxns, spcs, initial, params)
   for i = 1:itr
-    t = 0.0
-    copy!(spcs, initial) # Reset copy numbers to initial values
-    reset(alg, rxns, spcs, params) # Reset algorithm variables
-    while t < tf
-      update!(output, u, t)   # Record current state
-      τ = step(alg, rxns, spcs, params, t, tf) # Carry out one step of the algorithm
-      t = t + τ
+    reset!(algorithm)
+    reset!(m)
+    while !done(algorithm)
+      update!(output, manager, time(algorithm))   # Record current state
+      algorithm(m)
     end
-    final_update!(output, u, t) # Record final state
+    final_update!(output, manager, time(algorithm)) # Record final state
   end
-  compute_statistics(alg)
 
-  sdata, pdata = compile_data(overseer)
-  mdata = compile_metadata(alg, tf, n, itr)
-  return SimulationOutput(output, sdata, pdata, mdata)
+  sdata, pdata = compile_data(tracker)
+  mdata = compile_metadata(algorithm, blocksize(manager), itr)
+  return SimulationOutput(sdata, pdata, mdata)
 end
