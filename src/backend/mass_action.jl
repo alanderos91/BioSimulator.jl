@@ -26,11 +26,6 @@ function mass_action(c::Parameter, stoich::Vector{Int}, x::Vector{Int})
   return c * mass_action_helper(stoich, x)
 end
 
-function mass_action(r::ReactionChannel, x::Vector{Int}, params::Parameters)
-  c = params[r.rate]
-  return mass_action(c, r.pre, x)
-end
-
 function mass_action_deriv(c::Parameter, stoich::Vector{Int}, x::Vector{Int}, k::Int)
   acc = 1.0
   if stoich[k] == 0
@@ -46,23 +41,4 @@ function mass_action_deriv(c::Parameter, stoich::Vector{Int}, x::Vector{Int}, k:
   end
 
   return c * acc
-end
-
-function mass_action_deriv(r::ReactionChannel, x::Vector{Int}, params::Parameters, k::Int)
-  c = params[r.rate]
-  return mass_action_deriv(c, r.pre, x, k)
-end
-
-function propensity!(r::ReactionChannel, x::Vector{Int}, param::Parameters)
-  r.propensity = mass_action(r, x, param)
-  return;
-end
-
-function compute_propensities!(rxns::ReactionVector, x::Vector{Int}, param::Parameters)
-  intensity = 0.0
-  for r in rxns
-    propensity!(r, x, param)
-    intensity = intensity + r.propensity
-  end
-  return intensity
 end
