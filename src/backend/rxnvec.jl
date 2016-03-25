@@ -38,7 +38,7 @@ type ReactionVector
 end
 
 function ReactionVector(rxns::Vector{ReactionChannel})
-  return ReactionVector(rxns, 0.0, zeros(Float64, length(rxns)))
+  return ReactionVector(rxns, Inf, zeros(Float64, length(rxns)))
 end
 
 ##### accessors #####

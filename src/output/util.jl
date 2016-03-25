@@ -60,9 +60,3 @@ function Base.show(io::IO, x::SimulationOutput)
     @printf io "[species data] %d x %d\n" size(x.species, 1) size(x.species, 2)
     @printf io "[propensity data] %d x %d\n" size(x.propensity, 1) size(x.propensity, 2)
 end
-
-function cumavg(avg, x, n)
-    avg = (x + n * avg) / (n + 1)
-end
-
-get_tags(algorithm) = algorithm.tags

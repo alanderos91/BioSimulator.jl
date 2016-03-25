@@ -17,7 +17,8 @@ initial(m::Model)    = m.X₀
 
 function reset!(m::Model)
   copy!(m.Xt, m.X₀)
-  fill!(m.rv, 0.0)
+  m.rv.intensity = Inf
+  #fill!(m.rv, 0.0)
 end
 
 compute_propensities!(m) = compute_intensities!(reactions(m), species(m), parameters(m))
