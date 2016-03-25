@@ -7,7 +7,7 @@ type ReactionChannel
 
   function ReactionChannel(id, rate, pre, post)
     if any(pre .< 0) || any(post .< 0)
-      error("Stoichiometric coefficients must be positive.")
+      error("stoichiometric coefficients must be positive.")
     end
     return new(id, rate, 0.0, pre, post)
   end
@@ -81,8 +81,6 @@ end
 make_observers(::Explicit, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, 0)
 
 make_observers(::Uniform, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, n*itr)
-
-make_observers(::Histogram, sname, stracked, rname, rtracked, spcs, rxns, n, itr) = make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
 
 function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
     overseer = Overseer(TimeObserver(:time, n))
@@ -167,5 +165,5 @@ function _run(model::Simulation, alg::Algorithm, output::OutputType, dt, tf, itr
 
   sdata, pdata = compile_data(overseer)
   mdata = compile_metadata(alg, tf, n, itr)
-  return SimulationOutput(sdata, pdata, mdata)
+  return SimulationOutput(output, sdata, pdata, mdata)
 end

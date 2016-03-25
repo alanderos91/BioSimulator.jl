@@ -1,5 +1,28 @@
-function plot_mean_timeseries(data, field, colnames...)
+# inspired by Mamba.jl
+
+import Gadfly: Geom, Guide, plot
+
+function plot{T<:Uniform}(data::SimulationOutput{T}, ptype::Symbol; field=:species, args...)
     df = getfield(data, field)
+    mdata = metadata(data)
+
+    ptype == :sample ? sampleplot(df; args...) :
+    ptype == :mean   ? meanplot(df; args...) :
+    ptype == :dist   ? distplot(df; args...) :
+    throw(ArgumentError("Unrecognized type $(ptype)"))
+end
+
+function plot{T<:Explicit}(data::SimulationOutput{T}, ptype::Symbol, dt::Float64; field=:species, args...)
+    mdata = metadata(data)
+    tf = mdata[:time]
+    itr = mdata[:itr]
+
+    tmp = interpolate(data, tf, dt, itr)
+    plot(tmp, ptype; field=field, args...)
+end
+
+##### plotting engines #####
+function meanplot(df; colnames::Vector{Symbol}=names(df)[2:end], na...)
     temp = flatten(df[:, [:time; collect(colnames)]])
     temp = aggregate(temp, [:time, :species], [mean, std])
     names!(temp, [:time, :species, :mean, :std])
@@ -12,8 +35,7 @@ function plot_mean_timeseries(data, field, colnames...)
     )
 end
 
-function plot_sample_timeseries(data, field, nsamples, col)
-    df = getfield(data, field)
+function sampleplot(df; nsamples::Integer=1, col::Symbol=names(df)[end], na...)
     temp = df[:, [:time, col]]
     npts  = length(unique(temp[:time]))
 
@@ -23,8 +45,7 @@ function plot_sample_timeseries(data, field, nsamples, col)
     plot(temp, x=:time, y=:copynumber, color=:iteration, Geom.line, Geom.point, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
 end
 
-function plot_histogram(data, field, t, colnames...)
-    df = getfield(data, field)
+function distplot(df; colnames::Vector{Symbol}=names(df)[2:end], t=df[:time][end], na...)
     temp = df[ df[:time] .== t, :]
     temp = flatten(temp[:, [:time; collect(colnames)]])
     plot(temp, x=:copynumber, color=:species, Geom.histogram, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
@@ -38,9 +59,9 @@ function flatten(df)
 
     if ncols == 1
         temp = DataFrame(
-            time  = df[:time],
-            copynumber = df[cols[1]],
-            species = cols[1]
+        time  = df[:time],
+        copynumber = df[cols[1]],
+        species = cols[1]
         )
     else
         counts = DataArray(eltype(df[2]), 0)
@@ -50,15 +71,25 @@ function flatten(df)
         end
 
         temp = DataFrame(
-            time  = repeat(convert(Vector, df[:time]), outer=[ncols]),
-            copynumber = counts,
-            species = repeat(cols, inner=[npts * itr])
+        time = repeat(convert(Vector, df[:time]), outer=[ncols]),
+        copynumber = counts,
+        species = repeat(cols, inner=[npts * itr])
         )
     end
 
     return temp
 end
 
+function interpolate(so::SimulationOutput{Explicit}, final_t, dt, itr)
+  df1 = interpolate(species(so), final_t, dt, itr)
+  df2 = interpolate(propensities(so), final_t, dt, itr)
+
+  SimulationOutput(Uniform(), df1, df2, metadata(so))
+end
+
+interpolate(so::SimulationOutput{Uniform}, final_t, dt, itr) = so
+
+# write a test for this function; not working
 function interpolate(df, final_t, dt, itr)
     t = df[:time]
     npts = round(Int, final_t / dt) + 1
@@ -66,7 +97,7 @@ function interpolate(df, final_t, dt, itr)
     k = 1
     next_t = 0.0
     for i = 1:length(t)
-        if t[i] >= next_t
+        while t[i] >= next_t
             inds[k] = i
             next_t = next_t + dt
             k = k + 1

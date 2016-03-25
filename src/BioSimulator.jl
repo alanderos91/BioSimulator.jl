@@ -5,6 +5,9 @@ using DataFrames
 using Gadfly
 using LightGraphs
 using GraphViz
+using Compose
+
+import Compose: MeasureOrNumber
 
 abstract OutputType
 immutable Explicit  <: OutputType end
@@ -39,7 +42,5 @@ include(joinpath("interface", "petrinet.jl"))
 
 export Network, Simulation, Explicit, Uniform, Histogram,
   simulate, Species, Reaction, parameter, get_species_data, get_propensity_data,
-  plot_species_timeseries,
-  petrinet,
-  plot_sample_timeseries, plot_mean_timeseries, plot_histogram
+  petrinet, plot
 end # module
