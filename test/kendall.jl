@@ -18,8 +18,8 @@ points = round(Int, t_final/Δt) + 1
 t      = linspace(0.0,t_final, points)
 theoretical = kendall_mean(x,t,α,μ,ν)
 
-algorithms = [:ssa, :odm, :nrm, :sal, :frm]
-
+#algorithms = [:ssa, :odm, :nrm, :sal, :frm]
+algorithms = [:ssa, :sal]
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
   for a in algorithms
@@ -36,8 +36,8 @@ for a in algorithms
   # @test_approx_eq_eps computed theoretical[end] 1e0
 
   print("   - Uniform ", uppercase(string(a)))
-  srand(seed); @time result = simulate(m, tf=t_final, with=a, output=Uniform(), dt=0.1, itr=100_000)
-  computed = aggregate(get_species_data(result), :time, mean)
+  srand(seed); @time result = simulate(m, T=t_final, with=a, output=Uniform(), dt=0.1, itr=100_000)
+  computed = aggregate(species(result), :time, mean)
   print("     |observed - theoretical| = ", abs(computed[:X_mean][end] - theoretical[end]), "\n")
   println()
 end
