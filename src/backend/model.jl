@@ -30,6 +30,20 @@ function fire_reaction!(m::Model, r::ReactionChannel)
     end
 end
 
+function fire_reactions!(m, events)
+    rxns = reactions(m)
+    @inbounds for i in eachindex(rxns)
+        fire_reaction!(m, reaction(rxns, i), events[i])
+    end
+end
+
+function fire_reaction!(m, rxn, k)
+    Xt = species(m)
+    @inbounds for i in eachindex(Xt)
+        Xt[i] = Xt[i] + k * increment(rxn, i)
+    end
+end
+
 function make_species_arr(dict::Dict{Symbol,Species})
     Xt     = Array(Int,    length(dict))
     id     = Array(Symbol, length(dict))
