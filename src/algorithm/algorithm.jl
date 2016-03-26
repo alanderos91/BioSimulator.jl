@@ -3,7 +3,7 @@ abstract Algorithm
 steps(x::Algorithm) = x.steps
 avg_nsteps(x::Algorithm) = x.avg_nsteps
 avg_step_size(x::Algorithm) = x.avg_step_size
-done(x::Algorithm, m::Model) = x.t > x.T || intensity(reactions(m)) == 0.0
+done(x::Algorithm, m::Model) = x.t >= x.T || intensity(reactions(m)) == 0.0
 time(x::Algorithm) = x.t
 end_time(x::Algorithm) = x.T
 
