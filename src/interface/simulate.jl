@@ -63,7 +63,7 @@ function simulate(network::Network; with::Symbol=:ssa, T=1.0, output=Uniform(), 
 end
 
 function simulate(m::Model, algorithm::Algorithm, output::OutputType, itr, tracker, manager)
-  initialize!(algorithm)
+  initialize!(algorithm, m)
 
   for i = 1:itr
     reset!(algorithm)
