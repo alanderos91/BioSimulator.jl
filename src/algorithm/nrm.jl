@@ -2,78 +2,97 @@ import Base.Collections: PriorityQueue, peek
 import Base.Order: ForwardOrdering
 
 type NRM <: Algorithm
+    # parameters
+    T::Float64
+
     # state variables
-    intensity::Float64
+    t::Float64
     g::DiGraph
     pq::PriorityQueue{Int,Float64,ForwardOrdering}
+    propensities::Vector{Float64}
+    steps::Int
 
     # statistics
-    steps::Int
-    avg_steps::Float64
-    counter::Int
+    avg_nsteps::Float64
+    avg_step_size::Float64
 
     # metadata tags
     tags::Vector{Symbol}
 
-    function NRM(args)
-        new(0.0, DiGraph(), PriorityQueue(Int,Float64), 0, 0.0, 0, [:avg_steps])
+    function NRM(T)
+        new(T, 0.0, DiGraph(), PriorityQueue(Int,Float64), Float64[], 0, 0.0, 0.0, DEFAULT_TAGS)
     end
 end
 
-function init(alg::NRM, rxns, spcs, initial, params)
-    alg.g = init_dep_graph(rxns)
-    alg.pq = init_pq(rxns) # Allocate the priority queue with zeros
+function nrm(T; na...)
+    return NRM(T)
+end
+
+function initialize!(x::NRM, m)
+    rxns = reactions(m)
+    d    = length(rxns)
+
+    g = init_dep_graph(rxns)
+    setfield!(x, :g,  g)
+
+    compute_propensities!(m)
+
+    a = propensities(rxns)
+    setfield!(x, :propensities, deepcopy(a))
+
+    pq = init_pq(x)
+    setfield!(x, :pq, pq)
+    return;
+end
+
+function reset!(x::NRM, m::Model)
+    setfield!(x, :t, 0.0)
+    setfield!(x, :steps, 0)
+    compute_propensities!(m)
+    init_pq!(x)
 
     return;
 end
 
-function reset(alg::NRM, rxns, spcs, params)
-    compute_statistics(alg)
-    alg.steps = 0
+function call(x::NRM, m::Model)
+    τ = nrm_update!(m ,x)
 
-    # Compute propensities and initialize the priority queue with firing times
-    compute_propensities!(rxns, spcs, params)
-    init_pq!(alg.pq, rxns)
+    # update algorithm variables
+    setfield!(x, :t,     τ)
+    setfield!(x, :steps, steps(x) + 1)
 
-    return;
+    update_dependents!(x, m)
+    compute_statistics!(x, τ)
 end
 
-function compute_statistics(alg::NRM)
-    alg.avg_steps = cumavg(alg.avg_steps, alg.steps, alg.counter)
-    alg.counter = alg.counter + 1
-    return;
-end
+function nrm_update!(m::Model, x)
+    T = end_time(x)
+    rxns = reactions(m)
+    pq = getfield(x, :pq)
+    μ, τ = peek(pq)
 
-function step(alg::NRM, rxns, spcs, params, t, tf)
-    τ = nrm_update!(spcs, rxns, t, tf, alg.g, alg.pq, params) - t
-    alg.steps = alg.steps + 1
-    τ = min(τ, tf) # need a way to handle simulations that have no updates
-    return τ;
-end
+    if τ > T return τ end
 
-function nrm_update!(spcs::Vector{Int}, rxns::ReactionVector, t::Float64, tf::Float64, g::LightGraphs.DiGraph, pq, param::Parameters)
-    μ, t = peek(pq)
-    if t > tf; return t; end
-    μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
-    update_dep_graph!(g, rxns, pq, spcs, param, μ, t)
-    return t
+    μ > 0 ? fire_reaction!(m, reaction(rxns, μ)) : error("No reaction ocurred!")
+    return τ
 end
 
 function init_dep_graph(rxns::ReactionVector)
-    m = length(rxns)
-    d = length(rxns[1].pre)
-    g = DiGraph(m)
+    d = length(rxns)
+    g = DiGraph(d)
 
-    @inbounds for j in eachindex(rxns)
-        r = rxns[j]
+    for j in eachindex(rxns)
+        r = reaction(rxns, j)
         pre = r.pre
         post = r.post
 
         # Search for reactions r_i with reactant or product of r_j as reactant
-        @inbounds for k in eachindex(pre)
+        # how to handle immigration reaction?
+        for k in eachindex(pre)
             if pre[k] != 0 || post[k] != 0
-                @inbounds for i in eachindex(rxns)
-                    if rxns[i].pre[k] != 0; add_edge!(g, j, i); end
+                for i in eachindex(rxns)
+                    if i == j continue end
+                    if reaction(rxns, i).pre[k] != 0 add_edge!(g, j, i) end
                 end
             end
         end
@@ -81,36 +100,39 @@ function init_dep_graph(rxns::ReactionVector)
     return g
 end
 
-function update_dep_graph!(g::LightGraphs.DiGraph, rxns::ReactionVector, pq, spcs::Vector{Int}, param::Parameters, μ::Int, t::Float64)
-    dependents = neighbors(g, μ)
-    r = rxns[μ]
+function update_dependents!(x::NRM, m::Model)
+    pq   = getfield(x, :pq)
+    g    = getfield(x, :g)
+    μ, τ = peek(pq)
 
-    # Compute propensity of the reaction that fired and update the next firing time
-    propensity!(r, spcs, param)
-    pq[μ] = t + rand(Exponential(1 / r.propensity))
+    t    = time(x)
+    Xt   = species(m)
+    rxns = reactions(m)
+    p    = parameters(m)
 
     # Compute propensities and firing times for dependent reactions
-    @inbounds for α in dependents
-        _r = rxns[α]
-        old_propensity = _r.propensity
-        propensity!(_r, spcs, param)
-        if α != μ
-            pq[α] = t + (old_propensity / _r.propensity) * (pq[α] - t)
-        end
+    dependents = neighbors(g, μ)
+    for α in dependents
+        old_propensity = rxns[α]
+        rxns[α] = intensity(reaction(rxns, α), Xt, p)
+        pq[α] = t + (old_propensity / rxns[α]) * (pq[α] - t)
     end
+    rxns[μ] = intensity(reaction(rxns, μ), Xt, p)
+    pq[μ]   = τ + rand(Exponential(1 / rxns[μ]))
     return g
 end
 
-function init_pq(rxns::ReactionVector)
-    pq = PriorityQueue(Int,Float64)
-    for j in eachindex(rxns)
-        pq[j] = 0.0
-    end
+function init_pq(x)
+    a  = getfield(x, :propensities)
+    d  = length(a)
+    pq = PriorityQueue(collect(1:d), zeros(Float64, d))
     return pq
 end
 
-function init_pq!(pq, rxns::ReactionVector)
-    @inbounds for j in eachindex(rxns)
-        pq[j] = rand(Exponential(1 / rxns[j].propensity))
+function init_pq!(x)
+    a  = getfield(x, :propensities)
+    pq = getfield(x, :pq)
+    for j in eachindex(a)
+        pq[j] = rand(Exponential(1 / a[j]))
     end
 end

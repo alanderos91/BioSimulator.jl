@@ -66,8 +66,8 @@ function simulate(m::Model, algorithm::Algorithm, output::OutputType, itr, track
   initialize!(algorithm, m)
 
   for i = 1:itr
-    reset!(algorithm)
     reset!(m)
+    reset!(algorithm, m)
     while !done(algorithm, m)
       update!(output, manager, time(algorithm))   # Record current state
       algorithm(m)

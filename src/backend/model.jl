@@ -21,7 +21,7 @@ function reset!(m::Model)
   #fill!(m.rv, 0.0)
 end
 
-compute_propensities!(m) = compute_intensities!(reactions(m), species(m), parameters(m))
+compute_propensities!(m) = compute_propensities!(reactions(m), species(m), parameters(m))
 
 function fire_reaction!(m::Model, r::ReactionChannel)
     Xt = species(m)

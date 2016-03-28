@@ -1,54 +1,64 @@
 type FRM <: Algorithm
+    # parameters
+    T::Float64
+
     # state variables
-    intensity::Float64
+    t::Float64
+    steps::Int
 
     # statistics
-    steps::Int
-    avg_steps::Float64
-    counter::Int
+    avg_nsteps::Float64
+    avg_step_size::Float64
 
     # metadata tags
     tags::Vector{Symbol}
 
-    function FRM(args)
-        new(0.0, 0, 0.0, 0, [:avg_steps])
+    function FRM(T)
+        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_TAGS)
     end
 end
 
-init(alg::FRM, rxns, spcs, initial, params) = return;
+function frm(T; na...)
+    return FRM(T)
+end
 
-function reset(alg::FRM, rxns, spcs, params)
-    compute_statistics(alg)
-    alg.steps = 0
+initialize!(x::FRM, m::Model) = return;
 
+function reset!(x::FRM, m::Model)
+    setfield!(x, :t, 0.0)
+    setfield!(x, :steps, 0)
     return;
 end
 
-function compute_statistics(alg::FRM)
-    alg.avg_steps = cumavg(alg.avg_steps, alg.steps, alg.counter)
-    alg.counter = alg.counter + 1
-    return;
+function call(x::FRM, m::Model)
+    compute_propensities!(m)
+    τ = frm_update!(m, x)
+
+    # update algorithm variables
+    setfield!(x, :t,     time(x) + τ)
+    setfield!(x, :steps, steps(x) + 1)
+
+    compute_statistics!(x, τ)
 end
 
-function step(alg::FRM, rxns, spcs, params, t, tf)
-    compute_propensities!(rxns, spcs, params)
-    τ = frm_update!(spcs, rxns, t, tf)
-    alg.steps = alg.steps + 1
+function frm_update!(m::Model, x)
+    t = x.t
+    T = x.T
 
-    return τ;
-end
+    rxns = reactions(m)
 
-function frm_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf)
     τ = Inf; μ = 0
     for j in eachindex(rxns)
-        τj = rand(Exponential(1/rxns[j].propensity))
+        τj = rand(Exponential(1/rxns[j]))
         if τj < τ
             τ = τj
             μ = j
         end
     end
-    t = t + τ
-    if t > tf; return τ; end
-    μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
+
+    if t > T return τ end
+
+    μ > 0 ? fire_reaction!(m, reaction(rxns, μ)) : error("No reaction occurred!")
+
     return τ
 end

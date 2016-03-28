@@ -1,71 +1,72 @@
 type SSA <: Algorithm
+    # parameters
+    T::Float64
+
     # state variables
-    intensity::Float64
+    t::Float64
+    steps::Int
 
     # statistics
-    steps::Int
-    avg_steps::Float64
-    counter::Int
+    avg_nsteps::Float64
+    avg_step_size::Float64
 
     # metadata tags
     tags::Vector{Symbol}
 
-    function SSA(args)
-        new(0.0, 0, 0.0, 0, [:avg_steps])
+    function SSA(T)
+        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_TAGS)
     end
 end
 
-init(alg::SSA, rrxns, spcs, initial, params) = return;
+function ssa(T; na...)
+    return SSA(T)
+end
 
-function reset(alg::SSA, rxns, spcs, params)
-    compute_statistics(alg)
-    alg.steps = 0
+initialize!(x::SSA, m::Model) = return;
+
+function reset!(x::SSA, m::Model)
+    setfield!(x, :t, 0.0)
+    setfield!(x, :steps, 0)
     return;
 end
 
-function compute_statistics(alg::SSA)
-    alg.avg_steps = cumavg(alg.avg_steps, alg.steps, alg.counter)
-    alg.counter = alg.counter + 1
-    return;
+function call(x::SSA, m::Model)
+    compute_propensities!(m)
+    τ = ssa_update!(m, x)
+
+    # update algorithm variables
+    setfield!(x, :t,     time(x) + τ)
+    setfield!(x, :steps, steps(x) + 1)
+
+    compute_statistics!(x, τ)
 end
 
-function step(alg::SSA, rxns, spcs, params, t, tf)
-    alg.intensity = compute_propensities!(rxns, spcs, params)
-    τ = ssa_update!(spcs, rxns, t, tf, alg.intensity)
-    alg.steps = alg.steps + 1
-    return τ;
-end
+function ssa_update!(m::Model, x)
+    t = x.t
+    T = x.T
+    rxn = reactions(m)
+    a0 = intensity(rxn)
 
-function sample(rxns::ReactionVector, jump)
-    ss = 0.0
-    for i in eachindex(rxns)
-        ss = ss + rxns[i].propensity
-        if ss >= jump
-            return i
-        end
-    end
-    return 0
-end
+    τ = rand(Exponential(1 / a0))
 
-function ssa_step!(spcs::Vector{Int}, rxns::ReactionVector, intensity)
-    u = rand()
-    jump = intensity * u
-    j = sample(rxns, jump)
-    j > 0 ? update!(spcs, rxns[j]) : error("No reaction occurred!")
-    return;
-end
+    if t + τ > T return τ end
 
-function ssa_update!(spcs::Vector{Int}, rxns::ReactionVector, t, tf, intensity)
-    τ = rand(Exponential(1/intensity))
-    t = t + τ
-    if t > tf; return τ; end
-    ssa_step!(spcs, rxns, intensity)
+    μ = select_reaction(m, a0)
+    fire_reaction!(m, reaction(rxn, μ))
+
     return τ
 end
 
-function update!(spcs::Vector{Int}, r::ReactionChannel)
-    for i in eachindex(spcs)
-        spcs[i] = spcs[i] + (r.post[i] - r.pre[i])
+function select_reaction(m::Model, a0)
+    jump = a0 * rand()
+    rxn = reactions(m)
+    s = 0.0
+
+    for i in eachindex(rxn)
+        s = s + rxn[i]
+        if s >= jump
+            return i
+        end
     end
-    return;
+    error("no reaction occurred!")
 end

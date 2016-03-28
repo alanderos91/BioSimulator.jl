@@ -1,122 +1,126 @@
-abstract Coupling
-
-immutable Tight <: Coupling end
-immutable Loose <: Coupling end
-
-export Tight, Loose
-
-type ODM{T} <: Algorithm
+type ODM <: Algorithm
     # parameters
-    c::T
-    pre_steps::Int
-    samples::Int
+    T::Float64
+    init_steps::Int
+    init_iters::Int
+    coupled::Symbol
+    callback::Function
 
     # state variables
-    intensity::Float64
+    t::Float64
+    steps::Int
     g::DiGraph
 
     # statistics
-    steps::Int
-    avg_steps::Float64
-    counter::Int
+    avg_nsteps::Float64
+    avg_step_size::Float64
 
     # metadata tags
     tags::Vector{Symbol}
+
+    function ODM(T, init_steps, init_iters, coupled, callback)
+        new(T, init_steps, init_iters, coupled, callback, 0.0, 0, DiGraph(), 0.0, 0.0, DEFAULT_TAGS)
+    end
 end
 
-function ODM(args)
-    c       = get(args, :c,       Tight())
-    steps   = get(args, :steps,   100)
-    samples = get(args, :samples, 1)
-
-    ODM{typeof(c)}(c, steps, samples, 0.0, DiGraph(), 0, 0.0, 0, [:avg_steps])
+function odm(T; init_steps=100, init_iters=1, coupled=:tight, na...)
+    return ODM(T, init_steps, init_iters, coupled, update_all!)
 end
 
-function init(alg::ODM, rxns, spcs, initial, params)
-    alg.g = typeof(alg.c) <: Loose ? init_dep_graph(rxns) : DiGraph()
-
+function initialize!(x::ODM, m::Model)
+    if x.coupled == :loose
+        g = init_dep_graph()
+        setfield!(x, :g, g)
+        setfield!(x, :callback, update_dependents!)
+    end
     # Presimulate to sort reactions according to multiscale property.
     # This will modify spcs and rxns
-    init_odm!(spcs, rxns, params, initial, alg.pre_steps, alg.samples)
+    presimulate!(x, m)
     return;
 end
 
-function reset(alg::ODM, rxns, spcs, params)
-    compute_statistics(alg)
-    alg.steps = 0
-    alg.intensity = compute_propensities!(rxns, spcs, params)
+function reset!(x::ODM, m::Model)
+    setfield!(x, :t, 0.0)
+    setfield!(x, :steps, 0)
+    compute_propensities!(m)
 
     return;
 end
 
-function compute_statistics(alg::ODM)
-    alg.avg_steps = cumavg(alg.avg_steps, alg.steps, alg.counter)
-    alg.counter = alg.counter + 1
-    return;
+function call(x::ODM, m)
+    τ = odm_update!(m ,x)
+
+    # update algorithm variables
+    setfield!(x, :t,     time(x) + τ)
+    setfield!(x, :steps, steps(x) + 1)
+
+    compute_statistics!(x, τ)
 end
 
-function step(alg::ODM, rxns, spcs, params, t, tf)
-    intensity = alg.intensity; c = alg.c; g = alg.g
-    τ, intensity = odm_update!(c, spcs, rxns, params, intensity, g)
-    alg.steps = alg.steps + 1
-    alg.intensity = intensity
-    return τ;
+function odm_update!(m::Model, x)
+    t = x.t
+    T = x.T
+
+    rxn = reactions(m)
+    a0 = intensity(rxn)
+
+    τ = rand(Exponential(1 / a0))
+
+    if t + τ > T return τ end
+
+    μ = select_reaction(m, a0)
+    fire_reaction!(m, reaction(rxn, μ))
+
+    update_propensities = getfield(x, :callback)
+    update_propensities(x, m, μ)
+
+    return τ
 end
 
-function odm_update!(c::Coupling, spcs::Vector{Int}, rxns::ReactionVector, param, intensity, g)
-    τ = rand(Exponential(1 / intensity))
-    jump = intensity * rand()
-    μ = sample(rxns, jump)
-    μ > 0 ? update!(spcs, rxns[μ]) : error("No reaction occurred!")
-
-    intensity = update_propensities!(c, rxns, spcs, param, g, μ, intensity)
-    return τ, intensity
-end
-
-function update_propensities!(::Loose, rxns, spcs, param, g, μ, intensity)
+function update_dependents!(x::ODM, m::Model, μ)
+    g = getfield(x, :g)
+    Xt = species(m)
+    rxns = reactions(m)
+    p = parameters(m)
+    a0 = intensity(rxns)
     dependents = neighbors(g, μ)
 
     @inbounds for α in dependents
-        intensity = intensity - rxns[α].propensity
-        propensity!(rxns[α], spcs, param);
-        intensity = intensity + rxns[α].propensity
+        a0 = a0 - rxns[α]
+        rxns[α] = intensity(reaction(rxns, α), Xt, p)
+        a0 = a0 + rxns[α]
     end
-    return intensity
+    setfield!(rxn, :intensity, a0)
+    return;
 end
 
-function update_propensities!(::Tight, rxns, spcs, param, g, μ, intensity)
-    return compute_propensities!(rxns, spcs, param)
+function update_all!(x::ODM, m::Model, μ)
+    compute_propensities!(m)
+    return;
 end
 
-function presimulate!(spcs, rxns, params, initial, n, itr)
+function presimulate!(x, m)
+    itr = x.init_iters
+    n   = x.init_steps
+
+    rxns = reactions(m)
     events = zeros(Float64, length(rxns))
 
     for i = 1:itr
-        copy!(spcs, initial)
+        reset!(m)
         for k = 1:n
-            intensity = compute_propensities!(rxns, spcs, params)
-            τ = rand(Exponential(1 / intensity))
-            u = rand()
-            jump = intensity * u
-            j = sample(rxns, jump)
-            j > 0 ? update!(spcs, rxns[j]) : error("No reaction occurred!")
-            events[j] = events[j] + 1
+            a0 = compute_propensities!(m)
+            τ = rand(Exponential(1 / a0))
+            jump = a0 * rand()
+            μ = select_reaction(m, a0)
+            fire_reaction!(m, reaction(rxns, μ))
+            events[μ] = events[μ] + 1
         end
     end
 
     for i in eachindex(rxns)
-        rxns[i].propensity = events[i] / itr
+        @inbounds rxns[i] = events[i] / itr
     end
 
-    return rxns
-end
-
-function init_odm!(spcs, rxns, params, initial, n, itr)
-    rxns = presimulate!(spcs, rxns, params, initial, n, itr)
-    sort!(rxns, alg=Base.MergeSort, lt=isless, rev=true)
-    return rxns
-end
-
-function isless(x::ReactionChannel, y::ReactionChannel)
-    return x.propensity < y.propensity
+    sort!(rxns)
 end

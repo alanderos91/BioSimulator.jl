@@ -65,15 +65,10 @@ getindex(rv::ReactionVector, key...)         = getindex(rv.propensities, key...)
 setindex!(rv::ReactionVector, value, key...) = setindex!(rv.propensities, value, key...)
 
 ##### sorting #####
-function sort!(rv::ReactionVector;
-               alg::Base.Algorithm=defalg(v),
-               lt=isless,
-               by=identity,
-               rev::Bool=false,
-               order::Base.Ordering=Base.Forward)
+function sort!(rv::ReactionVector)
     rxns = reactions(rv)
     prop = propensities(rv)
-    ix   = sortperm(prop, alg=alg, lt=lt, by=by, order=order)
+    ix   = sortperm(prop)
 
     for i in eachindex(ix)
         k = ix[i]
@@ -104,7 +99,7 @@ function intensity(r::ReactionChannel, x::Vector{Int}, param::Parameters)
     mass_action(r, x, param)
 end
 
-function compute_intensities!(rv::ReactionVector, x::Vector{Int}, param::Parameters)
+function compute_propensities!(rv::ReactionVector, x::Vector{Int}, param::Parameters)
   a0  = 0.0
   rxn = reactions(rv)
   for j in eachindex(rxn)
