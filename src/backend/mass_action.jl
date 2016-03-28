@@ -3,7 +3,7 @@ function mass_action_helper(stoich::Vector{Int}, x::Vector{Int})
 
   for i in eachindex(stoich)
     for j = 1:stoich[i]
-      acc = acc * (x[i] - (j - 1))
+      @inbounds acc = acc * (x[i] - (j - 1))
     end
   end
 
@@ -15,7 +15,7 @@ function mass_action_helper(stoich::Vector{Int}, x::Vector{Int}, k::Int)
   for i in eachindex(stoich)
     if i != k
       for j = 1:stoich[i]
-        acc = acc * (x[i] - (j - 1))
+        @inbounds acc = acc * (x[i] - (j - 1))
       end
     end
   end
