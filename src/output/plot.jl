@@ -2,7 +2,7 @@
 
 import Gadfly: Geom, Guide, plot
 
-function plot{T<:Uniform}(data::SimulationOutput{T}, ptype::Symbol; field=:species, args...)
+function plot(data::SimulationOutput, ptype::Symbol; field=:species, args...)
     df = getfield(data, field)
     mdata = metadata(data)
 
@@ -10,15 +10,6 @@ function plot{T<:Uniform}(data::SimulationOutput{T}, ptype::Symbol; field=:speci
     ptype == :mean   ? meanplot(df; args...) :
     ptype == :dist   ? distplot(df; args...) :
     throw(ArgumentError("Unrecognized type $(ptype)"))
-end
-
-function plot{T<:Explicit}(data::SimulationOutput{T}, ptype::Symbol, dt::Float64; field=:species, args...)
-    mdata = metadata(data)
-    tf = mdata[:time]
-    itr = mdata[:itr]
-
-    tmp = interpolate(data, tf, dt, itr)
-    plot(tmp, ptype; field=field, args...)
 end
 
 ##### plotting engines #####
@@ -79,15 +70,6 @@ function flatten(df)
 
     return temp
 end
-
-function interpolate(so::SimulationOutput{Explicit}, final_t, dt, itr)
-  df1 = interpolate(species(so), final_t, dt, itr)
-  df2 = interpolate(propensities(so), final_t, dt, itr)
-
-  SimulationOutput(Uniform(), df1, df2, metadata(so))
-end
-
-interpolate(so::SimulationOutput{Uniform}, final_t, dt, itr) = so
 
 # write a test for this function; not working
 function interpolate(df, final_t, dt, itr)

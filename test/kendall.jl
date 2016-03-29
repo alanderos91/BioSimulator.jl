@@ -18,13 +18,12 @@ points = round(Int, t_final/Δt) + 1
 t      = linspace(0.0,t_final, points)
 theoretical = kendall_mean(x,t,α,μ,ν)
 
-#algorithms = [:ssa, :odm, :nrm, :sal, :frm]
-algorithms = [:ssa, :sal]
+algorithms = [:ssa, :odm, :nrm, :sal, :frm]
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
   for a in algorithms
-    simulate(m, tf=t_final, with=a, output=Explicit(), itr=1)
-    simulate(m, tf=t_final, with=a, output=Uniform(), dt=0.1, itr=1)
+    simulate(m, T=t_final, with=a, output=Explicit(), itr=1)
+    simulate(m, T=t_final, with=a, output=Uniform(), dt=0.1, itr=1)
   end
 end
 
