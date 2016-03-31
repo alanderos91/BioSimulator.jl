@@ -23,6 +23,8 @@ abstract OutputType
 immutable Explicit <: OutputType end
 immutable Uniform  <: OutputType end
 
+const ALGORITHMS = [:ssa]
+
 # Interface
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))

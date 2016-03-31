@@ -4,9 +4,9 @@ model_size = [10, 100, 500]
 
 for a in BioSimulator.ALGORITHMS
     @printf "%+6s\n" uppercase(string(a))
-    for M in model_size
-        model = linear(M, x0)
-        @printf "%+6s: %d" "M" M
+    for n in model_size
+        model = independent(n, x0)
+        @printf "%+6s: %d" "n" n
         @time simulate(model, T=T, with=a, track=[:S1])
     end
 end

@@ -2,40 +2,43 @@ using BioSimulator
 using Base.Test
 using DataFrames
 
-function kendall_mean(i,t,alpha,mu,nu)
-   x = exp((alpha-mu)*t)
-  return i * x + nu/(alpha-mu)*(x-1)
+function kendall_mean(i,t,α,μ,ν)
+   x = exp((α-μ)*t)
+  return i * x + ν/(α-μ)*(x-1)
 end
 
 m = kendall()
 x = m.species[:X].population
-t_final = 4.0
-Δt      = 0.1
-seed    = 53571
+α = p[:α].value
+μ = p[:μ].value
+ν = p[:ν].value
+T = 4.0
+dt = 0.1
+seed = 5357
+itr = 100_000
 
 # Compute mean for comparison
-points = round(Int, t_final/Δt) + 1
-t      = linspace(0.0,t_final, points)
+npts = round(Int, T / dt) + 1
+t = linspace(0.0, T, npts)
 theoretical = kendall_mean(x,t,α,μ,ν)
 
-algorithms = [:ssa, :odm, :nrm, :sal, :frm]
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
-  for a in algorithms
-    simulate(m, T=t_final, with=a, output=Explicit(), itr=1)
-    simulate(m, T=t_final, with=a, output=Uniform(), dt=0.1, itr=1)
+  for a in BioSimulator.ALGORITHMS
+    simulate(m, T=T, with=a, output=Explicit(), itr=1)
+    simulate(m, T=T, with=a, output=Uniform(), dt=dt, itr=1)
   end
 end
 
 print("    Running tests...\n\n")
-for a in algorithms
+for a in BioSimulator.ALGORITHMS
   # print(" * Explicit ", uppercase(string(a)))
-  # srand(seed); @time result = simulate(Simulation(m), t_final, a, o=Explicit(), itr=100_000)
+  # srand(seed); @time result = simulate(Simulation(m), T, a, o=Explicit(), itr=100_000)
   # computed = computed_mean(result)
   # @test_approx_eq_eps computed theoretical[end] 1e0
 
   print("   - Uniform ", uppercase(string(a)))
-  srand(seed); @time result = simulate(m, T=t_final, with=a, output=Uniform(), dt=0.1, itr=100_000)
+  srand(seed); @time result = simulate(m, T=T, with=a, output=Uniform(), dt=dt, itr=itr)
   computed = aggregate(species(result), :time, mean)
   print("     |observed - theoretical| = ", abs(computed[:X_mean][end] - theoretical[end]), "\n")
   println()

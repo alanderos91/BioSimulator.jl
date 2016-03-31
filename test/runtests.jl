@@ -8,7 +8,9 @@ include("test_models.jl")
 tests = ["mass_action",
          "time_derivatives",
          "network",
-         "kendall"]
+         "kendall",
+         "linear",
+         "independent"]
 
 println("Running tests:")
 
