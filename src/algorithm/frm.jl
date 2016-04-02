@@ -30,35 +30,37 @@ function reset!(x::FRM, m::Model)
     return;
 end
 
-function call(x::FRM, m::Model)
+function step!(x::FRM, m::Model)
     compute_propensities!(m)
-    τ = frm_update!(m, x)
+
+    r = reactions(m)
+
+    τ, μ = select_reaction(r)
 
     # update algorithm variables
     setfield!(x, :t,     time(x) + τ)
     setfield!(x, :steps, steps(x) + 1)
 
+    if !done(x, m)
+        if μ > 0
+            fire_reaction!(m, reaction(r, μ))
+        else
+            error("no reaction ocurred!")
+        end
+    end
+
     compute_statistics!(x, τ)
 end
 
-function frm_update!(m::Model, x)
-    t = x.t
-    T = x.T
-
-    rxns = reactions(m)
-
-    τ = Inf; μ = 0
-    for j in eachindex(rxns)
-        τj = rand(Exponential(1/rxns[j]))
+function select_reaction(r::ReactionVector)
+    τ = Inf
+    μ = 0
+    for j in eachindex(r)
+        τj = rand(Exponential(1 / r[j]))
         if τj < τ
             τ = τj
             μ = j
         end
     end
-
-    if t > T return τ end
-
-    μ > 0 ? fire_reaction!(m, reaction(rxns, μ)) : error("No reaction occurred!")
-
-    return τ
+    return τ, μ
 end

@@ -47,7 +47,7 @@ function reset!(x::ODM, m::Model)
     return;
 end
 
-function call(x::ODM, m)
+function step!(x::ODM, m)
     τ = odm_update!(m ,x)
 
     # update algorithm variables
@@ -68,7 +68,7 @@ function odm_update!(m::Model, x)
 
     if t + τ > T return τ end
 
-    μ = select_reaction(m, a0)
+    μ = select_reaction(rxn, a0)
     fire_reaction!(m, reaction(rxn, μ))
 
     update_propensities = getfield(x, :callback)
@@ -112,7 +112,7 @@ function presimulate!(x, m)
             a0 = compute_propensities!(m)
             τ = rand(Exponential(1 / a0))
             jump = a0 * rand()
-            μ = select_reaction(m, a0)
+            μ = select_reaction(rxns, a0)
             fire_reaction!(m, reaction(rxns, μ))
             events[μ] = events[μ] + 1
         end

@@ -80,20 +80,32 @@ function compute_statistics!(x::SAL, i::Integer)
     setfield!(x, :avg_sal,    cumavg(avg_sal(x),    sal_steps(x), i))
 end
 
-function call(x::SAL, m::Model)
+function step!(x::SAL, m::Model)
     a0 = compute_propensities!(m)
 
     if a0 < delta(x)
-        τ = ssa_update!(m, x)
+        τ = τ = rand(Exponential(1 / a0))
+
         setfield!(x, :ssa_steps, ssa_steps(x) + 1)
         setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
+        setfield!(x, :t, time(x) + τ)
+        
+        if !done(x, m)
+            r = reactions(m)
+            μ = select_reaction(r, a0)
+
+            if μ > 0
+                fire_reaction!(m, reaction(r, μ))
+            else
+                error("no reaction occurred!")
+            end
+        end
     else
         τ = sal_update!(m, x)
         setfield!(x, :sal_steps, sal_steps(x) + 1)
         setfield!(x, :avg_sal_step,  cumavg(avg_sal_step(x),  τ, sal_steps(x)))
+        setfield!(x, :t, time(x) + τ)
     end
-
-    setfield!(x, :t, time(x) + τ)
     compute_statistics!(x, τ)
 end
 

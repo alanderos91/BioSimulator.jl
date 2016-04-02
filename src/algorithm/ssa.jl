@@ -30,43 +30,35 @@ function reset!(x::SSA, m::Model)
     return;
 end
 
-function call(x::SSA, m::Model)
-    compute_propensities!(m)
-    τ = ssa_update!(m, x)
+function step!(x::SSA, m::Model)
+    a0 = compute_propensities!(m)
+    τ = rand(Exponential(1 / a0))
 
     # update algorithm variables
     setfield!(x, :t,     time(x) + τ)
     setfield!(x, :steps, steps(x) + 1)
-
     compute_statistics!(x, τ)
-end
 
-function ssa_update!(m::Model, x)
-    t = x.t
-    T = x.T
-    rxn = reactions(m)
-    a0 = intensity(rxn)
+    if !done(x, m)
+        r = reactions(m)
+        μ = select_reaction(r, a0)
 
-    τ = rand(Exponential(1 / a0))
-
-    if t + τ > T return τ end
-
-    μ = select_reaction(m, a0)
-    fire_reaction!(m, reaction(rxn, μ))
-
-    return τ
-end
-
-function select_reaction(m::Model, a0)
-    jump = a0 * rand()
-    rxn = reactions(m)
-    s = 0.0
-
-    for i in eachindex(rxn)
-        s = s + rxn[i]
-        if s >= jump
-            return i
+        if μ > 0
+            fire_reaction!(m, reaction(r, μ))
+        else
+            error("no reaction occurred!")
         end
     end
-    error("no reaction occurred!")
+end
+
+
+function select_reaction(r::ReactionVector, a0)
+    jump = a0 * rand()
+    a = 0.0
+
+    for j in eachindex(r)
+        a = a + r[j]
+        if a >= jump return j end
+    end
+    return 0
 end

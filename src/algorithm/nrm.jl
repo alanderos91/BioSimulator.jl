@@ -54,7 +54,7 @@ function reset!(x::NRM, m::Model)
     return;
 end
 
-function call(x::NRM, m::Model)
+function step!(x::NRM, m::Model)
     τ = nrm_update!(m ,x)
 
     # update algorithm variables
