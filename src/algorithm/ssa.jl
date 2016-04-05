@@ -1,4 +1,14 @@
-type SSA <: Algorithm
+"""
+```
+SSA(T)
+```
+
+Gillespie's Stochastic Simulation Algorithm. Simulates a system of coupled species and reactions by simulating each reaction event. The algorithm computes the time to the next reaction as a random exponential deviate with mean equal to the cumulative reaction intensity. It then scales the cumulative intensity by a uniform random number and conducts a linear search on the reaction propensities to select a reaction.
+
+### Arguments
+- `T`: The simulation end time.
+"""
+type SSA <: ExactMethod
     # parameters
     T::Float64
 
@@ -14,51 +24,39 @@ type SSA <: Algorithm
     tags::Vector{Symbol}
 
     function SSA(T)
-        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_TAGS)
+        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
     end
 end
 
+##### constructor wrapper #####
 function ssa(T; na...)
     return SSA(T)
 end
 
-initialize!(x::SSA, m::Model) = return;
-
-function reset!(x::SSA, m::Model)
-    setfield!(x, :t, 0.0)
-    setfield!(x, :steps, 0)
-    return;
-end
-
-function step!(x::SSA, m::Model)
-    a0 = compute_propensities!(m)
-    τ = rand(Exponential(1 / a0))
+function step!(x::SSA, Xt, rs, p)
+    a0 = compute_propensities!(rs, Xt, p)
+    τ  = rand(Exponential(1 / a0))
 
     # update algorithm variables
     setfield!(x, :t,     time(x) + τ)
     setfield!(x, :steps, steps(x) + 1)
     compute_statistics!(x, τ)
 
-    if !done(x, m)
-        r = reactions(m)
-        μ = select_reaction(r, a0)
-
-        if μ > 0
-            fire_reaction!(m, reaction(r, μ))
-        else
-            error("no reaction occurred!")
-        end
+    if time(x) < end_time(x) && a0 > 0
+        μ = select_reaction(rs, a0)
+        fire_reaction!(Xt, rs, μ)
     end
+    return;
 end
 
 
-function select_reaction(r::ReactionVector, a0)
+function select_reaction(rs::AbstractReactionSystem, a0)
     jump = a0 * rand()
-    a = 0.0
-
-    for j in eachindex(r)
-        a = a + r[j]
-        if a >= jump return j end
+    a = propensities(rs)
+    b = 0.0
+    @inbounds for j in eachindex(a)
+        b = b + a[j]
+        if b >= jump return j end
     end
     return 0
 end

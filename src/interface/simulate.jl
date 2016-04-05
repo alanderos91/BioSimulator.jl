@@ -1,6 +1,6 @@
 """
 ```
-simulate(m::Newtork; with=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
+simulate(m::Newtork; with=:SSA, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs...)
 ```
 
 ### Arguments
@@ -14,9 +14,9 @@ simulate(m::Newtork; with=:ssa, tf=1.0, output=Uniform(), dt=1.0, itr=1, kwargs.
 - `itr`: The number of realizations.
 - `kwargs`: Optional keyword arguments specific to a particular algorithm. Consult docs for an algorithm for more details.
 """
-function simulate(network::Network; with::Symbol=:ssa, T=1.0, output=Uniform(), dt=1.0, itr=1, track=Symbol[], kwargs...)
+function simulate(network::Network; with::Symbol=:SSA, T=1.0, output=Uniform(), dt=1.0, itr=1, track=Symbol[], kwargs...)
 
-  if with == :ssa
+  if with == :SSA
     algorithm = ssa(T; kwargs...)
   elseif with == :odm
     algorithm = odm(T; kwargs...)
@@ -32,9 +32,10 @@ function simulate(network::Network; with::Symbol=:ssa, T=1.0, output=Uniform(), 
 
   # Create the main data structure used in the simulation
   Xt, species_id, id2ind = make_species_arr(network.species)
-  rv, reaction_id        = make_reaction_arr(network.reactions, id2ind)
+  rs = reaction_system(network.reactions, id2ind)
+  reaction_id = Symbol[]
 
-  m = Model(network.id, Xt, rv, network.parameters, deepcopy(Xt))
+  m = Model(network.id, Xt, rs, network.parameters, deepcopy(Xt))
 
   # Identify which objects to track
   if isempty(track)
@@ -53,7 +54,7 @@ function simulate(network::Network; with::Symbol=:ssa, T=1.0, output=Uniform(), 
                             reaction_id,
                             tracked_reactions,
                             Xt,
-                            rv,
+                            rs,
                             n,
                             itr)
 
@@ -65,12 +66,17 @@ end
 function simulate(m::Model, algorithm::Algorithm, output::OutputType, itr, tracker, manager)
   initialize!(algorithm, m)
 
+  Xt = m.Xt
+  rs = m.rs
+  p  = m.parameters
+  X₀ = m.X₀
+
   for i = 1:itr
     reset!(m)
     reset!(algorithm, m)
-    while !done(algorithm, m)
+    while time(algorithm) < end_time(algorithm)
       update!(output, manager, time(algorithm))   # Record current state
-      step!(algorithm, m)
+      step!(algorithm, Xt, rs, p)
     end
     compute_statistics!(algorithm, i)
     final_update!(output, manager, time(algorithm)) # Record final state

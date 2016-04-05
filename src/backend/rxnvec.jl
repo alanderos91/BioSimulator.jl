@@ -1,114 +1,173 @@
-##### Reaction Channel #####
+type PropensityVector{T<:AbstractFloat}
+    a  :: Vector{T}
+    a0 :: T
+end
 
-immutable ReactionChannel
-    id::Symbol
-    rate::Symbol
-    pre::Vector{Int}
-    post::Vector{Int}
+function PropensityVector{T<:AbstractFloat}(::Type{T}, n)
+    return PropensityVector(zeros(T, n), convert(T, Inf))
+end
 
-    function ReactionChannel(id, rate, pre, post)
-        if any(pre .< 0) || any(post .< 0)
-          error("stoichiometric coefficients must be positive.")
+getindex{T}(pv::PropensityVector{T}, i) = getindex(pv.a, i)
+setindex!{T}(pv::PropensityVector{T}, val, i) = setindex!(pv.a, val, i)
+eachindex{T}(pv::PropensityVector{T}) = eachindex(pv.a)
+intensity{T}(pv::PropensityVector{T}) = pv.a0
+intensity!{T}(pv::PropensityVector{T}, val) = setfield!()
+
+abstract AbstractReactionSystem
+
+increments(rs::AbstractReactionSystem)   = rs.v
+reactants(rs::AbstractReactionSystem)    = rs.u
+propensities(rs::AbstractReactionSystem) = rs.a
+rates(rs::AbstractReactionSystem)        = rs.k
+
+function compute_propensities!(rs::AbstractReactionSystem, Xt, p)
+    a = propensities(rs)
+    k = rates(rs)
+    a0 = 0.0
+    @inbounds for j in eachindex(a)
+        key  = k[j]
+        kj   = p[key].value
+        a[j] = rs(Xt, kj, j)
+        a0   = a0 + a[j]
+    end
+    setfield!(a, :a0, a0)
+    return a0
+end
+
+immutable SparseReactionSystem <: AbstractReactionSystem
+    v :: SparseMatrixCSC{Float64,Int}
+    u :: SparseMatrixCSC{Float64,Int}
+    a :: PropensityVector{Float64}
+    k :: Vector{Symbol}
+
+    function SparseReactionSystem(v, u, k)
+        new(v, u, PropensityVector(Float64, length(k)), k)
+    end
+end
+
+function SparseReactionSystem(dict, id2ind, c, d)
+    v = spzeros(c,d)
+    u = spzeros(c,d)
+    k = Array(Symbol, d)
+
+    j = 1
+    for (key, r) in dict
+        k[j] = r.rate
+        reactants = r.reactants
+        products  = r.products
+
+        for (id, i) in id2ind
+            x = get(reactants, id, 0)
+            y = get(products,  id, 0)
+            v[i,j] = y - x
+            u[i,j] = x
         end
-        return new(id, rate, pre, post)
+
+        j = j + 1
+    end
+
+    return SparseReactionSystem(v, u, k)
+end
+
+# propensity of reaction j, assuming rate constant k
+function call(rs::SparseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+    u = reactants(rs)
+    participants = rowvals(u)
+    coeff = nonzeros(u)
+
+    a = k
+    @inbounds for i in nzrange(u, j)
+        c = coeff[i]
+        ind = participants[i]
+        for n in 1:c
+            a = a * (Xt[ind] - (n-1))
+        end
+    end
+    return a
+end
+
+function fire_reaction!(Xt, rs::SparseReactionSystem, j)
+    v    = increments(rs)
+    vj   = nonzeros(v)
+    idxs = rowvals(v)
+    @inbounds for k in nzrange(v, j)
+        i = idxs[k]
+        Xt[i] = Xt[i] + vj[k]
     end
 end
 
-function ReactionChannel(r::Reaction, id2ind)
-    pre  = Array(Int, length(id2ind))
-    post = Array(Int, length(id2ind))
+typealias StoichColumn SubArray{Int,1,Matrix{Int},Tuple{Colon,Int64},2}
 
-    for (id, i) in id2ind
-        pre[i]  = get(r.reactants, id, 0)
-        post[i] = get(r.products,  id, 0)
+immutable DenseReactionSystem <: AbstractReactionSystem
+    v :: Vector{StoichColumn}
+    u :: Vector{StoichColumn}
+    a :: PropensityVector{Float64}
+    k :: Vector{Symbol}
+
+    function DenseReactionSystem(v, u, k)
+        new(StoichColumn[ slice(v, :, j) for j in 1:size(v, 2) ],
+            StoichColumn[ slice(u, :, j) for j in 1:size(u, 2) ],
+            PropensityVector(Float64, length(k)),
+            k)
+    end
+end
+
+function DenseReactionSystem(dict, id2ind, c, d)
+    v = Array(Int, c,d)
+    u = Array(Int, c,d)
+    k = Array(Symbol, d)
+
+    j = 1
+    for (key, r) in dict
+        k[j] = r.rate
+        reactants = r.reactants
+        products  = r.products
+
+        for (id, i) in id2ind
+            x = get(reactants, id, 0)
+            y = get(products,  id, 0)
+            v[i,j] = y - x
+            u[i,j] = x
+        end
+
+        j = j + 1
     end
 
-    return ReactionChannel(r.id, r.rate, pre, post)
+    return DenseReactionSystem(v, u, k)
 end
 
-increment(rc::ReactionChannel, i) = rc.post[i] - rc.pre[i]
-rate(rc::ReactionChannel) = rc.rate
+# propensity of reaction j, assuming rate constant k
+function call(rs::DenseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+    u = reactants(rs)
+    coeff = u[j]
 
-##### Reaction Vector #####
-
-type ReactionVector
-    reactions::Vector{ReactionChannel}
-    intensity::Float64
-    propensities::Vector{Float64}
-end
-
-function ReactionVector(rxns::Vector{ReactionChannel})
-  return ReactionVector(rxns, Inf, zeros(Float64, length(rxns)))
-end
-
-##### accessors #####
-reactions(rv::ReactionVector)    = rv.reactions
-intensity(rv::ReactionVector)    = rv.intensity
-propensities(rv::ReactionVector) = rv.propensities
-reaction(rv::ReactionVector, i)  = rv.reactions[i]
-
-##### iteration #####
-start(rv::ReactionVector)       = start(rv.propensities)
-done(rv::ReactionVector, state) = done(rv.propensities, state)
-next(rv::ReactionVector, state) = next(rv.propensities, state)
-enumerate(rv::ReactionVector)   = enumerate(rv.propensities)
-eachindex(rv::ReactionVector)   = eachindex(rv.propensities)
-
-##### general collection #####
-isempty(rv::ReactionVector) = isempty(rv.propensities)
-empty!(rv::ReactionVector)  = empty!(rv.propensities)
-length(rv::ReactionVector)  = length(rv.propensities)
-endof(rv::ReactionVector)   = endof(rv.propensities)
-
-##### indexing #####
-getindex(rv::ReactionVector, key...)         = getindex(rv.propensities, key...)
-setindex!(rv::ReactionVector, value, key...) = setindex!(rv.propensities, value, key...)
-
-##### sorting #####
-function sort!(rv::ReactionVector)
-    rxns = reactions(rv)
-    prop = propensities(rv)
-    ix   = sortperm(prop)
-
-    for i in eachindex(ix)
-        k = ix[i]
-        r = rxns[i]
-        p = prop[i]
-
-        rxns[i] = rxns[k]
-        rxns[k] = r
-
-        prop[i] = prop[k]
-        prop[k] = p
+    a = k
+    @inbounds for i in eachindex(coeff)
+        c = coeff[i]
+        @inbounds for n in 1:c
+            a = a * (Xt[i] - (n-1))
+        end
     end
-    return rv
+    return a
 end
 
-##### mass-action kinetics ######
-function mass_action(r::ReactionChannel, x::Vector{Int}, params::Parameters)
-  c = params[r.rate]
-  return mass_action(c, r.pre, x)
+function fire_reaction!(Xt, rs::DenseReactionSystem, j)
+    v    = increments(rs)
+    vj   = v[j]
+    @inbounds for k in eachindex(vj)
+        Xt[k] = Xt[k] + vj[k]
+    end
 end
 
-function mass_action_deriv(r::ReactionChannel, x::Vector{Int}, params::Parameters, k::Int)
-  c = params[r.rate]
-  return mass_action_deriv(c, r.pre, x, k)
-end
+function reaction_system(dict, id2ind)
+    d = length(dict)   # number of reactions
+    c = length(id2ind) # number of species
 
-function intensity(r::ReactionChannel, x::Vector{Int}, param::Parameters)
-    mass_action(r, x, param)
-end
+    if d < 10
+        rs = DenseReactionSystem(dict, id2ind, c, d)
+    else
+        rs = SparseReactionSystem(dict, id2ind, c, d)
+    end
 
-function compute_propensities!(rv::ReactionVector, x::Vector{Int}, param::Parameters)
-  a0  = 0.0
-  rxn = reactions(rv)
-  for j in eachindex(rxn)
-    aj = intensity(rxn[j], x, param)
-    rv[j] = aj
-    a0 = a0 + aj
-  end
-  rv.intensity = a0
+    return rs
 end
-
-##### misc #####
-fill!(rv::ReactionVector, value) = fill!(rv.propensities, value)
