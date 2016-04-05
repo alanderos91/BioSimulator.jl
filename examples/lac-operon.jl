@@ -88,7 +88,7 @@ network <= parameter(:c14, c14)
 network <= parameter(:c15, c15)
 network <= parameter(:c16, c16)
 
-@time df1 = simulate(network, tf=500.0, with=:ssa, dt=1.0, itr=1_000);
+@time df1 = simulate(network, tf=500.0, with=:SSA, dt=1.0, itr=1_000);
       df = aggregate(df1, :Time, [mean,std]);
 
       new_df = DataFrame(Time    = repeat(convert(Vector, df[:Time]), outer=[4]),

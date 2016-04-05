@@ -20,7 +20,7 @@ function compile_data(overseer)
 
     t_observer  = overseer.t_observer
     s_observers = overseer.s_observers
-    r_observers = overseer.r_observers
+    #r_observers = overseer.r_observers
 
     if !isempty(t_observer.states)
         species_data[t_observer.id]    = t_observer.states
@@ -31,11 +31,12 @@ function compile_data(overseer)
         species_data[o.id] = o.states
     end
 
-    for o in r_observers
-        propensity_data[o.id] = o.states
-    end
+    # for o in r_observers
+    #     propensity_data[o.id] = o.states
+    # end
 
-    return species_data, propensity_data
+    #return species_data, propensity_data
+    return species_data, DataFrame()
 end
 
 function compile_metadata(algorithm, n, itr)

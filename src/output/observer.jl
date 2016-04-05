@@ -26,37 +26,37 @@ function update!(observer::SpeciesObserver, j)
     species = BioSimulator.species(observer)
 
     if is_preallocated(observer)
-        states[j] = species[i]
+        observer.states[j] = species[i]
     else
         push!(states, species[i])
     end
 end
 
-immutable PropensityObserver <: Observer
-    id::Symbol
-    reaction::ReactionChannel
-    states::Vector{Float64}
-    is_preallocated::Bool
-
-    function PropensityObserver(id, reaction, n)
-        states = zeros(Float64, n)
-        flag   = !isempty(states)
-        new(id, reaction, states, flag)
-    end
-end
-
-reaction(o::PropensityObserver) = o.reaction
-
-function update!(observer::PropensityObserver, j)
-    states   = BioSimulator.states(observer)
-    reaction = BioSimulator.reaction(observer)
-
-    if is_preallocated(observer)
-        states[j] = reaction.propensity
-    else
-        push!(states, reaction.propensity)
-    end
-end
+# immutable PropensityObserver <: Observer
+#     id::Symbol
+#     reaction::ReactionChannel
+#     states::Vector{Float64}
+#     is_preallocated::Bool
+#
+#     function PropensityObserver(id, reaction, n)
+#         states = zeros(Float64, n)
+#         flag   = !isempty(states)
+#         new(id, reaction, states, flag)
+#     end
+# end
+#
+# reaction(o::PropensityObserver) = o.reaction
+#
+# function update!(observer::PropensityObserver, j)
+#     states   = BioSimulator.states(observer)
+#     reaction = BioSimulator.reaction(observer)
+#
+#     if is_preallocated(observer)
+#         states[j] = reaction.propensity
+#     else
+#         push!(states, reaction.propensity)
+#     end
+# end
 
 immutable TimeObserver <: Observer
     id::Symbol
@@ -74,7 +74,7 @@ function update!(observer::TimeObserver, j, t)
     states = BioSimulator.states(observer)
 
     if is_preallocated(observer)
-        states[j] = t
+        observer.states[j] = t
     else
         push!(states, t)
     end
@@ -82,11 +82,12 @@ end
 
 immutable Overseer
     s_observers::Vector{SpeciesObserver}
-    r_observers::Vector{PropensityObserver}
+    #r_observers::Vector{PropensityObserver}
     t_observer::TimeObserver
 
     function Overseer(observer)
-        new(SpeciesObserver[], PropensityObserver[], observer)
+        #new(SpeciesObserver[], PropensityObserver[], observer)
+        new(SpeciesObserver[], observer)
     end
 end
 
@@ -102,9 +103,9 @@ function notify!(overseer, j)
         update!(o, j)
     end
 
-    for o in overseer.r_observers
-        update!(o, j)
-    end
+    # for o in overseer.r_observers
+    #     update!(o, j)
+    # end
 
     return overseer
 end
@@ -121,10 +122,10 @@ function make_observers(sname, stracked, rname, rtracked, spcs, rxns, n)
         push!(overseer.s_observers, SpeciesObserver(sname[j], spcs, stracked[i], n))
     end
 
-    for i in eachindex(rtracked)
-        j = stracked[i]
-        push!(overseer.r_observers, PropensityObserver(rname[j], rxns[rtracked[i]], n))
-    end
+    # for i in eachindex(rtracked)
+    #     j = stracked[i]
+    #     push!(overseer.r_observers, PropensityObserver(rname[j], rxns[rtracked[i]], n))
+    # end
 
     return overseer
 end

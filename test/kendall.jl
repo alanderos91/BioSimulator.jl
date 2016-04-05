@@ -9,6 +9,7 @@ end
 
 m = kendall()
 x = m.species[:X].population
+p = m.parameters
 α = p[:α].value
 μ = p[:μ].value
 ν = p[:ν].value
