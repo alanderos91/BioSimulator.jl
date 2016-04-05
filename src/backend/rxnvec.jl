@@ -7,11 +7,11 @@ function PropensityVector{T<:AbstractFloat}(::Type{T}, n)
     return PropensityVector(zeros(T, n), convert(T, Inf))
 end
 
+length{T}(pv::PropensityVector{T}) = length(pv.a)
 getindex{T}(pv::PropensityVector{T}, i) = getindex(pv.a, i)
 setindex!{T}(pv::PropensityVector{T}, val, i) = setindex!(pv.a, val, i)
 eachindex{T}(pv::PropensityVector{T}) = eachindex(pv.a)
 intensity{T}(pv::PropensityVector{T}) = pv.a0
-intensity!{T}(pv::PropensityVector{T}, val) = setfield!()
 
 abstract AbstractReactionSystem
 
@@ -144,7 +144,7 @@ function call(rs::DenseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
     a = k
     @inbounds for i in eachindex(coeff)
         c = coeff[i]
-        @inbounds for n in 1:c
+        for n in 1:c
             a = a * (Xt[i] - (n-1))
         end
     end
@@ -170,4 +170,113 @@ function reaction_system(dict, id2ind)
     end
 
     return rs
+end
+
+# derivative of reaction i with respect to reactant k
+function mass_action_deriv(Xt, rs::DenseReactionSystem, p, i, k)
+    u   = reactants(rs)
+    ui  = u[i]
+    key = rates(rs)[i]
+
+    acc = 1.0
+    if ui[k] == 0
+        acc = 0.0
+    else
+        acc = helper1(Xt, ui, k)
+    end
+
+    if ui[k] == 2
+        acc = acc * (2 * x[k] - 1)
+    elseif ui[k] > 2
+        error("higher order reactions not supported.")
+    end
+
+    return acc * p[key].value
+end
+
+function mass_action_deriv(Xt, rs::SparseReactionSystem, p, i, k)
+    u = reactants(rs)
+    key = rates(rs)[i]
+    val = u[k,i]
+    if val == 0
+        acc = 0.0
+    else
+        acc = helper2(Xt, u, i, k)
+    end
+
+    if val == 2
+        acc = acc * (2 * x[k] - 1)
+    elseif val > 2
+        error("higher order reactions not supported.")
+    end
+
+    return acc * p[key].value
+end
+
+function helper1(Xt, u, k)
+    acc = 1.0
+    for i in eachindex(u)
+        if i != k
+            c = u[i]
+            for j in 1:c
+                acc = acc * (Xt[i] - (j - 1))
+            end
+        end
+    end
+    return acc
+end
+
+function call(rs::SparseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+    u = reactants(rs)
+    participants = rowvals(u)
+    coeff = nonzeros(u)
+
+    a = k
+    @inbounds for i in nzrange(u, j)
+        c = coeff[i]
+        ind = participants[i]
+        for n in 1:c
+            a = a * (Xt[ind] - (n-1))
+        end
+    end
+    return a
+end
+function helper2(Xt, u, l, k)
+    participants = rowvals(u)
+    coeff = nonzeros(u)
+    a = 1.0
+    for i in nzrange(u, l)
+        if i != k
+            c = coeff[i]
+            ind = participants[i]
+            for n in 1:c
+                a = a * (Xt[ind] - (n-1))
+            end
+        end
+    end
+    return a
+end
+
+function fire_reactions!(Xt, rs, events)
+    for j in eachindex(events)
+        fire_reaction!(Xt, rs, j, events[j])
+    end
+end
+
+function fire_reaction!(Xt, rs::SparseReactionSystem, j, n)
+    v = increments(rs)
+    vj = nonzeros(v)
+    idxs = rowvals(v)
+    for k in nzrange(v, j)
+        i = idxs[k]
+        Xt[i] = Xt[i] + n * vj[k]
+    end
+end
+
+function fire_reaction!(Xt, rs::DenseReactionSystem, j, n)
+    v = increments(rs)
+    vj = v[j]
+    for k in eachindex(vj)
+        Xt[k] = Xt[k] + n * vj[k]
+    end
 end

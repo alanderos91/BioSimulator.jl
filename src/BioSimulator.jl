@@ -11,6 +11,7 @@ import Base: getindex,
              setindex!,
              isempty,
              length,
+             size,
              start,
              done,
              next,
@@ -23,7 +24,7 @@ abstract OutputType
 immutable Explicit <: OutputType end
 immutable Uniform  <: OutputType end
 
-const ALGORITHMS = [:SSA]
+const ALGORITHMS = [:SSA, :SAL]
 
 # Interface
 include(joinpath("interface","species.jl"))
@@ -42,7 +43,7 @@ include(joinpath("algorithm","ssa.jl"))
 #include(joinpath("algorithm","odm.jl"))
 #include(joinpath("algorithm","frm.jl"))
 #include(joinpath("algorithm","nrm.jl"))
-#include(joinpath("algorithm","sal.jl"))
+include(joinpath("algorithm","sal.jl"))
 
 # Output
 include(joinpath("output", "observer.jl"))

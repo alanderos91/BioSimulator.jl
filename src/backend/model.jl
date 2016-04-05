@@ -15,6 +15,8 @@ reactions(m::Model)  = m.rs
 parameters(m::Model) = m.parameters
 initial(m::Model)    = m.X₀
 
+size(m::Model) = (length(m.Xt), length(m.rs.a))
+
 function reset!(m::Model)
   copy!(m.Xt, m.X₀)
   m.rs.a.a0 = Inf

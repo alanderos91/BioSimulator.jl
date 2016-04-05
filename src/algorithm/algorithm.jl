@@ -59,7 +59,13 @@ end
 
 abstract TauLeapMethod <: Algorithm
 
-const DEFAULT_TAULEAP = [:avg_nsteps, :avg_step_size, :avg_nssa, :avg_nleaps, :avg_ssa_step, :avg_leap_step, :avg_neg_excursions]
+const DEFAULT_TAULEAP = [:avg_nsteps,
+                         :avg_step_size,
+                         :avg_nssa,
+                         :avg_nleaps,
+                         :avg_ssa_step,
+                         :avg_leap_step,
+                         :avg_neg_excursions]
 
 ##### accessors #####
 steps(x::TauLeapMethod)              = x.ssa_steps + x.leap_steps

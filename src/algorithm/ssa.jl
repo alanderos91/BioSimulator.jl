@@ -10,18 +10,18 @@ Gillespie's Stochastic Simulation Algorithm. Simulates a system of coupled speci
 """
 type SSA <: ExactMethod
     # parameters
-    T::Float64
+    T :: Float64
 
     # state variables
-    t::Float64
-    steps::Int
+    t     :: Float64
+    steps :: Int
 
     # statistics
-    avg_nsteps::Float64
-    avg_step_size::Float64
+    avg_nsteps    :: Float64
+    avg_step_size :: Float64
 
     # metadata tags
-    tags::Vector{Symbol}
+    tags :: Vector{Symbol}
 
     function SSA(T)
         new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)

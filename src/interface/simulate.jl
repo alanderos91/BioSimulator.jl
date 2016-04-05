@@ -18,13 +18,13 @@ function simulate(network::Network; with::Symbol=:SSA, T=1.0, output=Uniform(), 
 
   if with == :SSA
     algorithm = ssa(T; kwargs...)
-  elseif with == :odm
+  elseif with == :ODM
     algorithm = odm(T; kwargs...)
-  elseif with == :frm
+  elseif with == :FRM
     algorithm = frm(T; kwargs...)
-  elseif with == :nrm
+  elseif with == :NRM
     algorithm = nrm(T; kwargs...)
-  elseif with == :sal
+  elseif with == :SAL
     algorithm = sal(T; kwargs...)
   else
     error("$with is an unrecognized algorithm.")
