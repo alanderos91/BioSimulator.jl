@@ -118,7 +118,7 @@ function sal_update!(x, Xt, rs, p)
 end
 
 function mean_derivatives!(dxdt, rs::DenseReactionSystem)
-    v = reactants(rs)
+    v = increments(rs)
     a = propensities(rs)
     for k in eachindex(dxdt)
         dxdt[k] = 0.0
@@ -131,12 +131,19 @@ function mean_derivatives!(dxdt, rs::DenseReactionSystem)
 end
 
 function mean_derivatives!(dxdt, rs::SparseReactionSystem)
-    v = reactants(rs)
+    v = increments(rs)
     a = propensities(rs)
-    for k in eachindex(dxdt)
-        dxdt[k] = 0.0
-        for j in eachindex(a)
-            dxdt[k] = dxdt[k] + a[j] * v[k,j]
+
+    vj = nonzeros(v)
+    idxs = rowvals(v)
+    c = size(v, 2)
+
+    fill!(dxdt, 0.0)
+    
+    for j in 1:c
+        for k in nzrange(v, j)
+            i = idxs[k]
+            dxdt[i] = dxdt[i] + a[j] * vj[k]
         end
     end
     return dxdt
@@ -178,7 +185,7 @@ function generate_events!(events, rs, τ, drdt)
     end
 end
 
-function is_badleap(Xt, rs, events)
+function is_badleap(Xt, rs::DenseReactionSystem, events)
     v = increments(rs)
 
     for i in eachindex(Xt)
@@ -191,6 +198,23 @@ function is_badleap(Xt, rs, events)
         end
     end
 
+    return false
+end
+
+function is_badleap(Xt, rs::SparseReactionSystem, events)
+    v = increments(rs)
+    vj = nonzeros(v)
+    idxs = rowvals(v)
+    c = size(v, 2)
+
+    for j in 1:c
+        xi = 0
+        for k in nzrange(v, j)
+            xi = Xt[idxs[k]] + events[j] * vj[k]
+
+            if xi < 0 return true end
+        end
+    end
     return false
 end
 

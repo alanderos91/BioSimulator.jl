@@ -35,8 +35,8 @@ function compute_propensities!(rs::AbstractReactionSystem, Xt, p)
 end
 
 immutable SparseReactionSystem <: AbstractReactionSystem
-    v :: SparseMatrixCSC{Float64,Int}
-    u :: SparseMatrixCSC{Float64,Int}
+    v :: SparseMatrixCSC{Int,Int}
+    u :: SparseMatrixCSC{Int,Int}
     a :: PropensityVector{Float64}
     k :: Vector{Symbol}
 
@@ -66,7 +66,9 @@ function SparseReactionSystem(dict, id2ind, c, d)
         j = j + 1
     end
 
-    return SparseReactionSystem(v, u, k)
+    return SparseReactionSystem(convert(SparseMatrixCSC{Int,Int}, v),
+                                convert(SparseMatrixCSC{Int,Int}, u),
+                                k)
 end
 
 # propensity of reaction j, assuming rate constant k
@@ -96,17 +98,15 @@ function fire_reaction!(Xt, rs::SparseReactionSystem, j)
     end
 end
 
-typealias StoichColumn SubArray{Int,1,Matrix{Int},Tuple{Colon,Int64},2}
-
 immutable DenseReactionSystem <: AbstractReactionSystem
-    v :: Vector{StoichColumn}
-    u :: Vector{StoichColumn}
+    v :: Vector{Vector{Int}}
+    u :: Vector{Vector{Int}}
     a :: PropensityVector{Float64}
     k :: Vector{Symbol}
 
     function DenseReactionSystem(v, u, k)
-        new(StoichColumn[ slice(v, :, j) for j in 1:size(v, 2) ],
-            StoichColumn[ slice(u, :, j) for j in 1:size(u, 2) ],
+        new(Vector[ v[:, j] for j in 1:size(v, 2) ],
+            Vector[ u[:, j] for j in 1:size(u, 2) ],
             PropensityVector(Float64, length(k)),
             k)
     end
@@ -172,12 +172,16 @@ function reaction_system(dict, id2ind)
     return rs
 end
 
+function mass_action_deriv(Xt, rs, p, i, k)
+    key = rates(rs)[i]
+    param = p[key]
+    mass_action_deriv(Xt, rs, param.value, i, k)
+end
+
 # derivative of reaction i with respect to reactant k
-function mass_action_deriv(Xt, rs::DenseReactionSystem, p, i, k)
+function mass_action_deriv(Xt, rs::DenseReactionSystem, rate::Float64, i, k)
     u   = reactants(rs)
     ui  = u[i]
-    key = rates(rs)[i]
-
     acc = 1.0
     if ui[k] == 0
         acc = 0.0
@@ -186,18 +190,18 @@ function mass_action_deriv(Xt, rs::DenseReactionSystem, p, i, k)
     end
 
     if ui[k] == 2
-        acc = acc * (2 * x[k] - 1)
+        acc = acc * (2 * Xt[k] - 1)
     elseif ui[k] > 2
         error("higher order reactions not supported.")
     end
 
-    return acc * p[key].value
+    return rate * acc
 end
 
-function mass_action_deriv(Xt, rs::SparseReactionSystem, p, i, k)
+function mass_action_deriv(Xt, rs::SparseReactionSystem, rate::Float64, i, k)
     u = reactants(rs)
-    key = rates(rs)[i]
     val = u[k,i]
+
     if val == 0
         acc = 0.0
     else
@@ -205,12 +209,12 @@ function mass_action_deriv(Xt, rs::SparseReactionSystem, p, i, k)
     end
 
     if val == 2
-        acc = acc * (2 * x[k] - 1)
+        acc = acc * (2 * Xt[k] - 1)
     elseif val > 2
         error("higher order reactions not supported.")
     end
 
-    return acc * p[key].value
+    return rate * acc
 end
 
 function helper1(Xt, u, k)
