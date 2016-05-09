@@ -3,9 +3,9 @@ function kendall()
 
   m <= Species(:X, 5)
 
-  m <= Reaction(:Birth,       :α, r=(:X => 1), p=(:X => 2))
-  m <= Reaction(:Death,       :μ, r=(:X => 1)             )
-  m <= Reaction(:Immigration, :ν,              p=(:X => 1))
+  m <= Reaction(:Birth,       :α, :(X --> X + X))
+  m <= Reaction(:Death,       :μ, :(X --> 0))
+  m <= Reaction(:Immigration, :ν, :(0 --> X))
 
   m <= parameter(:α, 2.0)
   m <= parameter(:μ, 1.0)
@@ -21,10 +21,10 @@ function test1()
   m <= Species(:Y, 500)
   m <= Species(:XY,  1)
 
-  m <= Reaction(:zero,     :k0,  p=(:X => 1))
-  m <= Reaction(:first,    :k1,  r=(:X => 1))
-  m <= Reaction(:second_a, :k2a, r=(:X => 1, :Y => 1), p=(:XY => 1))
-  m <= Reaction(:second_b, :k2b, r=(:X => 2),          p=(:Y => 1))
+  m <= Reaction(:zero,     :k0,  :(0 --> X))
+  m <= Reaction(:first,    :k1,  :(X --> 0))
+  m <= Reaction(:second_a, :k2a, :(X + Y --> XY))
+  m <= Reaction(:second_b, :k2b, :(X + X --> Y))
 
   m <= parameter(:k0,  0.1)
   m <= parameter(:k1,  0.01)
@@ -41,15 +41,12 @@ function linear(M, x0)
     m <= Species(:S1, x0)
 
     for i = 2:(M+1)
-        m <= Species(symbol("S$(i)"), 0)
+        m <= Species(symbol(:S, i), 0)
     end
 
     for i = 1:M
-        m <= Reaction(symbol("R$(i)"), symbol("k$(i)"),
-            r=(symbol("S$(i)") => 1),
-            p=(symbol("S$(i+1)") => 1)
-        )
-        m <= parameter(symbol("k$(i)"), 1.0)
+        m <= Reaction(symbol(:R, i), symbol(:k, i), Expr(:-->, symbol(:S,i), symbol(:S,i+1)))
+        m <= parameter(symbol(:k, i), 1.0)
     end
 
     return m
@@ -59,9 +56,9 @@ function independent(n, x0)
   m = Network("Independent System")
 
   for i in 1:n
-    m <= Species(symbol("S$(i)"), x0)
-    m <= Reaction(symbol("R$(i)"), symbol("k$(i)"), r=(symbol("S$(i)") => 1))
-    m <= parameter(symbol("k$(i)"), 1.0)
+    m <= Species(symbol(:S, i), x0)
+    m <= Reaction(symbol(:R, i), symbol(:k, i), Expr(:-->, symbol(:S,i), 0))
+    m <= parameter(symbol(:k, i), 1.0)
   end
 
   return m

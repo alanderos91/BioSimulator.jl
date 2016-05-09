@@ -18,11 +18,9 @@ type Reaction
   rate::Symbol
   reactants::Dict{Symbol,Int}
   products::Dict{Symbol,Int}
-  istracked::Bool
 
-  function Reaction(id, rate; istracked::Bool=false, r=(), p=())
-    reactants = Dict{Symbol,Int}(r)
-    products  = Dict{Symbol,Int}(p)
+  function Reaction(id, rate, expression::Expr)
+    reactants, products = parse_reaction(expression)
 
     if isempty(reactants) && isempty(products)
       error("Reaction needs at least one reactant or product.")
@@ -31,13 +29,13 @@ type Reaction
     if any(x -> x < 0, values(reactants)) || any(x -> x < 0, values(products))
       error("Coefficients must be positive.")
     end
-    return new(id, rate, Dict(reactants), Dict(products), istracked)
+    return new(id, rate, reactants, products)
   end
 end
 
 function Base.show(io::IO, x::Reaction)
   print_participants(io, x.reactants)
-  @printf io " ---> "
+  @printf io " --> "
   print_participants(io, x.products)
 end
 
@@ -60,4 +58,38 @@ function print_participants(io, participants)
       i = i + 1
     end
   end
+end
+
+function parse_reaction(ex::Expr)
+    reactants = Dict{Symbol,Int}()
+    products  = Dict{Symbol,Int}()
+
+    if ex.head == :-->
+        exr = ex.args[1]
+        exp = ex.args[2]
+
+        add_participants!(reactants, exr)
+        add_participants!(products,  exp)
+    else
+        throw("malformed reaction")
+    end
+    return reactants, products
+end
+
+function add_participants!(dict, ex)
+    if isa(ex, Symbol)
+        #push!(dict, ex)
+        val = get(dict, ex, 0)
+        dict[ex] = val + 1
+    elseif isa(ex, Expr)
+        if ex.args[1] == :*
+            #push!(dict, ex.args[3], ex.args[2])
+            val = get(dict, ex.args[3], 0)
+            dict[ex.args[3]] = val + ex.args[2]
+        else
+            for i in 2:length(ex.args)
+                add_participants!(dict, ex.args[i])
+            end
+        end
+    end
 end
