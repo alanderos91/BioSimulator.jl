@@ -100,7 +100,7 @@ end
 # use at the end of a realization
 function compute_statistics!(x::TauLeapMethod, i::Integer)
     setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x), i - 1))
-    setfiedl!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), steps(x), i -1))
+    setfiedl!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), neg_excursions(x), i -1))
 end
 
 ##### misc #####

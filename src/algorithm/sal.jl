@@ -18,7 +18,7 @@ type SAL <: TauLeapMethod
     avg_nsteps         :: Float64
     avg_step_size      :: Float64
     avg_nssa           :: Float64
-    avg_nleaps          :: Float64
+    avg_nleaps         :: Float64
     avg_ssa_step       :: Float64
     avg_leap_step      :: Float64
     avg_neg_excursions :: Float64
@@ -57,6 +57,7 @@ function reset!(x::SAL, m::Model)
     setfield!(x, :t, 0.0)
     setfield!(x, :ssa_steps, 0)
     setfield!(x, :leap_steps, 0)
+    setfield!(x, :neg_excursions, 0)
     return;
 end
 
@@ -66,7 +67,7 @@ function compute_statistics!(x::SAL, i::Integer)
     setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x),     n))
     setfield!(x, :avg_nssa,    cumavg(avg_nssa(x),    ssa_steps(x), n))
     setfield!(x, :avg_nleaps,    cumavg(avg_nleaps(x),    leap_steps(x), n))
-    setfield!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), steps(x), n))
+    setfield!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), neg_excursions(x), n))
 end
 
 function step!(x::SAL, Xt, rs, p)
@@ -139,7 +140,7 @@ function mean_derivatives!(dxdt, rs::SparseReactionSystem)
     c = size(v, 2)
 
     fill!(dxdt, 0.0)
-    
+
     for j in 1:c
         for k in nzrange(v, j)
             i = idxs[k]
