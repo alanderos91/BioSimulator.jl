@@ -24,7 +24,7 @@ abstract OutputType
 immutable Explicit <: OutputType end
 immutable Uniform  <: OutputType end
 
-const ALGORITHMS = [:SSA, :SAL]
+const ALGORITHMS = [:ODM, :SSA, :FRM, :NRM, :SAL]
 
 # Interface
 include(joinpath("interface","species.jl"))
@@ -40,9 +40,9 @@ include(joinpath("backend","model.jl"))
 # Algorithms
 include(joinpath("algorithm","algorithm.jl"))
 include(joinpath("algorithm","ssa.jl"))
-#include(joinpath("algorithm","odm.jl"))
-#include(joinpath("algorithm","frm.jl"))
-#include(joinpath("algorithm","nrm.jl"))
+include(joinpath("algorithm","odm.jl"))
+include(joinpath("algorithm","frm.jl"))
+include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output
