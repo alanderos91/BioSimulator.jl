@@ -17,7 +17,7 @@ type Species
   id::Symbol
   population::Int
 
-  function Species(id::Symbol, value::Int)
+  function Species(id::Symbol, value::Int=0)
     if value < 0
       error("Species population must be nonnegative.")
     end
