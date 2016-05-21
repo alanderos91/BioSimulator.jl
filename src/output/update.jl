@@ -23,7 +23,6 @@ index(u::UpdateManager)     = u.index
 
 init_updater(::Explicit,  overseer, dt, n, itr) = UpdateManager(overseer, dt, 0, itr)
 init_updater(::Uniform,   overseer, dt, n, itr) = UpdateManager(overseer, dt, n, itr)
-init_updater(::Histogram, overseer, dt, n, itr) = UpdateManager(overseer, dt, itr, 1)
 
 function update!(::Explicit, u, t)
     notify!(overseer(u), index(u), t)
@@ -38,10 +37,6 @@ function update!(::Uniform, u, t)
         u.next  += dt(u)
         u.index += 1
     end
-end
-
-function update!(::Histogram, u, t)
-    return;
 end
 
 function final_update!(::Explicit, u, t)
@@ -63,11 +58,4 @@ function final_update!(::Uniform, u, t)
     if block_end(u) < maxindex(u)
         u.block_end = block_end(u) + blocksize(u)
     end
-end
-
-# Safeguard on indices?
-function final_update!(::Histogram, u, t)
-    i = index(u)
-    notify!(overseer(u), i)
-    u.index += 1
 end
