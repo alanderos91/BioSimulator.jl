@@ -39,13 +39,14 @@ function compile_data(overseer)
     return species_data, DataFrame()
 end
 
-function compile_metadata(algorithm, n, itr)
+function compile_metadata(algorithm, n, itr, datatype)
     mdata = Dict{Symbol,Any}()
 
     mdata[:algorithm] = string(typeof(algorithm))
     mdata[:time] = end_time(algorithm)
     mdata[:pts] = n
     mdata[:itr] = itr
+    mdata[:datatype] = string(datatype)
 
     tags = get_tags(algorithm)
 
