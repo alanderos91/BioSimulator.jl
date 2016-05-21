@@ -1,8 +1,5 @@
-# inspired by Mamba.jl
 
-import Gadfly: Geom, Guide, plot
-
-function plot(data::SimulationOutput, ptype::Symbol; field=:species, args...)
+function plot_results(data::SimulationOutput, ptype::Symbol=:mean; field=:species, args...)
     df = getfield(data, field)
     mdata = metadata(data)
 
@@ -13,7 +10,7 @@ function plot(data::SimulationOutput, ptype::Symbol; field=:species, args...)
 end
 
 ##### plotting engines #####
-function meanplot(df; colnames::Vector{Symbol}=names(df)[2:end], na...)
+function meanplot(df; ids::Vector{Symbol}=names(df)[2:end], na...)
     temp = flatten(df[:, [:time; collect(colnames)]])
     temp = aggregate(temp, [:time, :species], [mean, std])
     names!(temp, [:time, :species, :mean, :std])
@@ -26,8 +23,8 @@ function meanplot(df; colnames::Vector{Symbol}=names(df)[2:end], na...)
     )
 end
 
-function sampleplot(df; nsamples::Integer=1, col::Symbol=names(df)[end], na...)
-    temp = df[:, [:time, col]]
+function sampleplot(df; nsamples::Integer=1, id::Symbol=names(df)[end], na...)
+    temp = df[:, [:time, id]]
     npts  = length(unique(temp[:time]))
 
     temp = flatten(temp[1:nsamples * npts, :])
@@ -36,9 +33,9 @@ function sampleplot(df; nsamples::Integer=1, col::Symbol=names(df)[end], na...)
     plot(temp, x=:time, y=:copynumber, color=:iteration, Geom.line, Geom.point, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
 end
 
-function distplot(df; colnames::Vector{Symbol}=names(df)[2:end], t=df[:time][end], na...)
+function distplot(df; ids::Vector{Symbol}=names(df)[2:end], t=df[:time][end], na...)
     temp = df[ df[:time] .== t, :]
-    temp = flatten(temp[:, [:time; collect(colnames)]])
+    temp = flatten(temp[:, [:time; collect(ids)]])
     plot(temp, x=:copynumber, color=:species, Geom.histogram, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
 end
 

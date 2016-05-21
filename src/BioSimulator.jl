@@ -1,11 +1,8 @@
 module BioSimulator
 
-using Distributions
-using DataFrames
-using Gadfly
-using LightGraphs
-using GraphViz
-using Compose
+import Distributions: Exponential, Poisson, rand
+import LightGraphs: DiGraph, neighbors, add_edge!
+import DataFrames: DataFrame, aggregate, names
 
 import Base: getindex,
              setindex!,
@@ -18,7 +15,8 @@ import Base: getindex,
              eachindex,
              enumerate,
              fill!
-import Compose: MeasureOrNumber
+import Compose: cm, inch, mm, pt, px
+import Gadfly: Geom, Guide, Layer, layer, PDF, PGF, Plot, plot, PNG, PS, Scale, SVG, Theme
 
 abstract OutputType
 immutable Explicit <: OutputType end
@@ -50,7 +48,7 @@ include(joinpath("output", "observer.jl"))
 include(joinpath("output", "update.jl"))
 include(joinpath("output", "util.jl"))
 include(joinpath("output", "plot.jl"))
-include(joinpath("interface", "petrinet.jl"))
+#include(joinpath("interface", "petrinet.jl"))
 
 include(joinpath("interface","simulate.jl"))
 
