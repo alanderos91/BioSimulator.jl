@@ -83,6 +83,6 @@ function simulate(m::Model, algorithm::Algorithm, output::OutputType, itr, track
   end
 
   sdata, pdata = compile_data(tracker)
-  mdata = compile_metadata(algorithm, blocksize(manager), itr)
+  mdata = compile_metadata(algorithm, blocksize(manager), itr, output)
   return SimulationOutput(sdata, pdata, mdata)
 end
