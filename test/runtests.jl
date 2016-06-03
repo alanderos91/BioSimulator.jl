@@ -5,7 +5,7 @@ using Base.Test
 include("test_models.jl")
 
 # List of tests
-tests = [#"mass_action",
+tests = ["mass_action",
          #"time_derivatives",
          "network",
          "kendall",

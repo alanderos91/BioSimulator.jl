@@ -7,7 +7,7 @@ function test()
     end
     Profile.clear_malloc_data()
     for alg in BioSimulator.ALGORITHMS
-        @time simulate(kendall(), T=4.0, dt=0.5, with=alg, itr=100_000)
+        @time simulate(kendall(), time=4.0, sampling_interval=0.5, method=alg, realizations=100_000)
     end
 end
 
