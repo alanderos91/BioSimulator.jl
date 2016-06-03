@@ -3,23 +3,24 @@
 ODM(T)
 ```
 
-Optimized Direct Method.
+Optimized Direct Method. Same as SSA, except the system is pre-simulated in order to sort reaction propensities from increasing to decreasing. This improves the search on the propensity vector when selecting the next reaction to fire.
 
 ### Arguments
-- `T`:
+- `T`: The simulation end time.
+
+### Optional Arguments
+- `init_steps`: Number of time steps to pre-simulate.
+- `init_iters`: Number of iterations to simulate.
 """
 type ODM <: ExactMethod
     # parameters
     T          :: Float64
     init_steps :: Int
     init_iters :: Int
-    coupled    :: Symbol
-    callback   :: Function
 
     # state variables
     t     :: Float64
     steps :: Int
-    g     :: DiGraph
 
     # statistics
     avg_nsteps    :: Float64
@@ -28,22 +29,17 @@ type ODM <: ExactMethod
     # metadata tags
     tags :: Vector{Symbol}
 
-    function ODM(T, init_steps, init_iters, coupled, callback)
-        new(T, init_steps, init_iters, coupled, callback, 0.0, 0, DiGraph(), 0.0, 0.0, DEFAULT_EXACT)
+    function ODM(T, init_steps, init_iters)
+        new(T, init_steps, init_iters, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
     end
 end
 
-function odm(T; init_steps=100, init_iters=1, coupled=:tight, na...)
-    return ODM(T, init_steps, init_iters, coupled, update_all!)
+function odm(T; init_steps=100, init_iters=1, na...)
+    return ODM(T, init_steps, init_iters)
 end
 
 function initialize!(x::ODM, m::Model)
 
-    if x.coupled == :loose
-        g = init_dep_graph(reactions(m))
-        setfield!(x, :g, g)
-        setfield!(x, :callback, update_dependents!)
-    end
     # Presimulate to sort reactions according to multiscale property. This will modify Xt and rs...
     presimulate!(x, m)
     return;
@@ -72,30 +68,10 @@ function step!(x::ODM, Xt, rs, p)
     if time(x) < end_time(x) && a0 > 0
         μ = select_reaction(rs, a0)
         fire_reaction!(Xt, rs, μ)
-        update! = getfield(x, :callback)
-        update!(x, Xt, rs, p, μ)
+        compute_propensities!(rs, Xt, p)
     end
 
     compute_statistics!(x, τ)
-end
-
-function update_dependents!(x::ODM, Xt, rs, p, μ)
-    g = getfield(x, :g)
-    a = propensities(rs)
-    dependents = neighbors(g, μ)
-
-    @inbounds for α in dependents
-        a.a0 = a.a0 - a[α]
-        a[α] = rs(Xt, p, α)
-        a.a0 = a.a0 + a[α]
-    end
-
-    return;
-end
-
-function update_all!(x::ODM, Xt, rs, p, μ)
-    compute_propensities!(rs, Xt, p)
-    return;
 end
 
 function presimulate!(x, m)
