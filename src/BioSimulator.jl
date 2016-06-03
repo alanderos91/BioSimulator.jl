@@ -1,10 +1,16 @@
 module BioSimulator
 
-import Distributions: Exponential, Poisson, rand
-import LightGraphs: DiGraph, neighbors, add_edge!
-import DataFrames: DataFrame, aggregate, names
+using Gadfly
+using Distributions
+using LightGraphs
+using DataFrames
+using GraphViz
 
-import Base: getindex,
+import Compose: cm, inch, mm, pt, px
+
+import Base: (<=),
+             (>=),
+             getindex,
              setindex!,
              isempty,
              length,
@@ -15,8 +21,6 @@ import Base: getindex,
              eachindex,
              enumerate,
              fill!
-import Compose: cm, inch, mm, pt, px
-import Gadfly: Geom, Guide, Layer, layer, PDF, PGF, Plot, plot, PNG, PS, Scale, SVG, Theme
 
 abstract OutputType
 immutable Explicit <: OutputType end
@@ -48,11 +52,10 @@ include(joinpath("output", "observer.jl"))
 include(joinpath("output", "update.jl"))
 include(joinpath("output", "util.jl"))
 include(joinpath("output", "plot.jl"))
-#include(joinpath("interface", "petrinet.jl"))
+include(joinpath("interface", "petrinet.jl"))
 
 include(joinpath("interface","simulate.jl"))
 
-export Network, Simulation, Explicit, Uniform,
-  simulate, Species, Reaction, parameter,
-  petrinet, plot, species
+export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, value, id, get_speciesdf, get_metadata, plot_results
+
 end # module
