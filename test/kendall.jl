@@ -8,11 +8,11 @@ function kendall_mean(i,t,α,μ,ν)
 end
 
 m = kendall()
-x = m.species[:X].population
-p = m.parameters
-α = p[:α].value
-μ = p[:μ].value
-ν = p[:ν].value
+x = value(species_list(m)[:X])
+p = parameter_list(m)
+α = value(p[:α])
+μ = value(p[:μ])
+ν = value(p[:ν])
 T = 4.0
 dt = 0.1
 seed = 5357
@@ -26,8 +26,8 @@ theoretical = kendall_mean(x,t,α,μ,ν)
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
   for a in BioSimulator.ALGORITHMS
-    simulate(m, T=T, with=a, output=Explicit(), itr=1)
-    simulate(m, T=T, with=a, output=Uniform(), dt=dt, itr=1)
+    simulate(m, time=T, method=a, output=:explicit, realizations=1)
+    simulate(m, time=T, method=a, output=:fixed, sampling_interval=dt, realizations=1)
   end
 end
 
@@ -39,8 +39,8 @@ for a in BioSimulator.ALGORITHMS
   # @test_approx_eq_eps computed theoretical[end] 1e0
 
   print("   - Uniform ", uppercase(string(a)))
-  srand(seed); @time result = simulate(m, T=T, with=a, output=Uniform(), dt=dt, itr=itr)
-  computed = aggregate(species(result), :time, mean)
+  srand(seed); @time result = simulate(m, time=T, method=a, output=:fixed, sampling_interval=dt, realizations=itr)
+  computed = aggregate(get_speciesdf(result), :time, mean)
   print("     |observed - theoretical| = ", abs(computed[:X_mean][end] - theoretical[end]), "\n")
   println()
 end
