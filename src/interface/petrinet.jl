@@ -2,8 +2,19 @@ immutable PetriNet
     g::GraphViz.Graph
 end
 
+"""
+```
+petrinet(model::Network; rankdir=:LR)
+```
+
+### Arguments
+- `model`: The `Network` to visualize.
+
+### Optional Arguments
+- `rankdir`: Sets direction of graph layout. Options are `:TB` (top-bottom), `:BT` (bottom-top), `:LR` (left-right), and `:RL` (right-left).
+"""
 function petrinet(model::Network; rankdir=:LR)
-    reactions = model.reactions
+    reactions = model.reaction_list
     b = IOBuffer()
     modelid = string(model.id)
     modelid = replace(modelid, r"(\W\s?|_)", "")
