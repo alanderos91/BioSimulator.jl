@@ -10,9 +10,9 @@ function SimulationOutput(species, propensity, metadata)
     SimulationOutput(species, propensity, metadata)
 end
 
-species(so::SimulationOutput)      = so.species
-propensities(so::SimulationOutput) = so.propensity
-metadata(so::SimulationOutput)     = so.metadata
+get_speciesdf(so::SimulationOutput)  = so.species
+get_reactiondf(so::SimulationOutput) = so.propensity
+get_metadata(so::SimulationOutput)   = so.metadata
 
 function compile_data(overseer)
     species_data    = DataFrame()
