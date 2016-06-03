@@ -34,28 +34,28 @@ network <= Species(:BPP, 99000)
 network <= Species(:TD,      0)
 
 # Reaction Definitions
-network <= Reaction(r1, :k1, r=(:EMT => 1), p=(:MET => 1))
-network <= Reaction(r2, :k2, r=(:MET => 1), p=(:EMT => 1))
-network <= Reaction(r3, :k3, r=(:MET => 1), p=(:MET => 2))
-network <= Reaction(r4, :k4, r=(:MET => 1), p=(:MET => 1, :BPP => 1))
-network <= Reaction(r5, :k5, r=(:MET => 1), p=(:BPP => 2))
-network <= Reaction(r6, :k6, r=(:BPP => 1), p=(:BPP => 2))
-network <= Reaction(r7, :k7, r=(:BPP => 1))
-network <= Reaction(r8, :k8, r=(:BPP => 1), p=(:TD => 1))
-network <= Reaction(r9, :k9, r=(:TD => 1))
+network <= Reaction(r1, :k1, :(EMT --> MET))
+network <= Reaction(r2, :k2, :(MET --> EMT))
+network <= Reaction(r3, :k3, :(MET --> 2*MET))
+network <= Reaction(r4, :k4, :(MET --> MET + BPP))
+network <= Reaction(r5, :k5, :(MET --> 2*BPP))
+network <= Reaction(r6, :k6, :(BPP --> 2*BPP))
+network <= Reaction(r7, :k7, :(BPP --> 0))
+network <= Reaction(r8, :k8, :(BPP --> TD))
+network <= Reaction(r9, :k9, :(TD  --> 0))
 
 # Parameter Definitions
-network <= parameter(:k1, k1)
-network <= parameter(:k2, k2)
-network <= parameter(:k3, k3)
-network <= parameter(:k4, k4)
-network <= parameter(:k5, k5)
-network <= parameter(:k6, k6)
-network <= parameter(:k7, k7)
-network <= parameter(:k8, k8)
-network <= parameter(:k9, k9)
+network <= Parameter(:k1, k1)
+network <= Parameter(:k2, k2)
+network <= Parameter(:k3, k3)
+network <= Parameter(:k4, k4)
+network <= Parameter(:k5, k5)
+network <= Parameter(:k6, k6)
+network <= Parameter(:k7, k7)
+network <= Parameter(:k8, k8)
+network <= Parameter(:k9, k9)
 
-@time result = simulate(network, tf=2*365.0, with=:sal, dt=1.0, output=Uniform(), itr=10);
+@time result = simulate(network, tf=2*365.0, with=:sal, dt=1.0, output=:uniform, itr=10);
 df = get_species_data(result)
 df = aggregate(df, :Time, mean);
 
