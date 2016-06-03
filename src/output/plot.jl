@@ -1,7 +1,21 @@
+"""
+```
+plot_results(data::SimulationOutput, ptype::Symbol=:mean; args...)
+```
 
-function plot_results(data::SimulationOutput, ptype::Symbol=:mean; field=:species, args...)
-    df = getfield(data, field)
-    mdata = metadata(data)
+Plot species data according to `ptype`.
+
+### Arguments
+- `data`:  a `SimulationOutput` object
+- `ptype`: The type of graphic to produce. Using `:mean` produces mean trajectories of multiple species, `:sample` plots individual trajectories for a particular species, and `dist` plots a frequency distribution for multiple species at a particular time.
+### Optional Arguments
+- `ids`: Identifiers for the species to include in a plot. Used by `:mean` and `:dist`.
+- `id`: An identifier for a species to include in a plot. Used by `:sample`.
+- `nsamples`: The number of trajectories to inclue in a plot. Used by `:sample`.
+- `t`: A time used to subset simulation data. Used by `:dist`.
+"""
+function plot_results(data::SimulationOutput, ptype::Symbol=:mean; args...)
+    df = data.species
 
     ptype == :sample ? sampleplot(df; args...) :
     ptype == :mean   ? meanplot(df; args...) :
@@ -11,7 +25,7 @@ end
 
 ##### plotting engines #####
 function meanplot(df; ids::Vector{Symbol}=names(df)[2:end], na...)
-    temp = flatten(df[:, [:time; collect(colnames)]])
+    temp = flatten(df[:, [:time; collect(ids)]])
     temp = aggregate(temp, [:time, :species], [mean, std])
     names!(temp, [:time, :species, :mean, :std])
     temp[:min] = max(0, temp[:mean] - temp[:std])

@@ -2,7 +2,7 @@ import Base.show
 
 """
 ```
-Species(id::Symbol, value::Int=0)
+Species(id, value::Int=0)
 ```
 
 Construct a Species object named `id` with initial copy number `value`.
@@ -14,17 +14,20 @@ Construct a Species object named `id` with initial copy number `value`.
 - `value`: Initial copy number. Defaults to `0`.
 """
 type Species
-  id::Symbol
-  population::Int
+  id         :: UTF8String
+  population :: Int
 
-  function Species(id::Symbol, value::Int=0)
+  function Species(id, value::Int=0)
     if value < 0
       error("Species population must be nonnegative.")
     end
-    new(id, value)
+    new(UTF8String(string(id)), value)
   end
 end
 
+id(x::Species) = x.id
+value(x::Species) = x.population
+
 function Base.show(io::IO, x::Species)
-  print(io, x.population)
+  println(io, population(x))
 end

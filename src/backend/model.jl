@@ -1,9 +1,9 @@
 immutable Model{T<:AbstractReactionSystem}
-    id::ASCIIString
-    Xt::Vector{Int}
-    rs::T
+    id :: UTF8String
+    Xt :: Vector{Int}
+    rs :: T
 
-    parameters::Dict{Symbol,Parameter}
+    parameters :: Dict{Symbol,Parameter}
 
     X₀::Vector{Int}
 end

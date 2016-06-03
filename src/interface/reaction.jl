@@ -2,22 +2,22 @@ import Base.show
 
 """
 ```
-Reaction(id, rate, r=(), p=())
+Reaction(id, k::Symbol, formula::Expr)
 ```
+
+Construct a `Reaction` with identifier `id` and rate constant `k`, represented by a `formula` (e.g. X + Y --> XY).
 
 ### Arguments
 - `id`: An identifier for this `Reaction`.
-- `rate`: An identifier for this `Reaction`'s rate constant.
-
-### Optional Arguments
-- `r`: A list of reactants and their coefficients, specified using a `Tuple` of `Pair`s e.g. `(:X1 => 1, :X2 => 1)`.
-- `p`: Like `r`, but a list for reaction products.
+- `rate`: A `Symbol` identifier for this `Reaction`'s rate constant.
+- `formula`: A chemical formula representation of the `Reaction`. For example, `:(X --> X + X)` defines a birth reaction with reactant `X`, coefficient 1, and product `X`, coefficient 2; :(X --> 2*X) is also valid syntax. The `-->` symbol must be used to separate reactants and products.
 """
 type Reaction
-  id::Symbol
-  rate::Symbol
-  reactants::Dict{Symbol,Int}
-  products::Dict{Symbol,Int}
+  id   :: UTF8String
+  rate :: Symbol
+
+  reactants :: Dict{Symbol,Int}
+  products  :: Dict{Symbol,Int}
 
   function Reaction(id, rate, expression::Expr)
     reactants, products = parse_reaction(expression)
@@ -29,31 +29,31 @@ type Reaction
     if any(x -> x < 0, values(reactants)) || any(x -> x < 0, values(products))
       error("Coefficients must be positive.")
     end
-    return new(id, rate, reactants, products)
+    return new(UTF8String(string(id)), rate, reactants, products)
   end
 end
 
 function Base.show(io::IO, x::Reaction)
   print_participants(io, x.reactants)
-  @printf io " --> "
+  print(io, " --> ")
   print_participants(io, x.products)
 end
 
 function print_participants(io, participants)
   n = length(participants)
   if n == 0
-    @printf io "∅"
+    print(io, "∅")
   else
     i = 1
     for (id, coeff) in participants
       if coeff == 1
-        @printf io "%s" id
+        print(io, id)
       else
-        @printf io "%d %s" coeff id
+        print(io, coeff, " ", id)
       end
 
       if i < n
-        @printf io " + "
+        print(io, " + ")
       end
       i = i + 1
     end
