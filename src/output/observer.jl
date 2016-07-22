@@ -1,6 +1,6 @@
 abstract Observer
 id(o::Observer)              = o.id
-states(o::Observer)          = o.states
+get_states(o::Observer)          = o.states
 is_preallocated(o::Observer) = o.is_preallocated
 
 immutable SpeciesObserver <: Observer
@@ -17,19 +17,20 @@ immutable SpeciesObserver <: Observer
     end
 end
 
-species(o::SpeciesObserver) = o.species
+get_species(o::SpeciesObserver) = o.species
 index(o::SpeciesObserver)   = o.index
 
 function update!(observer::SpeciesObserver, j::Int)
     i       = BioSimulator.index(observer)
-    states  = BioSimulator.states(observer)
-    species = BioSimulator.species(observer)
+    st      = get_states(observer)
+    species = get_species(observer)
 
     if is_preallocated(observer)
-        observer.states[j] = species[i]
+        st[j] = species[i]
     else
-        push!(states, species[i])
+        push!(st, species[i])
     end
+    return species[i]
 end
 
 # immutable PropensityObserver <: Observer
@@ -71,13 +72,14 @@ immutable TimeObserver <: Observer
 end
 
 function update!(observer::TimeObserver, j::Int, t::Float64)
-    states = BioSimulator.states(observer)
+    st = get_states(observer)
 
     if is_preallocated(observer)
-        observer.states[j] = t
+        st[j] = t
     else
-        push!(states, t)
+        push!(st, t)
     end
+    return t
 end
 
 immutable Overseer

@@ -85,7 +85,7 @@ function call(rs::SparseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
       a = a * (Xt[ind] - (n-1))
     end
   end
-  return a
+  return abs(a)
 end
 
 function fire_reaction!(Xt, rs::SparseReactionSystem, j)
@@ -148,7 +148,7 @@ function call(rs::DenseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
       a = a * (Xt[i] - (n-1))
     end
   end
-  return a
+  return abs(a)
 end
 
 function fire_reaction!(Xt, rs::DenseReactionSystem, j)
@@ -182,16 +182,16 @@ end
 function mass_action_deriv(Xt, rs::DenseReactionSystem, rate::Float64, i, k)
   u   = reactants(rs)
   ui  = u[i]
-  acc = 1.0
-  if ui[k] == 0
-    acc = 0.0
-  else
-    acc = helper1(Xt, ui, k)
-  end
+  val = ui[k]
 
-  if ui[k] == 2
-    acc = acc * (2 * Xt[k] - 1)
-  elseif ui[k] > 2
+    acc = 0.0
+  if val == 0
+    acc = 0.0
+  elseif val == 1
+    acc = helper1(Xt, ui, k)
+  elseif val == 2
+    acc = 2.0 * Xt[k] - 1
+  elseif val > 2
     error("higher order reactions not supported.")
   end
 
@@ -202,6 +202,7 @@ function mass_action_deriv(Xt, rs::SparseReactionSystem, rate::Float64, i, k)
   u = reactants(rs)
   val = u[k,i]
 
+    acc = 0.0
   if val == 0
     acc = 0.0
   elseif val == 1
@@ -215,7 +216,7 @@ function mass_action_deriv(Xt, rs::SparseReactionSystem, rate::Float64, i, k)
   return rate * acc
 end
 
-function helper1(Xt, u, k)
+function helper1(Xt::Vector{Int}, u::Vector{Int}, k::Int)
   acc = 1.0
   for i in eachindex(u)
     if i != k
