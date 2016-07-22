@@ -6,7 +6,7 @@ include("test_models.jl")
 
 # List of tests
 tests = ["mass_action",
-         #"time_derivatives",
+         "time_derivatives",
          "network",
          "kendall",
          "linear",

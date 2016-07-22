@@ -16,6 +16,38 @@ function mass_action_tests(Xt, r, parameters)
   k2b = value(parameters[:k2b])
 
   a = propensities(r)
+
+  Xt0 = zero(Xt)
+  compute_propensities!(r, Xt0, parameters)
+
+  print("  Zero-Order:             ")
+  @test a[1] == k0
+  @test ∂(Xt0, r, parameters, 1, 1) == 0.0
+  @test ∂(Xt0, r, parameters, 1, 2) == 0.0
+  @test ∂(Xt0, r, parameters, 1, 3) == 0.0
+  println("Passed")
+
+  print("  First-Order:            ")
+  @test a[2] == 0.0
+  @test ∂(Xt0, r, parameters, 2, 1) == k1
+  @test ∂(Xt0, r, parameters, 2, 2) == 0.0
+  @test ∂(Xt0, r, parameters, 2, 3) == 0.0
+  println("Passed")
+
+  print("  Second-Order, Distinct: ")
+  @test a[3] == 0.0
+  @test ∂(Xt0, r, parameters, 3, 1) == 0.0
+  @test ∂(Xt0, r, parameters, 3, 2) == 0.0
+  @test ∂(Xt0, r, parameters, 3, 3) == 0.0
+  println("Passed")
+
+  print("  Second-Order, Repeated: ")
+  @test a[4] == 0.0
+  @test ∂(Xt0, r, parameters, 4, 1) == -k2b
+  @test ∂(Xt0, r, parameters, 4, 2) == 0.0
+  @test ∂(Xt0, r, parameters, 4, 3) == 0.0
+  println("Passed")
+
   compute_propensities!(r, Xt, parameters)
 
   print("  Zero-Order:             ")

@@ -1,34 +1,84 @@
-network = kendall()
-Xt, species_id, id2ind = BioSimulator.make_species_arr(network.species)
-rv, reaction_id        = BioSimulator.make_reaction_arr(network.reactions, id2ind)
+import BioSimulator: DenseReactionSystem,
+                     SparseReactionSystem,
+                     propensities,
+                     compute_propensities!,
+                     mean_derivatives!,
+                     time_derivatives!
 
-m = BioSimulator.Model(network.id, Xt, rv, network.parameters, deepcopy(Xt))
-rv = BioSimulator.reactions(m)
-p = BioSimulator.parameters(m)
+∂ = BioSimulator.mass_action_deriv
 
-X = Xt[1]
+function time_derivatives_tests(Xt, r, parameters)
+  a = propensities(r)
+  compute_propensities!(r, Xt, parameters)
 
-α = p[:α]
-μ = p[:μ]
-ν = p[:ν]
+  dxdt = zeros(Float64, length(Xt))
+  drdt = zeros(Float64, length(a))
 
-# d/dt (x_1)
-dxdt = [(1 * α * X) + (-1 * μ * X) + (1 * ν)]
+  mean_derivatives!(dxdt, r)
+  time_derivatives!(drdt, Xt, r, parameters, dxdt)
 
-# d/dt (r)
-drdt = zeros(Float64, 3)
-drdt[1] = BioSimulator.mass_action_deriv(BioSimulator.reaction(rv, 1), Xt, p, 1) * dxdt[1]
-drdt[2] = BioSimulator.mass_action_deriv(BioSimulator.reaction(rv, 2), Xt, p, 1) * dxdt[1]
-drdt[3] = BioSimulator.mass_action_deriv(BioSimulator.reaction(rv, 3), Xt, p, 1) * dxdt[1]
+  print("  Species Mean Derivatives: ")
+  val = a[1] * 1 + a[2] * -1 + a[3] * -1 + a[4] * -2
+  @test dxdt[1] == val
 
-# We have not computed propensities...
-@test BioSimulator.mean_derivatives!([0.0], m) == [0.0]
-@test BioSimulator.time_derivatives!([0.0, 0.0, 0.0], m, [0.0, 0.0, 0.0]) == [0.0, 0.0, 0.0]
-@test BioSimulator.time_derivatives!([1.0, 1.0, 1.0], m, [0.0, 0.0, 0.0]) == [0.0, 0.0, 0.0]
+  val = a[1] * 0 + a[2] * 0 + a[3] * -1 + a[4] * 1
+  @test dxdt[2] == val
 
-BioSimulator.compute_propensities!(m)
+  val = a[1] * 0 + a[2] * 0 + a[3] * 1 + a[4] * 0
+  @test dxdt[3] == val
 
-# We have computed propensities...
-@test BioSimulator.mean_derivatives!([0.0], m) == dxdt
-@test BioSimulator.time_derivatives!([0.0, 0.0, 0.0], m, dxdt) == drdt
-@test BioSimulator.time_derivatives!([1.0, 1.0, 1.0], m, dxdt) == drdt
+  println("Passed")
+
+  print("  Reaction Derivatives:     ")
+  val = ∂(Xt, r, parameters, 1, 1) * dxdt[1] + ∂(Xt, r, parameters, 1, 2) * dxdt[2] + ∂(Xt, r, parameters, 1, 3) * dxdt[3]
+  @test drdt[1] == val
+
+  val = ∂(Xt, r, parameters, 2, 1) * dxdt[1] + ∂(Xt, r, parameters, 2, 2) * dxdt[2] + ∂(Xt, r, parameters, 2, 3) * dxdt[3]
+  @test drdt[2] == val
+
+  val = ∂(Xt, r, parameters, 3, 1) * dxdt[1] + ∂(Xt, r, parameters, 3, 2) * dxdt[2] + ∂(Xt, r, parameters, 3, 3) * dxdt[3]
+  @test drdt[3] == val
+
+  val = ∂(Xt, r, parameters, 4, 1) * dxdt[1] + ∂(Xt, r, parameters, 4, 2) * dxdt[2] + ∂(Xt, r, parameters, 4, 3) * dxdt[3]
+  @test drdt[4] == val
+
+  println("Passed")
+end
+
+##### Setup #####
+Xt = [100, 500, 1] # (X, Y, XY)
+
+pre = transpose([
+  0 0 0; # Zero Order
+  1 0 0; # First Order
+  1 1 0; # Second Order, Type A
+  2 0 0  # Second Order, Type B
+])
+
+post = transpose([
+  1 0 0; # Zero Order
+  0 0 0; # First Order
+  0 0 1; # Second Order, Type A
+  0 1 0  # Second Order, Type B
+])
+
+v = post - pre
+u = pre
+
+k_id = [:k0, :k1, :k2a, :k2b]
+k    = [0.1, 0.01, 0.25, 0.5]
+
+parameters = Dict{Symbol,Parameter}(
+  k_id[1] => Parameter(k_id[1], k[1]),
+  k_id[2] => Parameter(k_id[2], k[2]),
+  k_id[3] => Parameter(k_id[3], k[3]),
+  k_id[4] => Parameter(k_id[4], k[4])
+)
+
+##### DenseReactionSystem #####
+println("- DenseReactionSystem")
+time_derivatives_tests(Xt, DenseReactionSystem(v, u, k_id), parameters)
+
+##### SparseReactionSystem #####
+println("- SparseReactionSystem")
+time_derivatives_tests(Xt, SparseReactionSystem(v, u, k_id), parameters)

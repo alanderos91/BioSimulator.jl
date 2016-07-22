@@ -35,7 +35,7 @@ include(joinpath("interface","parameter.jl"))
 include(joinpath("interface","network.jl"))
 
 # Backend
-include(joinpath("backend","mass_action.jl"))
+#include(joinpath("backend","mass_action.jl"))
 include(joinpath("backend","rxnvec.jl"))
 include(joinpath("backend","model.jl"))
 
