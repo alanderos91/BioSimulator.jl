@@ -20,7 +20,7 @@ end
 species(o::SpeciesObserver) = o.species
 index(o::SpeciesObserver)   = o.index
 
-function update!(observer::SpeciesObserver, j)
+function update!(observer::SpeciesObserver, j::Int)
     i       = BioSimulator.index(observer)
     states  = BioSimulator.states(observer)
     species = BioSimulator.species(observer)
@@ -70,7 +70,7 @@ immutable TimeObserver <: Observer
     end
 end
 
-function update!(observer::TimeObserver, j, t)
+function update!(observer::TimeObserver, j::Int, t::Float64)
     states = BioSimulator.states(observer)
 
     if is_preallocated(observer)
@@ -91,14 +91,14 @@ immutable Overseer
     end
 end
 
-function notify!(overseer, j, t)
+function notify!(overseer, j::Int, t::Float64)
     notify!(overseer, j)
     update!(overseer.t_observer, j, t)
 
     return overseer
 end
 
-function notify!(overseer, j)
+function notify!(overseer, j::Int)
     for o in overseer.s_observers
         update!(o, j)
     end

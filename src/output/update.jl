@@ -29,7 +29,7 @@ function update!(::Explicit, u, t)
     u.index += 1
 end
 
-function update!(::Uniform, u, t)
+function update!(::Uniform, u::UpdateManager, t::Float64)
     while t >= next(u)
         i = index(u)
         if i > block_end(u); return; end
@@ -39,12 +39,12 @@ function update!(::Uniform, u, t)
     end
 end
 
-function final_update!(::Explicit, u, t)
+function final_update!(::Explicit, u::UpdateManager, t::Float64)
     notify!(overseer(u), index(u), t)
     u.index += 1
 end
 
-function final_update!(::Uniform, u, t)
+function final_update!(::Uniform, u::UpdateManager, t::Float64)
     while index(u) <= block_end(u)
         i = index(u)
 
