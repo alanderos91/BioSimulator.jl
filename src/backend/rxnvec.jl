@@ -1,3 +1,37 @@
+@generated function compute_mass_action(x::Vector{Int}, u::Vector{Int})
+    ex = quote
+        value = 1
+        @inbounds for i in 1:length(u)
+            if u[i] > 0
+                value = value * x[i]
+                @inbounds for k in 2:u[i]
+                    value = value * ( x[i] - (k-1) )
+                end
+            end
+        end
+        value
+    end
+
+    return ex
+end
+
+@generated function compute_mass_action(x::Vector{Int}, u::SparseMatrixCSC{Int,Int})
+    ex = quote
+        value = 1
+        @inbounds for i in 1:length(u)
+            if u[i] > 0
+                value = value * x[i]
+                @inbounds for k in 2:u[i]
+                    value = value * ( x[i] - (k-1) )
+                end
+            end
+        end
+        value
+    end
+
+    return ex
+end
+
 type PropensityVector{T<:AbstractFloat}
     a  :: Vector{T}
     a0 :: T
@@ -27,7 +61,7 @@ function compute_propensities!(rs::AbstractReactionSystem, Xt, p)
     @inbounds for j in eachindex(a)
         key  = k[j]
         kj   = p[key].value
-        a[j] = rs(Xt, kj, j)::Float64
+        a[j] = rs(Xt, kj, j)
         a0   = a0 + a[j]
     end
     setfield!(a, :a0, a0)
@@ -39,12 +73,11 @@ immutable SparseReactionSystem <: AbstractReactionSystem
     u :: SparseMatrixCSC{Int,Int}
     a :: PropensityVector{Float64}
     k :: Vector{Symbol}
-    klaw :: Vector{Function}
 
     function SparseReactionSystem(v, u, k)
         a = PropensityVector(Float64, length(k))
-        klaw = make_propensities(u)
-        new(v, u, a, k, klaw)
+
+        new(v, u, a, k)
     end
 end
 
@@ -89,15 +122,13 @@ immutable DenseReactionSystem <: AbstractReactionSystem
     u    :: Vector{Vector{Int}}
     a    :: PropensityVector{Float64}
     k    :: Vector{Symbol}
-    klaw :: Vector{Function}
 
     function DenseReactionSystem(v, u, k)
         inc  = Vector[ v[:, j] for j in 1:size(v, 2) ]
         rct  = Vector[ u[:, j] for j in 1:size(u, 2) ]
         a    = PropensityVector(Float64, length(k))
-        klaw = make_propensities(u)
 
-        new(inc, rct, a, k, klaw)
+        new(inc, rct, a, k)
     end
 end
 
@@ -125,50 +156,16 @@ function DenseReactionSystem(dict, id2ind, c, d)
     return DenseReactionSystem(v, u, k)
 end
 
-function make_propensity(u, id)
-    name = symbol("_a", id)
-    args = Expr[]
-
-    for i in 1:length(u)
-        if u[i] > 0
-            push!(args, :( x[$i] ))
-            for k in 2:u[i]
-                push!(args, :( (x[$i] - $(k-1)) ))
-            end
-        end
-    end
-
-    ex   = quote end
-    code = Expr(:(=), :( $name(x::Vector{Int}) ))
-
-    if length(args) > 1
-        ex   = Expr(:call, :*, args...)
-        push!(code.args, ex)
-    elseif length(args) == 1
-        ex   = args[1]
-        push!(code.args, ex)
-    else
-        push!(code.args, 1)
-    end
-
-    return eval(code)
-end
-
-function make_propensities(u)
-    klaw = Function[]
-
-    for i in 1:size(u,2)
-        f = make_propensity(u[:,i], i)
-        push!(klaw, f)
-    end
-
-    return klaw
+# propensity of reaction j, assuming rate constant k
+function call(rs::DenseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+    u = reactants(rs)
+    return k * compute_mass_action(Xt, u[j])
 end
 
 # propensity of reaction j, assuming rate constant k
-function call(rs::AbstractReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
-    a = rs.klaw[j]
-    return k * a(Xt)::Int
+function call(rs::SparseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+    u = reactants(rs)
+    return k * compute_mass_action(Xt, u[:,j])
 end
 
 function fire_reaction!(Xt, rs::DenseReactionSystem, j)
