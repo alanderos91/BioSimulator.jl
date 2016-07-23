@@ -48,24 +48,12 @@ function simulate(network::Network; method::Symbol=:SSA, time=1.0, output=:fixed
       tracked_reactions = findin(reaction_id, track)
   end
 
-  # Create the respective observers
-  n = round(Int, time / sampling_interval) + 1
-  tracker = make_observers(otype,
-                            species_id,
-                            tracked_species,
-                            reaction_id,
-                            tracked_reactions,
-                            Xt,
-                            rs,
-                            n,
-                            realizations)
+  Xt_history = initialize_history(otype, Xt, id2ind, realizations, Int(time / sampling_interval) + 1)
 
-  manager = init_updater(otype, tracker, sampling_interval, n, realizations) # Initialize update manager
-
-  simulate(m, algorithm, otype, realizations, tracker, manager)
+  simulate(m, algorithm, otype, realizations, Xt_history)
 end
 
-function simulate(m::Model, algorithm::Algorithm, output::OutputType, realizations, tracker, manager)
+function simulate(m::Model, algorithm::Algorithm, output::OutputType, realizations, Xt_history)
   initialize!(algorithm, m)
 
   Xt = m.Xt
@@ -77,14 +65,21 @@ function simulate(m::Model, algorithm::Algorithm, output::OutputType, realizatio
     reset!(m)
     reset!(algorithm, m)
     while time(algorithm) < end_time(algorithm)
-      update!(output, manager, time(algorithm))   # Record current state
+      #@code_warntype update!(Xt_history, i, time(algorithm), Xt)
+      #update!(Xt_history, i, time(algorithm), Xt)   # Record current state
       step!(algorithm, Xt, rs, p)
     end
     compute_statistics!(algorithm, i)
-    final_update!(output, manager, time(algorithm)) # Record final state
+    #update!(Xt_history, i, time(algorithm), Xt) # Record final state
   end
 
-  sdata, pdata = compile_data(tracker)
-  mdata = compile_metadata(algorithm, blocksize(manager), realizations, output)
-  return SimulationOutput(sdata, pdata, mdata)
+  return Xt_history
+end
+
+function initialize_history(::Explicit, Xt, id2ind, nrlz, nstates)
+  return SimData(Xt, nrlz, id2ind)
+end
+
+function initialize_history(::Uniform, Xt, id2ind, nrlz, nstates)
+  return SimData(Xt, nrlz, id2ind, nstates)
 end

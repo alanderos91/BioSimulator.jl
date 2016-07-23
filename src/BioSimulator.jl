@@ -48,10 +48,9 @@ include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
 # Output
-include(joinpath("output", "observer.jl"))
-include(joinpath("output", "update.jl"))
-include(joinpath("output", "util.jl"))
-include(joinpath("output", "plot.jl"))
+include(joinpath("output", "history.jl"))
+include(joinpath("output", "realization.jl"))
+include(joinpath("output", "simdata.jl"))
 include(joinpath("interface", "petrinet.jl"))
 
 include(joinpath("interface","simulate.jl"))
