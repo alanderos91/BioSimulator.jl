@@ -1,10 +1,12 @@
-@generated function compute_mass_action(x::Vector{Int}, u::Vector{Int})
+@generated function compute_mass_action(x::Vector{Int}, u::Vector{Vector{Int}}, j::Int)
     ex = quote
+        r = u[j]
         value = 1
-        @inbounds for i in 1:length(u)
-            if u[i] > 0
+
+        @inbounds for i in 1:length(r)
+            if r[i] > 0
                 value = value * x[i]
-                @inbounds for k in 2:u[i]
+                @inbounds for k in 2:r[i]
                     value = value * ( x[i] - (k-1) )
                 end
             end
@@ -15,14 +17,17 @@
     return ex
 end
 
-@generated function compute_mass_action(x::Vector{Int}, u::SparseMatrixCSC{Int,Int})
+@generated function compute_mass_action(x::Vector{Int}, u::SparseMatrixCSC{Int,Int}, j::Int)
     ex = quote
+        rv = rowvals(u)
+        nz = nonzeros(u)
         value = 1
-        @inbounds for i in 1:length(u)
-            if u[i] > 0
-                value = value * x[i]
-                @inbounds for k in 2:u[i]
-                    value = value * ( x[i] - (k-1) )
+
+        @inbounds for i in nzrange(u, j)
+            if nz[i] > 0
+                value = value * x[rv[i]]
+                @inbounds for k in 2:nz[i]
+                    value = value * ( x[rv[i]] - (k-1) )
                 end
             end
         end
@@ -157,15 +162,9 @@ function DenseReactionSystem(dict, id2ind, c, d)
 end
 
 # propensity of reaction j, assuming rate constant k
-function call(rs::DenseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
+function call(rs::AbstractReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
     u = reactants(rs)
-    return k * compute_mass_action(Xt, u[j])
-end
-
-# propensity of reaction j, assuming rate constant k
-function call(rs::SparseReactionSystem, Xt::Vector{Int}, k::Float64, j::Integer)
-    u = reactants(rs)
-    return k * compute_mass_action(Xt, u[:,j])
+    return k * compute_mass_action(Xt, u, j)
 end
 
 function fire_reaction!(Xt, rs::DenseReactionSystem, j)
