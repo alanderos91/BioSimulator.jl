@@ -37,6 +37,75 @@ end
     return ex
 end
 
+@generated function compute_mass_action_deriv(Xt::Vector{Int}, u::Vector{Vector{Int}}, j::Int, k::Int)
+    ex = quote
+        r = u[j]
+        value = 0
+
+        if r[k] > 0
+            value = 1
+            @inbounds for i in eachindex(r)
+                if i != k
+                    if r[i] > 0
+                        value = value * Xt[i]
+                        @inbounds for n in 2:r[i]
+                            value = value * (Xt[i] - (n - 1))
+                        end
+                    end
+                elseif r[i] > 1
+                    tmp1 = 0
+                    @inbounds for m in 1:r[i]
+                        tmp2 = 1
+                        @inbounds for n in 1:r[i]
+                            if m != n; tmp2 = tmp2 * (Xt[i] - (n - 1)); end
+                        end
+                        tmp1 = tmp1 + tmp2
+                    end
+                    value = value * tmp1
+                end
+            end
+        end
+
+        value
+    end
+    return ex
+end
+
+@generated function compute_mass_action_deriv(Xt::Vector{Int}, u::SparseMatrixCSC{Int,Int}, j::Int, k::Int)
+    ex = quote
+        rv = rowvals(u)
+        nz = nonzeros(u)
+        value = 0
+
+        if u[k,j] > 0
+            value = 1
+            @inbounds for i in nzrange(u, j)
+                if rv[i] != k
+                    if nz[i] > 0
+                        value = value * Xt[rv[i]]
+                        @inbounds for n in 2:nz[i]
+                            value = value * (Xt[rv[i]] - (n - 1))
+                        end
+                    end
+                elseif nz[i] > 1
+                    tmp1 = 0
+                    @inbounds for m in 1:nz[i]
+                        tmp2 = 1
+                        @inbounds for n in 1:nz[i]
+                            if m != n; tmp2 = tmp2 * (Xt[rv[i]] - (n - 1)); end
+                        end
+                        tmp1 = tmp1 + tmp2
+                    end
+                    value = value * tmp1
+                end
+            end
+        end
+
+        value
+    end
+    return ex
+end
+
 type PropensityVector{T<:AbstractFloat}
     a  :: Vector{T}
     a0 :: T
@@ -188,77 +257,16 @@ function reaction_system(dict, id2ind)
     return rs
 end
 
+# unpack
 function mass_action_deriv(Xt, rs, p, i, k)
     key = rates(rs)[i]
     param = p[key]
     mass_action_deriv(Xt, rs, param.value, i, k)
 end
 
-# derivative of reaction i with respect to reactant k
-function mass_action_deriv(Xt, rs::DenseReactionSystem, rate::Float64, i, k)
-    u   = reactants(rs)
-    ui  = u[i]
-    val = ui[k]
-
-    acc = 0.0
-    if val == 0
-        acc = 0.0
-    elseif val == 1
-        acc = helper1(Xt, ui, k)
-    elseif val == 2
-        acc = 2.0 * Xt[k] - 1
-    elseif val > 2
-        error("higher order reactions not supported.")
-    end
-
-    return rate * acc
-end
-
-function mass_action_deriv(Xt, rs::SparseReactionSystem, rate::Float64, i, k)
-    u = reactants(rs)
-    val = u[k,i]
-
-    acc = 0.0
-    if val == 0
-        acc = 0.0
-    elseif val == 1
-        acc = helper2(Xt, u, i, k)
-    elseif val == 2
-        acc = 2.0 * Xt[k] - 1
-    elseif val > 2
-        error("higher order reactions not supported.")
-    end
-
-    return rate * acc
-end
-
-function helper1(Xt::Vector{Int}, u::Vector{Int}, k::Int)
-    acc = 1.0
-    for i in eachindex(u)
-        if i != k
-            c = u[i]
-            for j in 1:c
-                acc = acc * (Xt[i] - (j - 1))
-            end
-        end
-    end
-    return acc
-end
-
-function helper2(Xt, u, l, k)
-    participants = rowvals(u)
-    coeff = nonzeros(u)
-    a = 1.0
-    for i in nzrange(u, l)
-        if i != k + length(nzrange(u, l)) - 1
-            c = coeff[i]
-            ind = participants[i]
-            for n in 1:c
-                a = a * (Xt[ind] - (n-1))
-            end
-        end
-    end
-    return a
+# derivative of reaction j with respect to reactant k
+function mass_action_deriv(Xt, rs::AbstractReactionSystem, rate::Float64, j, k)
+    return rate * compute_mass_action_deriv(Xt, reactants(rs), j, k)
 end
 
 function fire_reactions!(Xt, rs, events)
