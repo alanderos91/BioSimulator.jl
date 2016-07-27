@@ -121,9 +121,9 @@ end
 function mean_derivatives!(dxdt, rs::DenseReactionSystem)
     v = increments(rs)
     a = propensities(rs)
-    for k in eachindex(dxdt)
+    @inbounds for k in eachindex(dxdt)
         dxdt[k] = 0.0
-        for j in eachindex(a)
+        @inbounds for j in eachindex(a)
             vj = v[j]
             dxdt[k] = dxdt[k] + a[j] * vj[k]
         end
@@ -141,8 +141,8 @@ function mean_derivatives!(dxdt, rs::SparseReactionSystem)
 
     fill!(dxdt, 0.0)
 
-    for j in 1:c
-        for k in nzrange(v, j)
+    @inbounds for j in 1:c
+        @inbounds for k in nzrange(v, j)
             i = idxs[k]
             dxdt[i] = dxdt[i] + a[j] * vj[k]
         end
@@ -150,12 +150,27 @@ function mean_derivatives!(dxdt, rs::SparseReactionSystem)
     return dxdt
 end
 
-function time_derivatives!(drdt, Xt, rs, p, dxdt)
-    for i in eachindex(drdt)
+function time_derivatives!(drdt, Xt, rs::DenseReactionSystem, p, dxdt)
+    @inbounds for i in eachindex(drdt)
         drdt[i]  = 0.0
-        for k in eachindex(Xt)
+        @inbounds for k in eachindex(Xt)
             ∂r∂x_k = mass_action_deriv(Xt, rs, p, i, k)
             drdt[i] = drdt[i] + ∂r∂x_k * dxdt[k]
+        end
+    end
+    return drdt
+end
+
+function time_derivatives!(drdt, Xt, rs::SparseReactionSystem, p, dxdt)
+    u  = reactants(rs)
+    rv = rowvals(u)
+    nz = nonzeros(u)
+
+    @inbounds for i in eachindex(drdt)
+        drdt[i]  = 0.0
+        @inbounds for k in nzrange(u, i)
+            ∂r∂x_k = mass_action_deriv(Xt, rs, p, i, rv[k])
+            drdt[i] = drdt[i] + ∂r∂x_k * dxdt[rv[k]]
         end
     end
     return drdt
@@ -165,7 +180,7 @@ function tau_leap(rs, p, drdt, ϵ)
     τ = Inf
     a = propensities(rs)
     k = rates(rs)
-    for j in eachindex(a)
+    @inbounds for j in eachindex(a)
         kj = p[k[j]].value
         r  = a[j]
 
@@ -180,7 +195,7 @@ end
 
 function generate_events!(events, rs, τ, drdt)
     r = propensities(rs)
-    for j in eachindex(r)
+    @inbounds for j in eachindex(r)
         λ = τ * r[j] + 0.5 * τ * τ * drdt[j]
         events[j] = rand(Poisson(λ))
     end
@@ -189,9 +204,9 @@ end
 function is_badleap(Xt, rs::DenseReactionSystem, events)
     v = increments(rs)
 
-    for i in eachindex(Xt)
+    @inbounds for i in eachindex(Xt)
         xi = Xt[i]
-        for j in eachindex(events)
+        @inbounds for j in eachindex(events)
             vj = v[j]
             xi = xi + events[j] * vj[i]
 
@@ -208,9 +223,9 @@ function is_badleap(Xt, rs::SparseReactionSystem, events)
     idxs = rowvals(v)
     c = size(v, 2)
 
-    for j in 1:c
+    @inbounds for j in 1:c
         xi = 0
-        for k in nzrange(v, j)
+        @inbounds for k in nzrange(v, j)
             xi = Xt[idxs[k]] + events[j] * vj[k]
 
             if xi < 0 return true end
@@ -220,9 +235,9 @@ function is_badleap(Xt, rs::SparseReactionSystem, events)
 end
 
 function contract!(events, α)
-    for i in eachindex(events)
+    @inbounds for i in eachindex(events)
         k = 0
-        for j in 1:events[i]
+        @inbounds for j in 1:events[i]
             k = rand() < α ? k + 1 : k
         end
         events[i] = k
