@@ -15,8 +15,8 @@ function SimData(Xt::Vector{Int}, nrlz::Int, id2ind::Dict{Symbol,Int})
     return SimData(rlz, id2ind, false)
 end
 
-function SimData(Xt::Vector{Int}, nrlz::Int, id2ind::Dict{Symbol,Int}, nstates::Int)
-    t   = zeros(Float64, nstates)
+function SimData(Xt::Vector{Int}, nrlz::Int, id2ind::Dict{Symbol,Int}, nstates::Int, t::Float64)
+    t   = collect(linspace(0.0, t, nstates))
     rlz = Realization[ Realization(Xt, t) for i in 1:nrlz ]
 
     return SimData(rlz, id2ind, true)

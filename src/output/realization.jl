@@ -7,9 +7,8 @@ type TickTock
 end
 
 function next!(tt::TickTock)
-    old_val = tt.val
     tt.val += 1
-    return old_val
+    return tt.val
 end
 
 immutable Realization
@@ -36,9 +35,8 @@ function Realization(Xt::Vector{Int}, t::Vector{Float64})
 end
 
 function partial_update!(r::Realization, t::Float64, Xt::Vector{Int})
-    dum = 0
     len = length(r.t)
-    pos = next!(r.pos)
+    pos = r.pos.val
     ttt = r.t
 
     while (pos <= len) && (t >= ttt[pos])
