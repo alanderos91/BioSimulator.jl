@@ -40,7 +40,8 @@ for a in BioSimulator.ALGORITHMS
 
   print("   - Uniform ", uppercase(string(a)))
   srand(seed); @time result = simulate(m, time=T, method=a, output=:fixed, sampling_interval=dt, realizations=itr)
+  computed  = mean(Int[ result.rlz[i][1].history[j] for j in 1:npts, i in 1:itr ], 2)
   #computed = aggregate(get_speciesdf(result), :time, mean)
-  #print("     |observed - theoretical| = ", abs(computed[:X_mean][end] - theoretical[end]), "\n")
+  print("     |observed - theoretical| = ", abs(computed[end] - theoretical[end]), "\n")
   println()
 end
