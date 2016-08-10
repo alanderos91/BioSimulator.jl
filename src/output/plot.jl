@@ -6,7 +6,7 @@ plot_results(data::SimulationOutput, ptype::Symbol=:mean; args...)
 Plot species data according to `ptype`.
 
 ### Arguments
-- `data`:  a `SimulationOutput` object
+- `data`:  a `SimData` object
 - `ptype`: The type of graphic to produce. Using `:mean` produces mean trajectories of multiple species, `:sample` plots individual trajectories for a particular species, and `dist` plots a frequency distribution for multiple species at a particular time.
 ### Optional Arguments
 - `ids`: Identifiers for the species to include in a plot. Used by `:mean` and `:dist`.
@@ -14,43 +14,109 @@ Plot species data according to `ptype`.
 - `nsamples`: The number of trajectories to inclue in a plot. Used by `:sample`.
 - `t`: A time used to subset simulation data. Used by `:dist`.
 """
-function plot_results(data::SimulationOutput, ptype::Symbol=:mean; args...)
-    df = data.species
+function plot_results(Xt_history::SimData, ptype::Symbol=:mean; args...)
+    ptype == :sample ? sampleplot(Xt_history; args...) :
+    ptype == :mean   ? meanplot(Xt_history; args...) :
+    ptype == :dist   ? distplot(Xt_history; args...) :
+    throw(ArgumentError("Unrecognized plot type $(ptype)"))
+end
 
-    ptype == :sample ? sampleplot(df; args...) :
-    ptype == :mean   ? meanplot(df; args...) :
-    ptype == :dist   ? distplot(df; args...) :
-    throw(ArgumentError("Unrecognized type $(ptype)"))
+##### dataframe methods #####
+function meandf(Xt_history::SimData, ids::Vector{Symbol})
+    nrlz = length(Xt_history.rlz)
+    ndat = length(Xt_history.rlz[1].t)
+    nsps = length(ids)
+
+    dfm  = zeros(Float64, ndat, nsps)
+    dfs  = zeros(Float64, ndat, nsps)
+    t    = Xt_history.rlz[1].t
+    lbl  = Array(Symbol, ndat, nsps)
+
+    j = 1
+    for id in ids
+        k = Xt_history.id2ind[id]
+        Xtk = [ Xt_history.rlz[n].hist[k][i] for n in 1:nrlz, i in 1:ndat ]
+        dfm[:,j] = mean(Xtk, 1)[:]
+        dfs[:,j] = std(Xtk, 1)[:]
+        lbl[:,j] = Symbol[ id for i = 1:ndat]
+        j += 1
+    end
+
+    df = DataFrame(time = repeat(t, outer=[nsps]),
+                    mean = dfm[:],
+                    std = dfs[:])
+    df[:min] = max(0, df[:mean] - df[:std])
+    df[:max] = df[:mean] + df[:std]
+    df[:species] = lbl[:]
+
+    return df
+end
+
+function sampledf(Xt_history::SimData, nsamples::Int, id::Symbol)
+    nrlz = length(Xt_history.rlz)
+    ndat = length(Xt_history.rlz[1].t)
+    nsps = length(Xt_history.rlz[1].hist)
+
+    #ind = rand(1:nrlz, nsamples)
+    t   = Xt_history.rlz[1].t
+    k   = get(Xt_history.id2ind, id, 0)
+    x   = [ Xt_history.rlz[n].hist[k][i] for i in 1:ndat, n in 1:nsamples ]
+    lbl = map(string, 1:nsamples)
+
+    df = DataFrame(time = repeat(t, outer=[nsamples]),
+        species_count = x[:],
+        iteration = repeat(lbl, inner=[ndat]))
+end
+
+function distdf(Xt_history::SimData, ids::Vector{Symbol}, t::Float64)
+    nrlz = length(Xt_history.rlz)
+    nsps = length(ids)
+    i    = findin(Xt_history.rlz[1].t, t)[1]
+
+    Xt  = zeros(Int, nrlz, nsps)
+    lbl = map(string, ids)
+
+    j = 1
+    for id in ids
+        k = Xt_history.id2ind[id]
+        Xt[:,j] = Int[ Xt_history.rlz[n].hist[k][i] for n in 1:nrlz ]
+        j += 1
+    end
+
+    return df = DataFrame(species_count = Xt[:],
+        species = repeat(lbl, inner=[nrlz]))
 end
 
 ##### plotting engines #####
-function meanplot(df; ids::Vector{Symbol}=names(df)[2:end], na...)
-    temp = flatten(df[:, [:time; collect(ids)]])
-    temp = aggregate(temp, [:time, :species], [mean, std])
-    names!(temp, [:time, :species, :mean, :std])
-    temp[:min] = max(0, temp[:mean] - temp[:std])
-    temp[:max] = temp[:mean] + temp[:std]
+function meanplot(Xt_history::SimData; ids::Vector{Symbol}=Symbol[], na...)
+    if isempty(ids)
+        error("Must specify species to plot.")
+    end
 
-    plot(temp,
-    x=:time, y=:mean, ymin=:min, ymax=:max, color=:species,
+    df = meandf(Xt_history, ids)
+
+    plot(df, x=:time, y=:mean, ymin=:min, ymax=:max, color=:species,
     Geom.line, Geom.point, Geom.errorbar, Theme(major_label_font_size=12pt,minor_label_font_size=12pt)
     )
 end
 
-function sampleplot(df; nsamples::Integer=1, id::Symbol=names(df)[end], na...)
-    temp = df[:, [:time, id]]
-    npts  = length(unique(temp[:time]))
+function sampleplot(Xt_history::SimData; nsamples::Integer=1, id::Symbol=:notset, na...)
+    if id == :notset
+        error("Must specify a species to sample.")
+    end
 
-    temp = flatten(temp[1:nsamples * npts, :])
-    temp[:iteration] = repeat([string(i) for i in 1:nsamples], outer=[1], inner=[npts])
+    df = sampledf(Xt_history, nsamples, id)
 
-    plot(temp, x=:time, y=:copynumber, color=:iteration, Geom.line, Geom.point, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
+    plot(df, x=:time, y=:species_count, color=:iteration, Geom.line, Geom.point, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
 end
 
-function distplot(df; ids::Vector{Symbol}=names(df)[2:end], t=df[:time][end], na...)
-    temp = df[ df[:time] .== t, :]
-    temp = flatten(temp[:, [:time; collect(ids)]])
-    plot(temp, x=:copynumber, color=:species, Geom.histogram, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
+function distplot(Xt_history::SimData; ids::Vector{Symbol}=Symbol[], t::Float64=-0.0, na...)
+    if isempty(ids) || t == -0.0
+        error("Must specify species and sample time.")
+    end
+    df = distdf(Xt_history, ids, t)
+
+    plot(df, x=:species_count, color=:species, Geom.histogram, Theme(major_label_font_size=12pt,minor_label_font_size=12pt))
 end
 
 function flatten(df)

@@ -51,10 +51,11 @@ include(joinpath("algorithm","sal.jl"))
 include(joinpath("output", "history.jl"))
 include(joinpath("output", "realization.jl"))
 include(joinpath("output", "simdata.jl"))
+include(joinpath("output", "plot.jl"))
 include(joinpath("interface", "petrinet.jl"))
 
 include(joinpath("interface","simulate.jl"))
 
-export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, value, id, get_speciesdf, get_metadata, plot_results
+export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, value, id, get_metadata, plot_results
 
 end # module

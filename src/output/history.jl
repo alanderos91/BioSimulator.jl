@@ -36,3 +36,7 @@ function full_update!(h::History, Xt::Vector{Int}, n::Int)
 end
 
 getindex(h::History, i) = h.history[i]
+
+function Base.show(io::IO, h::History)
+    show(io, h.history)
+end

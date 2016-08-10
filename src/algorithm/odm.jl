@@ -45,20 +45,21 @@ function initialize!(x::ODM, m::Model)
     return;
 end
 
-function reset!(x::ODM, m::Model)
-    Xt = species(m)
-    rs = reactions(m)
-    p  = parameters(m)
-
-    setfield!(x, :t, 0.0)
-    setfield!(x, :steps, 0)
-    compute_propensities!(rs, Xt, p)
-
-    return;
-end
+# function reset!(x::ODM, m::Model)
+#     Xt = species(m)
+#     rs = reactions(m)
+#     p  = parameters(m)
+#
+#     setfield!(x, :t, 0.0)
+#     setfield!(x, :steps, 0)
+#     compute_propensities!(rs, Xt, p)
+#
+#     return;
+# end
 
 function step!(x::ODM, Xt, rs, p)
-    a0 = intensity(propensities(rs))
+    a0 = compute_propensities!(rs, Xt, p)
+    #a0 = intensity(propensities(rs))
     τ  = rand(Exponential(1 / a0))
 
     # update algorithm variables
@@ -68,10 +69,11 @@ function step!(x::ODM, Xt, rs, p)
     if time(x) < end_time(x) && a0 > 0
         μ = select_reaction(rs, a0)
         fire_reaction!(Xt, rs, μ)
-        compute_propensities!(rs, Xt, p)
+        #compute_propensities!(rs, Xt, p)
     end
 
     compute_statistics!(x, τ)
+    return;
 end
 
 function presimulate!(x, m)

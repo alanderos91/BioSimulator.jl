@@ -5,13 +5,13 @@ include("test_models.jl")
 function test(algorithms)
 
     for alg in algorithms
-        @time simulate(kendall(), with=alg)
+        @time simulate(autoreg(), method=alg)
     end
 
     Profile.clear_malloc_data()
 
     for alg in algorithms
-        @time simulate(kendall(), time=4.0, sampling_interval=0.5, method=alg, realizations=100_000)
+        @time simulate(autoreg(), time=1000.0, sampling_interval=10.0, method=alg, realizations=1000)
     end
 
     nothing

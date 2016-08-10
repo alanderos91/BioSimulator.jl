@@ -73,6 +73,8 @@ function simulate(m::Model, algorithm::Algorithm, output::OutputType, realizatio
     update!(Xt_history, i, time(algorithm), Xt) # Record final state
   end
 
+  compile_metadata!(Xt_history, algorithm, realizations, output)
+
   return Xt_history
 end
 
