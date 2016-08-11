@@ -45,6 +45,7 @@ function initialize!(x::NRM, m::Model)
 
     # initialize dependency graph
     g = init_dep_graph(rs)
+
     setfield!(x, :g,  g)
 
     # initialize the priority queue
@@ -73,6 +74,7 @@ function step!(x::NRM, Xt, rs, p)
     pq   = getfield(x, :pq)
     μ, τ = peek(pq)
     a0   = intensity(propensities(rs))
+
     # update algorithm variables
     t = time(x)
     setfield!(x, :t, τ)
@@ -151,7 +153,11 @@ function update_dependents!(x::NRM, Xt, rs, p)
         old_a = a[α]
         a[α]  = rs(Xt, kα, α)
         a.a0  = a.a0 - old_a + a[α]
-        pq[α] = t + (old_a / a[α]) * (pq[α] - t)
+        if pq[α] != Inf
+            pq[α] = t + (old_a / a[α]) * (pq[α] - t)
+        else
+            pq[α] = τ + rand(Exponential(1 / a[α]))
+        end
     end
     key   = k[μ]
     kμ    = p[key].value
