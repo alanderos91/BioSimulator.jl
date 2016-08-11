@@ -197,7 +197,8 @@ function generate_events!(events, rs, τ, drdt)
     r = propensities(rs)
     @inbounds for j in eachindex(r)
         λ = τ * r[j] + 0.5 * τ * τ * drdt[j]
-        events[j] = rand(Poisson(λ))
+
+        events[j] = rand(Poisson(max(λ,0)))
     end
 end
 
