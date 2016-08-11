@@ -109,22 +109,24 @@ function _sort!(rs, ix)
     u = reactants(rs)
     v = increments(rs)
     a = propensities(rs).a
-    for i in eachindex(ix)
-        swapcols!(u, i, ix[i])
-        swapcols!(v, i, ix[i])
-        swapcols!(a, i, ix[i])
-    end
+
+    swapcols!(u, ix)
+    swapcols!(v, ix)
+    swapcols!(a, ix)
     return rs
 end
 
-function swapcols!(A, i, j)
-     for k = 1:size(A, 1)
-           A[k,i], A[k,j] = A[k,j], A[k,i]
+function swapcols!(A, ix)
+    for i in eachindex(ix)
+        j = ix[i]
+         for k = 1:size(A, 1)
+               A[k,i], A[k,j] = A[k,j], A[k,i]
+         end
      end
      return A
 end
 
-function swapcols!(v::Vector, i, j)
-    v[i], v[j] = v[j], v[i]
+function swapcols!(v::Vector, ix)
+    v = v[ix]
     return v
 end
