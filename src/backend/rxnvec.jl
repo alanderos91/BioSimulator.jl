@@ -24,11 +24,9 @@ end
         value = 1
 
         @inbounds for i in nzrange(u, j)
-            if nz[i] > 0
-                value = value * x[rv[i]]
-                @inbounds for k in 2:nz[i]
-                    value = value * ( x[rv[i]] - (k-1) )
-                end
+            value = value * x[rv[i]]
+            @inbounds for k in 2:nz[i]
+                value = value * ( x[rv[i]] - (k-1) )
             end
         end
         value
@@ -81,11 +79,9 @@ end
             value = 1
             @inbounds for i in nzrange(u, j)
                 if rv[i] != k
-                    if nz[i] > 0
-                        value = value * Xt[rv[i]]
-                        @inbounds for n in 2:nz[i]
-                            value = value * (Xt[rv[i]] - (n - 1))
-                        end
+                    value = value * Xt[rv[i]]
+                    @inbounds for n in 2:nz[i]
+                        value = value * (Xt[rv[i]] - (n - 1))
                     end
                 elseif nz[i] > 1
                     tmp1 = 0

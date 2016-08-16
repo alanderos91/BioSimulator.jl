@@ -108,11 +108,10 @@ end
 function _sort!(rs, ix)
     u = reactants(rs)
     v = increments(rs)
-    a = propensities(rs).a
 
     swapcols!(u, ix)
     swapcols!(v, ix)
-    swapcols!(a, ix)
+
     return rs
 end
 
