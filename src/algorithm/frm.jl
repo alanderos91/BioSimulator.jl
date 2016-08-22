@@ -9,59 +9,57 @@ Gillespie's First Reaction Method. Statistically equivalent to `SSA`, but slower
 - `T`: The simulation end time.
 """
 type FRM <: ExactMethod
-    # parameters
-    T :: Float64
+  # parameters
+  end_time :: Float64
 
-    # state variables
-    t     :: Float64
-    steps :: Int
+  # state
+  t      :: Float64
+  nsteps :: Int
 
-    # statistics
-    avg_nsteps    :: Float64
-    avg_step_size :: Float64
+  # statistics
+  avg_nsteps :: Float64
+  avg_stepsz :: Float64
 
-    # metadata tags
-    tags :: Vector{Symbol}
+  # metadata
+  tags :: Vector{Symbol}
 
-    function FRM(T)
-        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
-    end
+  function FRM(T)
+    new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  end
 end
 
-##### constructor wrapper #####
-function frm(T; na...)
-    return FRM(T)
+set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
+
+function init!(algorithm::FRM)
+  algorithm.t = 0.0
+  return nothing
 end
 
-function step!(x::FRM, Xt, rs, p)
-    a0 = compute_propensities!(rs, Xt, p)
-    τ, μ = select_reaction(rs)
+function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
+  a = propensities(r)
 
-    # update algorithm variables
-    setfield!(x, :t,     time(x) + τ)
-    setfield!(x, :steps, steps(x) + 1)
+  τ, μ = select_reaction(algorithm, a)
+  set_time!(algorithm, τ)
 
-    if time(x) < end_time(x) && a0 > 0
-        if μ > 0
-            fire_reaction!(Xt, rs, μ)
-        else
-            error("no reaction ocurred!")
-        end
-    end
+  if !done(algorithm) && intensity(a) > 0
+    fire_reaction!(Xt, r, μ)
+    update_propensities!(r, Xt, μ)
+  end
 
-    compute_statistics!(x, τ)
+  return nothing
 end
 
-function select_reaction(rs::AbstractReactionSystem)
-    τ = Inf
-    μ = 0
-    a = propensities(rs)
-    @inbounds for j in eachindex(a)
-        τj = rand(Exponential(1 / a[j]))
-        if τj < τ
-            τ = τj
-            μ = j
-        end
+function select_reaction(::FRM, a::PropensityVector)
+  min_val = Inf
+  min_ind = 0
+
+  for j in eachindex(a)
+    temp = rand(Exponential(1 / a[j]))
+    if temp < min_val
+      min_val = temp
+      min_ind = j
     end
-    return τ, μ
+  end
+
+  return min_val, min_ind
 end

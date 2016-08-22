@@ -61,9 +61,9 @@ function compute_mass_action_deriv(
     return c[j] * compute_mass_action_deriv(Xt, U, j, k)
 end
 
-fire_reaction!(Xt, r, μ) = fire_reaction!(Xt, stoichiometry(r), μ)
+fire_reaction!(Xt::Vector{Int}, r::AbstractReactionSystem, μ::Integer) = fire_reaction!(Xt, stoichiometry(r), μ)
 
-function fire_reactions!(Xt, r, events)
+function fire_reactions!(Xt::Vector{Int}, r::AbstractReactionSystem, events::Vector{Int})
     for j in eachindex(events)
         fire_reaction!(Xt, stoichiometry(r), j, events[j])
     end
