@@ -1,15 +1,47 @@
-function simulate(algorithm, X0, r; time::Float64=1.0, sampling_interval::Float64=1.0, nrlz::Integer=1)
+"""
+```
+simulate()
+```
+### Arguments
+- ?
+
+### Optional Arguments
+- ?
+
+"""
+function simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)
+
+  c = n_species(model)
+  d = n_reactions(model)
+
+  species   = species_list(model)
+  reactions = reaction_list(model)
+
+  X0, id, id2ind = make_species_vector(species)
+
+  if d < 8
+    r = DenseReactionSystem(reactions, id2ind, c, d)
+  else
+    r = SparseReactionSystem(reactions, id2ind, c, d)
+  end
+
+  simulate(algorithm, X0, r, sampling_interval, nrlz)
+end
+
+##### PartialHistory #####
+function simulate(algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, sampling_interval::AbstractFloat, nrlz::Integer)
+  t  = end_time(algorithm)
 
   Xt = similar(X0)
 
-  npts = round(Int, time / sampling_interval + 1)
+  npts = round(Int, t / sampling_interval + 1)
 
-  output = PartialHistory(length(Xt), npts, nrlz, 0.0, time)
+  output = PartialHistory(length(Xt), npts, nrlz, 0.0, t)
 
-  simulate!(output, Xt, algorithm, X0, r, nrlz)
+  simulate(output, Xt, algorithm, X0, r, nrlz)
 end
 
-function simulate!(output, Xt, algorithm, X0, r, nrlz) # nrlz is encoded in PartialHistory; refactor
+function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, nrlz::Integer) # nrlz is encoded in PartialHistory; refactor
 
   for i in 1:nrlz
     init!(algorithm)
@@ -18,11 +50,11 @@ function simulate!(output, Xt, algorithm, X0, r, nrlz) # nrlz is encoded in Part
     interval = 1
 
     while !done(algorithm)
-      output, interval = update!(output, Xt, get_time(algorithm), interval, i)
+      interval = update!(output, Xt, get_time(algorithm), interval, i)
       step!(algorithm, Xt, r)
     end
 
-    output, interval = update!(output, Xt, get_time(algorithm), interval, i)
+    interval = update!(output, Xt, get_time(algorithm), interval, i)
   end
 
   return output

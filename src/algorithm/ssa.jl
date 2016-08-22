@@ -1,62 +1,84 @@
-"""
-```
-SSA(T)
-```
-
-Gillespie's Stochastic Simulation Algorithm. Simulates a system of coupled species and reactions by simulating each reaction event. The algorithm computes the time to the next reaction as a random exponential deviate with mean equal to the cumulative reaction intensity. It then scales the cumulative intensity by a uniform random number and conducts a linear search on the reaction propensities to select a reaction.
-
-### Arguments
-- `T`: The simulation end time.
-"""
 type SSA <: ExactMethod
-    # parameters
-    T :: Float64
+  # parameters
+  end_time :: Float64
 
-    # state variables
-    t     :: Float64
-    steps :: Int
+  # state
+  t      :: Float64
+  nsteps :: Int
 
-    # statistics
-    avg_nsteps    :: Float64
-    avg_step_size :: Float64
+  # statistics
+  avg_nsteps :: Float64
+  avg_stepsz :: Float64
 
-    # metadata tags
-    tags :: Vector{Symbol}
+  # metadata
+  tags :: Vector{Symbol}
 
-    function SSA(T)
-        new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
-    end
+  function SSA(tf)
+    new(tf, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  end
 end
 
-##### constructor wrapper #####
-function ssa(T; na...)
-    return SSA(T)
+set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
+
+##### implementation #####
+
+function init!(algorithm::SSA)
+  algorithm.t = 0.0
+  return nothing
 end
 
-function step!(x::SSA, Xt, rs, p)
-    a0 = compute_propensities!(rs, Xt, p)
-    τ  = rand(Exponential(1 / a0))
+function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
+  a = propensities(r)
 
-    # update algorithm variables
-    setfield!(x, :t,     time(x) + τ)
-    setfield!(x, :steps, steps(x) + 1)
-    compute_statistics!(x, τ)
+  τ = compute_stepsize(a)
+  set_time!(algorithm, τ)
 
-    if time(x) < end_time(x) && a0 > 0
-        μ = select_reaction(rs, a0)
-        fire_reaction!(Xt, rs, μ)
-    end
-    return;
+  if !done(algorithm) && intensity(a) > 0
+    μ = select_reaction(a)
+    fire_reaction!(Xt, r, μ)
+    update_propensities!(r, Xt, μ)
+  end
+
+  # update nsteps
+  # update statistics
+
+  return nothing
 end
 
+##### next reaction #####
 
-function select_reaction(rs::AbstractReactionSystem, a0)
-    jump = a0 * rand()
-    a = propensities(rs)
-    b = 0.0
-    @inbounds for j in eachindex(a)
-        b = b + a[j]
-        if b >= jump return j end
-    end
-    return 0
+function compute_stepsize(a::PropensityVector)
+  rand(Exponential(1 / intensity(a)))
+end
+
+##### selecting reaction #####
+
+function select_reaction(a::PropensityVector)
+  chopdown(a)
+end
+
+function buildup(a::PropensityVector)
+  jump = intensity(a) * rand()
+  asum = zero(eltype(a))
+
+  μ = 1
+
+  while asum < jump
+    asum += a[μ]
+    μ += 1
+  end
+
+  return μ - 1
+end
+
+function chopdown(a::PropensityVector)
+  jump = intensity(a) * rand()
+
+  μ = length(a)
+  while jump > 0
+    jump -= a[μ]
+    μ -= 1
+  end
+
+  return μ + 1
 end

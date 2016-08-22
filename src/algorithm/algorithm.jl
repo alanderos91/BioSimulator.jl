@@ -3,22 +3,21 @@
 abstract Algorithm
 
 ##### accessors #####
-time(x::Algorithm)     = x.t
-end_time(x::Algorithm) = x.T
+get_time(x::Algorithm) = x.t
+end_time(x::Algorithm) = x.end_time
 get_tags(x::Algorithm) = x.tags
 
 ##### termination criterion #####
-done(x::Algorithm, m::Model) = x.t >= x.T || intensity(reactions(m)) == 0.0
+done(x::Algorithm) = x.t >= x.end_time
 
 ##### setup outside iteration loop #####
-initialize!(x::Algorithm, m::Model) = return;
+initialize!(x::Algorithm) = return;
 
 #### setup inside iteration loop #####
-reset!(x::Algorithm, m::Model) = return;
+reset!(x::Algorithm) = return;
 
 ##### step through the algorithm #####
-step!(x::Algorithm, Xt, rs, p) = return;
-
+step!(x::Algorithm, Xt, r) = return;
 
 
 
@@ -26,15 +25,15 @@ step!(x::Algorithm, Xt, rs, p) = return;
 
 abstract ExactMethod <: Algorithm
 
-const DEFAULT_EXACT = [:avg_nsteps, :avg_step_size]
+const DEFAULT_EXACT = [:avg_nsteps, :avg_stepsz]
 
 ##### accessors #####
 steps(x::ExactMethod)         = x.steps
 avg_nsteps(x::ExactMethod)    = x.avg_nsteps
-avg_step_size(x::ExactMethod) = x.avg_step_size
+avg_stepsz(x::ExactMethod) = x.avg_stepsz
 
 ##### setup inside iteration loop #####
-function reset!(x::ExactMethod, m::Model)
+function reset!(x::ExactMethod)
     setfield!(x, :t, 0.0)
     setfield!(x, :steps, 0)
     return;
@@ -42,7 +41,7 @@ end
 
 # use within the step! method
 function compute_statistics!(x::ExactMethod, τ::Float64)
-    setfield!(x, :avg_step_size, cumavg(avg_step_size(x), τ, steps(x)))
+    setfield!(x, :avg_stepsz, cumavg(avg_stepsz(x), τ, steps(x)))
     return;
 end
 
@@ -84,7 +83,7 @@ avg_neg_excursions(x::TauLeapMethod) = x.avg_neg_excursions
 events(x::TauLeapMethod) = x.events
 
 ##### setup inside iteration loop #####
-function reset!(x::TauLeapMethod, m::Model)
+function reset!(x::TauLeapMethod)
     setfield!(x, :t, 0.0)
     setfield!(x, :ssa_steps, 0)
     setfield!(x, :leap_steps, 0)

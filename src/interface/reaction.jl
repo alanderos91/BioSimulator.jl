@@ -14,7 +14,7 @@ Construct a `Reaction` with identifier `id` and rate constant `k`, represented b
 """
 type Reaction
   id   :: UTF8String
-  rate :: Symbol
+  rate :: Float64
 
   reactants :: Dict{Symbol,Int}
   products  :: Dict{Symbol,Int}

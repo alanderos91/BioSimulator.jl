@@ -12,7 +12,6 @@ Adding a `Species`, `Reaction`, or `Parameter` is done using the `<=` operator:
 ```
 m <= Species("X", 100) # Adds a Species
 m <= Reaction("birth", :α, :(X --> X + X)) # Adds a Reaction
-m <= Parameter(:α, 0.5) # Adds a Parameter
 ```
 
 A fully specified `Network` model is simulated by calling `simulate`:
@@ -37,29 +36,25 @@ type Network
 
   species_list   :: Dict{Symbol,Species}
   reaction_list  :: Dict{Symbol,Reaction}
-  parameter_list :: Dict{Symbol,Parameter}
 
   function Network(id)
     s = Dict{Symbol,Species}()
     r = Dict{Symbol,Reaction}()
-    p = Dict{Symbol,Parameter}()
-    return new(UTF8String(id), s, r, p)
+
+    return new(UTF8String(id), s, r)
   end
 end
 
 species_list(x::Network)   = x.species_list
 reaction_list(x::Network)  = x.reaction_list
-parameter_list(x::Network) = x.parameter_list
 
 n_species(x::Network)    = length(species_list(x))
 n_reactions(x::Network)  = length(reaction_list(x))
-n_parameters(x::Network) = length(parameter_list(x))
 
 function Base.show(io::IO, x::Network)
   println(io, "[ Model: $(x.id) ]")
   println(io, " no. species:    $(n_species(x))")
   println(io, " no. reactions:  $(n_reactions(x))")
-  println(io, " no. parameters: $(n_parameters(x))")
 end
 
 function add_object!(model, object, fieldname)
@@ -83,10 +78,6 @@ function (<=)(model::Network, object::Reaction)
   catch ex
     rethrow(ex)
   end
-end
-
-function (<=)(model::Network, object::Parameter)
-  add_object!(model, object, :parameter_list)
 end
 
 function validate(participants, model)

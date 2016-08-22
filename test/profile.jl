@@ -11,7 +11,7 @@ function test(algorithms)
     Profile.clear_malloc_data()
 
     for alg in algorithms
-        @time simulate(autoreg(), time=1000.0, sampling_interval=10.0, method=alg, realizations=1000)
+        @time simulate(autoreg(), time=1000.0, sampling_interval=10.0, method=alg, realizations=100)
     end
 
     nothing
