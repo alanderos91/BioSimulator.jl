@@ -30,11 +30,6 @@ end
 
 set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
-function init!(algorithm::FRM, a::PropensityVector)
-  algorithm.t = 0.0
-  return nothing
-end
-
 function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 

@@ -36,7 +36,7 @@ get_reaction_times(algorithm::NRM) = algorithm.pq
 
 set_time!(algorithm::NRM, t) = (algorithm.t = t)
 
-function init!(algorithm::NRM, a::PropensityVector)
+function reset!(algorithm::NRM, a)
   algorithm.t = 0.0
   pq = algorithm.pq
 

@@ -22,11 +22,6 @@ set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 ##### implementation #####
 
-function init!(algorithm::SSA, a::PropensityVector)
-  algorithm.t = 0.0
-  return nothing
-end
-
 function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 
