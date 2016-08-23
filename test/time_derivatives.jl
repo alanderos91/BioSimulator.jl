@@ -5,17 +5,17 @@ import BioSimulator: DenseReactionSystem,
                      mean_derivatives!,
                      time_derivatives!
 
-∂ = BioSimulator.mass_action_deriv
+∂ = BioSimulator.compute_mass_action_deriv
 
-function time_derivatives_tests(Xt, r, parameters)
+function time_derivatives_tests(Xt, r)
   a = propensities(r)
-  compute_propensities!(r, Xt, parameters)
+  compute_propensities!(r, Xt)
 
   dxdt = zeros(Float64, length(Xt))
   drdt = zeros(Float64, length(a))
 
   mean_derivatives!(dxdt, r)
-  time_derivatives!(drdt, Xt, r, parameters, dxdt)
+  time_derivatives!(drdt, Xt, r, dxdt)
 
   print("  Species Mean Derivatives: ")
   val = a[1] * 1 + a[2] * -1 + a[3] * -1 + a[4] * -2
@@ -30,16 +30,16 @@ function time_derivatives_tests(Xt, r, parameters)
   println("Passed")
 
   print("  Reaction Derivatives:     ")
-  val = ∂(Xt, r, parameters, 1, 1) * dxdt[1] + ∂(Xt, r, parameters, 1, 2) * dxdt[2] + ∂(Xt, r, parameters, 1, 3) * dxdt[3]
+  val = ∂(Xt, r, 1, 1) * dxdt[1] + ∂(Xt, r, 1, 2) * dxdt[2] + ∂(Xt, r, 1, 3) * dxdt[3]
   @test drdt[1] == val
 
-  val = ∂(Xt, r, parameters, 2, 1) * dxdt[1] + ∂(Xt, r, parameters, 2, 2) * dxdt[2] + ∂(Xt, r, parameters, 2, 3) * dxdt[3]
+  val = ∂(Xt, r, 2, 1) * dxdt[1] + ∂(Xt, r, 2, 2) * dxdt[2] + ∂(Xt, r, 2, 3) * dxdt[3]
   @test drdt[2] == val
 
-  val = ∂(Xt, r, parameters, 3, 1) * dxdt[1] + ∂(Xt, r, parameters, 3, 2) * dxdt[2] + ∂(Xt, r, parameters, 3, 3) * dxdt[3]
+  val = ∂(Xt, r, 3, 1) * dxdt[1] + ∂(Xt, r, 3, 2) * dxdt[2] + ∂(Xt, r, 3, 3) * dxdt[3]
   @test drdt[3] == val
 
-  val = ∂(Xt, r, parameters, 4, 1) * dxdt[1] + ∂(Xt, r, parameters, 4, 2) * dxdt[2] + ∂(Xt, r, parameters, 4, 3) * dxdt[3]
+  val = ∂(Xt, r, 4, 1) * dxdt[1] + ∂(Xt, r, 4, 2) * dxdt[2] + ∂(Xt, r, 4, 3) * dxdt[3]
   @test drdt[4] == val
 
   println("Passed")
@@ -62,23 +62,15 @@ post = transpose([
   0 1 0  # Second Order, Type B
 ])
 
-v = post - pre
-u = pre
+V = post - pre
+U = pre
 
-k_id = [:k0, :k1, :k2a, :k2b]
 k    = [0.1, 0.01, 0.25, 0.5]
-
-parameters = Dict{Symbol,Parameter}(
-  k_id[1] => Parameter(k_id[1], k[1]),
-  k_id[2] => Parameter(k_id[2], k[2]),
-  k_id[3] => Parameter(k_id[3], k[3]),
-  k_id[4] => Parameter(k_id[4], k[4])
-)
 
 ##### DenseReactionSystem #####
 println("- DenseReactionSystem")
-time_derivatives_tests(Xt, DenseReactionSystem(v, u, k_id), parameters)
+time_derivatives_tests(Xt, DenseReactionSystem(V, U, k, a, dg))
 
 ##### SparseReactionSystem #####
 println("- SparseReactionSystem")
-time_derivatives_tests(Xt, SparseReactionSystem(v, u, k_id), parameters)
+time_derivatives_tests(Xt, SparseReactionSystem(V, U, k, a, dg))

@@ -1,81 +1,84 @@
 import BioSimulator: DenseReactionSystem,
                      SparseReactionSystem,
                      propensities,
-                     compute_propensities!
+                     scaled_rates,
+                     compute_propensities!,
+                     PVec
 
-∂ = BioSimulator.mass_action_deriv
+∂ = BioSimulator.compute_mass_action_deriv
 
-function mass_action_tests(Xt, r, parameters)
+function mass_action_tests(Xt, r)
   X  = Xt[1]
   Y  = Xt[2]
   XY = Xt[3]
 
-  k0  = value(parameters[:k0])
-  k1  = value(parameters[:k1])
-  k2a = value(parameters[:k2a])
-  k2b = value(parameters[:k2b])
+  k   = scaled_rates(r)
+  k0  = k[1]
+  k1  = k[2]
+  k2a = k[3]
+  k2b = k[4]
 
   a = propensities(r)
 
   Xt0 = zero(Xt)
-  compute_propensities!(r, Xt0, parameters)
+  compute_propensities!(r, Xt0)
 
   print("  Zero-Order:             ")
   @test a[1] == k0
-  @test ∂(Xt0, r, parameters, 1, 1) == 0.0
-  @test ∂(Xt0, r, parameters, 1, 2) == 0.0
-  @test ∂(Xt0, r, parameters, 1, 3) == 0.0
+  @test ∂(Xt0, r, 1, 1) == 0.0
+  @test ∂(Xt0, r, 1, 2) == 0.0
+  @test ∂(Xt0, r, 1, 3) == 0.0
   println("Passed")
 
   print("  First-Order:            ")
   @test a[2] == 0.0
-  @test ∂(Xt0, r, parameters, 2, 1) == k1
-  @test ∂(Xt0, r, parameters, 2, 2) == 0.0
-  @test ∂(Xt0, r, parameters, 2, 3) == 0.0
+  @test ∂(Xt0, r, 2, 1) == k1
+  @test ∂(Xt0, r, 2, 2) == 0.0
+  @test ∂(Xt0, r, 2, 3) == 0.0
   println("Passed")
 
   print("  Second-Order, Distinct: ")
   @test a[3] == 0.0
-  @test ∂(Xt0, r, parameters, 3, 1) == 0.0
-  @test ∂(Xt0, r, parameters, 3, 2) == 0.0
-  @test ∂(Xt0, r, parameters, 3, 3) == 0.0
+  @test ∂(Xt0, r, 3, 1) == 0.0
+  @test ∂(Xt0, r, 3, 2) == 0.0
+  @test ∂(Xt0, r, 3, 3) == 0.0
   println("Passed")
 
   print("  Second-Order, Repeated: ")
   @test a[4] == 0.0
-  @test ∂(Xt0, r, parameters, 4, 1) == -k2b
-  @test ∂(Xt0, r, parameters, 4, 2) == 0.0
-  @test ∂(Xt0, r, parameters, 4, 3) == 0.0
+  @test ∂(Xt0, r, 4, 1) == -k2b
+  @test ∂(Xt0, r, 4, 2) == 0.0
+  @test ∂(Xt0, r, 4, 3) == 0.0
   println("Passed")
 
-  compute_propensities!(r, Xt, parameters)
+  compute_propensities!(r, Xt)
 
   print("  Zero-Order:             ")
   @test a[1] == k0
-  @test ∂(Xt, r, parameters, 1, 1) == 0.0
-  @test ∂(Xt, r, parameters, 1, 2) == 0.0
-  @test ∂(Xt, r, parameters, 1, 3) == 0.0
+  @test ∂(Xt, r, 1, 1) == 0.0
+  @test ∂(Xt, r, 1, 2) == 0.0
+  @test ∂(Xt, r, 1, 3) == 0.0
   println("Passed")
 
   print("  First-Order:            ")
   @test a[2] == k1 * X
-  @test ∂(Xt, r, parameters, 2, 1) == k1
-  @test ∂(Xt, r, parameters, 2, 2) == 0.0
-  @test ∂(Xt, r, parameters, 2, 3) == 0.0
+  @test ∂(Xt, r, 2, 1) == k1
+  @test ∂(Xt, r, 2, 2) == 0.0
+  @test ∂(Xt, r, 2, 3) == 0.0
   println("Passed")
 
   print("  Second-Order, Distinct: ")
   @test a[3] == k2a * X * Y
-  @test ∂(Xt, r, parameters, 3, 1) == k2a * Y
-  @test ∂(Xt, r, parameters, 3, 2) == k2a * X
-  @test ∂(Xt, r, parameters, 3, 3) == 0.0
+  @test ∂(Xt, r, 3, 1) == k2a * Y
+  @test ∂(Xt, r, 3, 2) == k2a * X
+  @test ∂(Xt, r, 3, 3) == 0.0
   println("Passed")
 
   print("  Second-Order, Repeated: ")
   @test a[4] == k2b * X * (X - 1)
-  @test ∂(Xt, r, parameters, 4, 1) == k2b * (2 * X - 1)
-  @test ∂(Xt, r, parameters, 4, 2) == 0.0
-  @test ∂(Xt, r, parameters, 4, 3) == 0.0
+  @test ∂(Xt, r, 4, 1) == k2b * (2 * X - 1)
+  @test ∂(Xt, r, 4, 2) == 0.0
+  @test ∂(Xt, r, 4, 3) == 0.0
   println("Passed")
 end
 
@@ -96,23 +99,17 @@ post = transpose([
   0 1 0  # Second Order, Type B
 ])
 
-v = post - pre
-u = pre
+V = post - pre
+U = pre
 
-k_id = [:k0, :k1, :k2a, :k2b]
-k    = [0.1, 0.01, 0.25, 0.5]
-
-parameters = Dict{Symbol,Parameter}(
-  k_id[1] => Parameter(k_id[1], k[1]),
-  k_id[2] => Parameter(k_id[2], k[2]),
-  k_id[3] => Parameter(k_id[3], k[3]),
-  k_id[4] => Parameter(k_id[4], k[4])
-)
+k = [0.1, 0.01, 0.25, 1/2 * 0.5]
+a = PVec{Float64}(4)
+dg = Array{Int}[] # unused
 
 ##### DenseReactionSystem #####
 println("- DenseReactionSystem")
-mass_action_tests(Xt, DenseReactionSystem(v, u, k_id), parameters)
+mass_action_tests(Xt, DenseReactionSystem(V, U, k, a, dg))
 
 ##### SparseReactionSystem #####
 println("- SparseReactionSystem")
-mass_action_tests(Xt, SparseReactionSystem(v, u, k_id), parameters)
+mass_action_tests(Xt, SparseReactionSystem(V, U, k, a, dg))
