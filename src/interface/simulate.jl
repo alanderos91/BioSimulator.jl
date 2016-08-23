@@ -32,7 +32,7 @@ end
 function simulate(algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, sampling_interval::AbstractFloat, nrlz::Integer)
   t  = end_time(algorithm)
 
-  Xt = similar(X0)
+  Xt = deepcopy(X0)
 
   npts = round(Int, t / sampling_interval + 1)
 
