@@ -13,112 +13,91 @@ Optimized Direct Method. Same as SSA, except the system is pre-simulated in orde
 - `init_iters`: Number of iterations to simulate.
 """
 type ODM <: ExactMethod
-    # parameters
-    end_time   :: Float64
-    init_steps :: Int
-    init_iters :: Int
+  # parameters
+  end_time :: Float64
+  nsteps   :: Int
 
-    # state variables
-    t     :: Float64
-    steps :: Int
+  # state variables
+  t     :: Float64
+  steps :: Int
 
-    # statistics
-    avg_nsteps    :: Float64
-    avg_stepsz :: Float64
+  # statistics
+  avg_nsteps    :: Float64
+  avg_stepsz :: Float64
 
-    # metadata tags
-    tags :: Vector{Symbol}
+  # metadata tags
+  tags :: Vector{Symbol}
 
-    function ODM(T, init_steps, init_iters)
-        new(T, init_steps, init_iters, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
-    end
+  function ODM(tf, nsteps)
+    new(tf, nsteps, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  end
 end
 
-function initialize!(x::ODM, m::Model)
+set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 
-    presimulate!(x, m)
-    return;
+function init!(algorithm::ODM, Xt, r)
+  nsteps = algorithm.nsteps
+  reaction_events = zeros(Int, size(stoichiometry(r), 2))
+
+  presimulate!(reaction_events, Xt, r, nsteps)
+
+  ix = sortperm(reaction_events)
+  sort!(r, ix)
+
+  return nothing
 end
-
-# function reset!(x::ODM, m::Model)
-#     Xt = species(m)
-#     rs = reactions(m)
-#     p  = parameters(m)
-#
-#     setfield!(x, :t, 0.0)
-#     setfield!(x, :steps, 0)
-#     compute_propensities!(rs, Xt, p)
-#
-#     return;
-# end
 
 function step!(algorithm::ODM, Xt, r)
-    a = propensities(r)
+  a = propensities(r)
 
-    τ  = select_reaction(a)
+  τ  = compute_stepsize(a)
 
-    # update algorithm variables
-    set_time!(algorithm, τ)
+  # update algorithm variables
+  set_time!(algorithm, τ)
 
-    if !done(algorithm) && intensity(a) > 0
-        μ = select_reaction(a)
-        fire_reaction!(Xt, r, μ)
-        update_propensities!(r, Xt, μ)
-    end
+  if !done(algorithm) && intensity(a) > 0
+    μ = select_reaction(a)
+    fire_reaction!(Xt, r, μ)
+    update_propensities!(r, Xt, μ)
+  end
 
-    return nothing
+  return nothing
 end
 
-function presimulate!(x, m)
-    itr = x.init_iters
-    n   = x.init_steps
+function presimulate!(
+  reaction_events :: Vector{Int},
+  Xt              :: Vector{Int},
+  r               :: AbstractReactionSystem,
+  nsteps          :: Integer
+  )
 
-    Xt = species(m)
-    rs = reactions(m)
-    p  = parameters(m)
+  a = propensities(r)
 
-    a = propensities(rs)
-    events = zeros(Float64, length(a))
+  for i = 1:nsteps
+    μ = select_reaction(a)
+    fire_reaction!(Xt, r, μ)
+    reaction_events[μ] = reaction_events[μ] + 1
+  end
 
-    for i = 1:itr
-        reset!(m)
-        for k = 1:n
-            a0 = compute_propensities!(rs, Xt, p)
-            μ  = select_reaction(rs, a0)
-            fire_reaction!(Xt, rs, μ)
-            events[μ] = events[μ] + 1
-        end
-    end
-
-    for i in eachindex(a)
-        @inbounds a[i] = events[i] / itr
-    end
-
-    ix = sortperm(a.a)
-    _sort!(rs, ix)
+  return reaction_events
 end
 
-function _sort!(rs, ix)
-    u = reactants(rs)
-    v = increments(rs)
+function sort!(r, ix)
+  V = stoichiometry(r)
+  U = coefficients(r)
 
-    swapcols!(u, ix)
-    swapcols!(v, ix)
+  swapcols!(U, ix)
+  swapcols!(V, ix)
 
-    return rs
+  return r
 end
 
 function swapcols!(A, ix)
-    for i in eachindex(ix)
-        j = ix[i]
-         for k = 1:size(A, 1)
-               A[k,i], A[k,j] = A[k,j], A[k,i]
-         end
-     end
-     return A
-end
-
-function swapcols!(v::Vector, ix)
-    v = v[ix]
-    return v
+  for i in eachindex(ix)
+    j = ix[i]
+    for k = 1:size(A, 1)
+      A[k,i], A[k,j] = A[k,j], A[k,i]
+    end
+  end
+  return A
 end

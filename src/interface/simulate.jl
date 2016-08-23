@@ -43,10 +43,12 @@ end
 
 function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, nrlz::Integer) # nrlz is encoded in PartialHistory; refactor
 
+  init!(algorithm, Xt, r)
   for i in 1:nrlz
+    # setup
     copy!(Xt, X0)
     compute_propensities!(r, Xt)
-    init!(algorithm, propensities(r))
+    reset!(algorithm, propensities(r))
     interval = 1
 
     while !done(algorithm)
