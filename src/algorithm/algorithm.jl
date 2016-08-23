@@ -11,10 +11,10 @@ get_tags(x::Algorithm) = x.tags
 done(x::Algorithm) = x.t >= x.end_time
 
 ##### setup outside iteration loop #####
-init!(x::Algorithm, Xt::Vector, r::AbstractReactionSystem) = nothing;
+init!(x::Algorithm, Xt, r) = nothing;
 
 #### setup inside iteration loop #####
-function reset!(x::Algorithm, a::PVec)
+function reset!(x::Algorithm, a)
     x.t = 0.0
     return nothing
 end
