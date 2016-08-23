@@ -27,7 +27,7 @@ function update!(
   maxindex = length(ttt)
 
   while (interval <= maxindex) && (t >= ttt[interval])
-    @inbounds for k in eachindex(Xt)
+    for k in eachindex(Xt)
       data[k, interval, realization] = Xt[k]
     end
     interval = interval + 1
