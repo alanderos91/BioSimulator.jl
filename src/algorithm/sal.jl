@@ -1,6 +1,6 @@
 type SAL <: TauLeapMethod
     # parameters
-    T :: Float64
+    end_time :: Float64
     ϵ :: Float64
     δ :: Float64
     α :: Float64
@@ -26,13 +26,15 @@ type SAL <: TauLeapMethod
     # metadata tags
     tags :: Vector{Symbol}
 
-    function SAL(T, ϵ, δ, α)
-        new(T, ϵ, δ, α,
+    function SAL(tf::AbstractFloat, ϵ::AbstractFloat, δ::AbstractFloat, α::AbstractFloat)
+        new(tf, ϵ, δ, α,
             0.0, Float64[], Float64[], Int[], 0, 0, 0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             DEFAULT_TAULEAP)
     end
 end
+
+set_time!(algorithm::SAL, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 ##### accessors #####
 epsilon(x::SAL) = x.ϵ
@@ -40,25 +42,24 @@ delta(x::SAL)   = x.δ
 alpha(x::SAL)   = x.α
 get_derivatives(x::SAL) = x.dxdt, x.drdt
 
-function sal(T; ϵ=0.125, δ=100.0, α=0.75, na...)
-    return SAL(T, ϵ, δ, α)
-end
-
-function initialize!(x::SAL, m::Model)
-    c, d = size(m)
+function init!(x::SAL, Xt, r)
+    c = length(Xt)
+    d = size(stoichiometry(r), 2)
 
     setfield!(x, :dxdt,   zeros(Float64, c))
     setfield!(x, :drdt,   zeros(Float64, d))
     setfield!(x, :events, zeros(Int,     d))
-    return;
+
+    return nothing
 end
 
-function reset!(x::SAL, m::Model)
+function reset!(x::SAL, a::PVec)
     setfield!(x, :t, 0.0)
     setfield!(x, :ssa_steps, 0)
     setfield!(x, :leap_steps, 0)
     setfield!(x, :neg_excursions, 0)
-    return;
+
+    return nothing
 end
 
 # for use at the end of a realization
@@ -70,121 +71,126 @@ function compute_statistics!(x::SAL, i::Integer)
     setfield!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), neg_excursions(x), n))
 end
 
-function step!(x::SAL, Xt, rs, p)
-    a0 = compute_propensities!(rs, Xt, p)
+function step!(algorithm::SAL, Xt, r)
+    a = propensities(r)
 
-    if a0 < delta(x)
-        τ = rand(Exponential(1 / a0))
+    if intensity(a) < delta(algorithm)
+        τ = rand(Exponential(1 / intensity(a)))
 
-        setfield!(x, :ssa_steps, ssa_steps(x) + 1)
-        setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
-        setfield!(x, :t, time(x) + τ)
+        #setfield!(x, :ssa_steps, ssa_steps(x) + 1)
+        #setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
+        #setfield!(x, :t, time(x) + τ)
+        set_time!(algorithm, τ)
 
-        if time(x) < end_time(x) && a0 > 0
-            μ = select_reaction(rs, a0)
-            fire_reaction!(Xt, rs, μ)
+        if !done(algorithm) & (intensity(a) > 0)
+            μ = select_reaction(a)
+            fire_reaction!(Xt, r, μ)
+            update_propensities!(r, Xt, μ)
         end
     else
-        τ = sal_update!(x, Xt, rs, p)
-        setfield!(x, :leap_steps, leap_steps(x) + 1)
-        setfield!(x, :avg_leap_step,  cumavg(avg_leap_step(x),  τ, leap_steps(x)))
-        setfield!(x, :t, time(x) + τ)
+        τ = sal_update!(algorithm, Xt, r)
+        compute_propensities!(r, Xt)
+        # setfield!(x, :leap_steps, leap_steps(x) + 1)
+        # setfield!(x, :avg_leap_step,  cumavg(avg_leap_step(x),  τ, leap_steps(x)))
+        # setfield!(x, :t, time(x) + τ)
+        set_time!(algorithm, τ)
     end
-    compute_statistics!(x, τ)
+    #compute_statistics!(x, τ)
+    return nothing
 end
 
-function sal_update!(x, Xt, rs, p)
-    dxdt, drdt = get_derivatives(x)
-    ϵ = epsilon(x)
-    α = alpha(x)
-    events = x.events
+function sal_update!(algorithm, Xt, r)
+    dxdt, drdt = get_derivatives(algorithm)
+    ϵ = epsilon(algorithm)
+    α = alpha(algorithm)
+    events = algorithm.events
 
-    mean_derivatives!(dxdt, rs)
-    time_derivatives!(drdt, Xt, rs, p, dxdt)
+    mean_derivatives!(dxdt, r)
+    time_derivatives!(drdt, Xt, r, dxdt)
 
-    τ = tau_leap(rs, p, drdt, ϵ)
-    τ = min(τ, end_time(x) - time(x))
+    τ = tau_leap(r, drdt, ϵ)
+    τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
-    generate_events!(events, rs, τ, drdt)
+    generate_events!(events, r, τ, drdt)
 
-    while is_badleap(Xt, rs, events)
+    while is_badleap(Xt, r, events)
         contract!(events, α)
         τ = τ * α
-        setfield!(x, :neg_excursions, neg_excursions(x) + 1)
+        #setfield!(x, :neg_excursions, neg_excursions(x) + 1)
     end
 
-    fire_reactions!(Xt, rs, events)
+    fire_reactions!(Xt, r, events)
 
     return τ
 end
 
-function mean_derivatives!(dxdt, rs::DenseReactionSystem)
-    v = increments(rs)
-    a = propensities(rs)
-    @inbounds for k in eachindex(dxdt)
+function mean_derivatives!(dxdt, r::DenseReactionSystem)
+    V = stoichiometry(r)
+    a = propensities(r)
+
+    for k in eachindex(dxdt)
         dxdt[k] = 0.0
-        @inbounds for j in eachindex(a)
-            vj = v[j]
-            dxdt[k] = dxdt[k] + a[j] * vj[k]
+        for j in eachindex(a)
+            dxdt[k] = dxdt[k] + a[j] * V[k, j]
         end
     end
+
     return dxdt
 end
 
-function mean_derivatives!(dxdt, rs::SparseReactionSystem)
-    v = increments(rs)
-    a = propensities(rs)
+function mean_derivatives!(dxdt, r::SparseReactionSystem)
+    V = stoichiometry(r)
+    a = propensities(r)
 
-    vj = nonzeros(v)
-    idxs = rowvals(v)
-    c = size(v, 2)
+    Vj = nonzeros(V)
+    ix = rowvals(V)
+    c  = size(V, 2)
 
     fill!(dxdt, 0.0)
 
-    @inbounds for j in 1:c
-        @inbounds for k in nzrange(v, j)
-            i = idxs[k]
-            dxdt[i] = dxdt[i] + a[j] * vj[k]
+    for j in 1:c
+        for k in nzrange(V, j)
+            i = ix[k]
+            dxdt[i] = dxdt[i] + a[j] * Vj[k]
         end
     end
+
     return dxdt
 end
 
-function time_derivatives!(drdt, Xt, rs::DenseReactionSystem, p, dxdt)
-    @inbounds for i in eachindex(drdt)
+function time_derivatives!(drdt, Xt, r::DenseReactionSystem, dxdt)
+    for i in eachindex(drdt)
         drdt[i]  = 0.0
-        @inbounds for k in eachindex(Xt)
-            ∂r∂x_k = mass_action_deriv(Xt, rs, p, i, k)
+        for k in eachindex(Xt)
+            ∂r∂x_k = compute_mass_action_deriv(Xt, r, i, k)
             drdt[i] = drdt[i] + ∂r∂x_k * dxdt[k]
         end
     end
     return drdt
 end
 
-function time_derivatives!(drdt, Xt, rs::SparseReactionSystem, p, dxdt)
-    u  = reactants(rs)
-    rv = rowvals(u)
-    nz = nonzeros(u)
+function time_derivatives!(drdt, Xt, r::SparseReactionSystem, dxdt)
+    U  = coefficients(r)
+    ix = rowvals(U)
 
-    @inbounds for i in eachindex(drdt)
+    for i in eachindex(drdt)
         drdt[i]  = 0.0
-        @inbounds for k in nzrange(u, i)
-            ∂r∂x_k = mass_action_deriv(Xt, rs, p, i, rv[k])
-            drdt[i] = drdt[i] + ∂r∂x_k * dxdt[rv[k]]
+        for k in nzrange(U, i)
+            ∂r∂x_k = compute_mass_action_deriv(Xt, r, i, ix[k])
+            drdt[i] = drdt[i] + ∂r∂x_k * dxdt[ix[k]]
         end
     end
+
     return drdt
 end
 
-function tau_leap(rs, p, drdt, ϵ)
+function tau_leap(r::AbstractReactionSystem, drdt::Vector, ϵ::AbstractFloat)
     τ = Inf
-    a = propensities(rs)
-    k = rates(rs)
-    @inbounds for j in eachindex(a)
-        kj = p[k[j]].value
-        r  = a[j]
+    a = propensities(r)
+    k = scaled_rates(r) # should we be using the unscaled rate instead?
 
-        A = ϵ * max(r, kj)
+    for j in eachindex(a)
+        A = ϵ * max(a[j], k[j])
         B = abs(drdt[j])
 
         τ = min(τ, A / B)
@@ -193,24 +199,25 @@ function tau_leap(rs, p, drdt, ϵ)
     return τ
 end
 
-function generate_events!(events, rs, τ, drdt)
-    r = propensities(rs)
-    @inbounds for j in eachindex(r)
-        λ = τ * r[j] + 0.5 * τ * τ * drdt[j]
+function generate_events!(events, r, τ, drdt)
+    a = propensities(r)
 
-        events[j] = rand(Poisson(max(λ,0)))
+    for j in eachindex(a)
+        λ = τ * a[j] + 0.5 * τ * τ * drdt[j]
+
+        events[j] = rand(Poisson(max(λ, 0)))
     end
+
+    return nothing
 end
 
-function is_badleap(Xt, rs::DenseReactionSystem, events)
-    v = increments(rs)
+function is_badleap(Xt, r::DenseReactionSystem, events)
+    V = stoichiometry(r)
 
-    @inbounds for i in eachindex(Xt)
+    for i in eachindex(Xt)
         xi = Xt[i]
-        @inbounds for j in eachindex(events)
-            vj = v[j]
-            xi = xi + events[j] * vj[i]
-
+        for j in eachindex(events)
+            xi = xi + events[j] * V[i, j]
             if xi < 0 return true end
         end
     end
@@ -218,29 +225,32 @@ function is_badleap(Xt, rs::DenseReactionSystem, events)
     return false
 end
 
-function is_badleap(Xt, rs::SparseReactionSystem, events)
-    v = increments(rs)
-    vj = nonzeros(v)
-    idxs = rowvals(v)
-    c = size(v, 2)
+function is_badleap(Xt, r::SparseReactionSystem, events)
+    V  = stoichiometry(r)
+    Vj = nonzeros(V)
+    ix = rowvals(V)
+    c  = size(V, 2)
 
-    @inbounds for j in 1:c
+    for j in 1:c
         xi = 0
-        @inbounds for k in nzrange(v, j)
-            xi = Xt[idxs[k]] + events[j] * vj[k]
+        for k in nzrange(V, j)
+            xi = Xt[ix[k]] + events[j] * Vj[k]
 
             if xi < 0 return true end
         end
     end
+
     return false
 end
 
 function contract!(events, α)
-    @inbounds for i in eachindex(events)
+    for i in eachindex(events)
         k = 0
-        @inbounds for j in 1:events[i]
+        for j in 1:events[i]
             k = rand() < α ? k + 1 : k
         end
         events[i] = k
     end
+
+    return nothing
 end

@@ -36,7 +36,7 @@ include(joinpath("algorithm","ssa.jl"))
 include(joinpath("algorithm","odm.jl"))
 include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","nrm.jl"))
-#include(joinpath("algorithm","sal.jl"))
+include(joinpath("algorithm","sal.jl"))
 
 # Output
 include(joinpath("output","partial_history.jl"))
@@ -44,6 +44,6 @@ include(joinpath("output","partial_history.jl"))
 # Simulate
 include(joinpath("interface","simulate.jl"))
 
-export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, SSA, FRM, NRM, ODM
+export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, SSA, FRM, NRM, ODM, SAL
 
 end # module
