@@ -28,7 +28,7 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
   τ = compute_stepsize(a)
   set_time!(algorithm, τ)
 
-  if !done(algorithm) && intensity(a) > 0
+  if !done(algorithm) & (intensity(a) > 0)
     μ = select_reaction(a)
     fire_reaction!(Xt, r, μ)
     update_propensities!(r, Xt, μ)
@@ -70,6 +70,7 @@ function chopdown(a::PropensityVector)
   jump = intensity(a) * rand()
 
   μ = length(a)
+
   while jump > 0
     jump -= a[μ]
     μ -= 1

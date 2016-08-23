@@ -36,7 +36,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
   τ, μ = select_reaction(algorithm, a)
   set_time!(algorithm, τ)
 
-  if !done(algorithm) && intensity(a) > 0
+  if !done(algorithm) & (intensity(a) > 0)
     fire_reaction!(Xt, r, μ)
     update_propensities!(r, Xt, μ)
   end

@@ -57,7 +57,7 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   # update algorithm variables
   set_time!(algorithm, τ)
 
-  if !done(algorithm) && intensity(a) > 0
+  if !done(algorithm) & (intensity(a) > 0)
     fire_reaction!(Xt, r, μ)
     update_reaction_times!(algorithm, Xt, r, μ, τ)
   end

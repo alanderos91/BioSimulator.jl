@@ -55,7 +55,7 @@ function step!(algorithm::ODM, Xt, r)
   # update algorithm variables
   set_time!(algorithm, τ)
 
-  if !done(algorithm) && intensity(a) > 0
+  if !done(algorithm) & (intensity(a) > 0)
     μ = select_reaction(a)
     fire_reaction!(Xt, r, μ)
     update_propensities!(r, Xt, μ)
@@ -71,12 +71,19 @@ function presimulate!(
   nsteps          :: Integer
   )
 
+  compute_propensities!(r, Xt)
+
   a = propensities(r)
 
   for i = 1:nsteps
-    μ = select_reaction(a)
-    fire_reaction!(Xt, r, μ)
-    reaction_events[μ] = reaction_events[μ] + 1
+    if intensity(a) > 0
+      μ = select_reaction(a)
+      fire_reaction!(Xt, r, μ)
+      update_propensities!(r, Xt, μ)
+      reaction_events[μ] = reaction_events[μ] + 1
+    else
+      break
+    end
   end
 
   return reaction_events
