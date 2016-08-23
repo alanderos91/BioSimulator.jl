@@ -14,7 +14,7 @@ Optimized Direct Method. Same as SSA, except the system is pre-simulated in orde
 """
 type ODM <: ExactMethod
     # parameters
-    T          :: Float64
+    end_time   :: Float64
     init_steps :: Int
     init_iters :: Int
 
@@ -24,7 +24,7 @@ type ODM <: ExactMethod
 
     # statistics
     avg_nsteps    :: Float64
-    avg_step_size :: Float64
+    avg_stepsz :: Float64
 
     # metadata tags
     tags :: Vector{Symbol}
@@ -34,13 +34,8 @@ type ODM <: ExactMethod
     end
 end
 
-function odm(T; init_steps=100, init_iters=1, na...)
-    return ODM(T, init_steps, init_iters)
-end
-
 function initialize!(x::ODM, m::Model)
 
-    # Presimulate to sort reactions according to multiscale property. This will modify Xt and rs...
     presimulate!(x, m)
     return;
 end
@@ -57,23 +52,21 @@ end
 #     return;
 # end
 
-function step!(x::ODM, Xt, rs, p)
-    a0 = compute_propensities!(rs, Xt, p)
-    #a0 = intensity(propensities(rs))
-    τ  = rand(Exponential(1 / a0))
+function step!(algorithm::ODM, Xt, r)
+    a = propensities(r)
+
+    τ  = select_reaction(a)
 
     # update algorithm variables
-    setfield!(x, :t,     time(x) + τ)
-    setfield!(x, :steps, steps(x) + 1)
+    set_time!(algorithm, τ)
 
-    if time(x) < end_time(x) && a0 > 0
-        μ = select_reaction(rs, a0)
-        fire_reaction!(Xt, rs, μ)
-        #compute_propensities!(rs, Xt, p)
+    if !done(algorithm) && intensity(a) > 0
+        μ = select_reaction(a)
+        fire_reaction!(Xt, r, μ)
+        update_propensities!(r, Xt, μ)
     end
 
-    compute_statistics!(x, τ)
-    return;
+    return nothing
 end
 
 function presimulate!(x, m)
