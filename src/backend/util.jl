@@ -42,30 +42,22 @@ function make_dependency_graph(reactions)
   return dg
 end
 
-function make_dependency_graph!(dg, reactions) # entire reaction system
-  for (i, r) in enumerate(values(reactions))
-    add_dependents!(dg, r, reactions, i)
+function make_dependency_graph!(dg, reactions_dict)
+  reactions = values(reactions_dict)
+
+  for (i, reaction) in enumerate(reactions)
+    for (j, other) in enumerate(reactions)
+      s1 = intersect(keys(reaction.reactants), keys(other.reactants))
+      s2 = intersect(keys(reaction.products),  keys(other.reactants))
+
+      if !isempty(union(s1, s2))
+        push!(dg[i], j)
+      end
+    end
     dg[i] = unique(dg[i])
   end
-end
 
-function add_dependents!(dg, r::Reaction, reactions, i) # dependents of individual reaction
-  for s in keys(r.reactants)
-    add_dependents!(dg, s, reactions, i)
-  end
-
-  for s in keys(r.products)
-    add_dependents!(dg, s, reactions, i)
-  end
-end
-
-function add_dependents!(dg, s::Symbol, reactions, i) # dependents based on individual species
-  for (j, other) in enumerate(values(reactions))
-    reactants = keys(other.reactants)
-    if s ∈ reactants
-      push!(dg[i], j)
-    end
-  end
+  return dg
 end
 
 function make_species_vector(dict::Dict{Symbol,Species})
