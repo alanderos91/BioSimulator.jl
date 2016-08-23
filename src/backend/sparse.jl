@@ -15,7 +15,7 @@ function SparseReactionSystem(reactions, id2ind, c, d)
   a = PVec{Float64}(d)
 
   dg = make_dependency_graph(reactions)
-  
+
   return SparseReactionSystem(V, U, k, a, dg)
 end
 
@@ -34,7 +34,7 @@ function fire_reaction!(
   μ  :: Integer)
 
   Vμ  = nonzeros(V)
-  idx = rowvals(v)
+  idx = rowvals(V)
 
   for k in nzrange(V, μ)
     i = idx[k]
@@ -51,7 +51,7 @@ function fire_reaction!(
   n  :: Integer)
 
   Vμ  = nonzeros(V)
-  idx = rowvals(v)
+  idx = rowvals(V)
 
   for k in nzrange(V, μ)
     i = idx[k]

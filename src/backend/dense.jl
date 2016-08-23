@@ -47,7 +47,7 @@ function fire_reaction!(
   n  :: Integer)
 
   for k in eachindex(Xt)
-    Xt[k] = Xt[k] + n * V[k, j]
+    Xt[k] = Xt[k] + n * V[k, μ]
   end
 
   return nothing
