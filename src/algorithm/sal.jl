@@ -74,27 +74,37 @@ end
 function step!(algorithm::SAL, Xt, r)
     a = propensities(r)
 
-    if intensity(a) < delta(algorithm)
-        τ = rand(Exponential(1 / intensity(a)))
+    if intensity(a) > 0
+        if intensity(a) < delta(algorithm)
+            τ = rand(Exponential(1 / intensity(a)))
 
-        #setfield!(x, :ssa_steps, ssa_steps(x) + 1)
-        #setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
-        #setfield!(x, :t, time(x) + τ)
-        set_time!(algorithm, τ)
+            #setfield!(x, :ssa_steps, ssa_steps(x) + 1)
+            #setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
+            #setfield!(x, :t, time(x) + τ)
+            set_time!(algorithm, τ)
 
-        if !done(algorithm) & (intensity(a) > 0)
-            μ = select_reaction(a)
-            fire_reaction!(Xt, r, μ)
-            update_propensities!(r, Xt, μ)
+            if !done(algorithm)
+                μ = select_reaction(a)
+                fire_reaction!(Xt, r, μ)
+                update_propensities!(r, Xt, μ)
+            end
+        else
+            τ = sal_update!(algorithm, Xt, r)
+            compute_propensities!(r, Xt)
+            # setfield!(x, :leap_steps, leap_steps(x) + 1)
+            # setfield!(x, :avg_leap_step,  cumavg(avg_leap_step(x),  τ, leap_steps(x)))
+            # setfield!(x, :t, time(x) + τ)
+            set_time!(algorithm, τ)
         end
+    elseif intensity(a) == 0
+      algorithm.t = algorithm.end_time
     else
-        τ = sal_update!(algorithm, Xt, r)
-        compute_propensities!(r, Xt)
-        # setfield!(x, :leap_steps, leap_steps(x) + 1)
-        # setfield!(x, :avg_leap_step,  cumavg(avg_leap_step(x),  τ, leap_steps(x)))
-        # setfield!(x, :t, time(x) + τ)
-        set_time!(algorithm, τ)
+      println("t = ", get_time(algorithm))
+      println("a = ", a)
+      println("Xt = ", Xt)
+      error("intensity = ", intensity(a))
     end
+
     #compute_statistics!(x, τ)
     return nothing
 end

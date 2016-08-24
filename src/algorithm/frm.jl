@@ -33,12 +33,21 @@ set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 
-  τ, μ = select_reaction(algorithm, a)
-  set_time!(algorithm, τ)
+  if intensity(a) > 0
+    τ, μ = select_reaction(algorithm, a)
+    set_time!(algorithm, τ)
 
-  if !done(algorithm) & (intensity(a) > 0)
-    fire_reaction!(Xt, r, μ)
-    update_propensities!(r, Xt, μ)
+    if !done(algorithm)
+      fire_reaction!(Xt, r, μ)
+      update_propensities!(r, Xt, μ)
+    end
+  elseif intensity(a) == 0
+    algorithm.t = algorithm.end_time
+  else
+    println("t = ", get_time(algorithm))
+    println("a = ", a)
+    println("Xt = ", Xt)
+    error("intensity = ", intensity(a))
   end
 
   return nothing

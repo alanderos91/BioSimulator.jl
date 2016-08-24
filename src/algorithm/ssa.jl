@@ -25,13 +25,22 @@ set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 
-  τ = compute_stepsize(a)
-  set_time!(algorithm, τ)
+  if intensity(a) > 0
+    τ = compute_stepsize(a)
+    set_time!(algorithm, τ)
 
-  if !done(algorithm) & (intensity(a) > 0)
-    μ = select_reaction(a)
-    fire_reaction!(Xt, r, μ)
-    update_propensities!(r, Xt, μ)
+    if !done(algorithm)
+      μ = select_reaction(a)
+      fire_reaction!(Xt, r, μ)
+      update_propensities!(r, Xt, μ)
+    end
+  elseif intensity(a) == 0
+    algorithm.t = algorithm.end_time
+  else
+    println("t = ", get_time(algorithm))
+    println("a = ", a)
+    println("Xt = ", Xt)
+    error("intensity = ", intensity(a))
   end
 
   # update nsteps
@@ -74,6 +83,8 @@ function chopdown(a::PropensityVector)
   while jump > 0
     jump -= a[μ]
     μ -= 1
+
+    if μ == 0 && (jump > 0) println("a = ", a, " intensity = ", intensity(a)) end
   end
 
   return μ + 1

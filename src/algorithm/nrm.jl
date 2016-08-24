@@ -50,16 +50,25 @@ end
 function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 
-  pq = get_reaction_times(algorithm)
+  if intensity(a)
+    pq = get_reaction_times(algorithm)
 
-  μ, τ = peek(pq)
+    μ, τ = peek(pq)
 
-  # update algorithm variables
-  set_time!(algorithm, τ)
+    # update algorithm variables
+    set_time!(algorithm, τ)
 
-  if !done(algorithm) & (intensity(a) > 0)
-    fire_reaction!(Xt, r, μ)
-    update_reaction_times!(algorithm, Xt, r, μ, τ)
+    if !done(algorithm)
+      fire_reaction!(Xt, r, μ)
+      update_reaction_times!(algorithm, Xt, r, μ, τ)
+    end
+  elseif intensity(a) == 0
+    algorithm.t = algorithm.end_time
+  else
+    println("t = ", get_time(algorithm))
+    println("a = ", a)
+    println("Xt = ", Xt)
+    error("intensity = ", intensity(a))
   end
 
   return nothing
