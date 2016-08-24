@@ -27,12 +27,22 @@ end
 
 function update_propensities!(r::AbstractReactionSystem, Xt, μ)
   a  = propensities(r)
-  dg = dependencies(r)
 
-  dependents = dg[μ]
+  # check for loss of random bits
+  if islossy(a)
+    fill!(a.cache, zero(eltype(a)))
+    a.intensity = zero(eltype(a))
+    a.error_bound = zero(eltype(a))
 
-  for j in dependents
-    a[j] = compute_mass_action(Xt, r, j)
+    compute_propensities!(r, Xt)
+  else
+    dg = dependencies(r)
+
+    dependents = dg[μ]
+
+    for j in dependents
+      a[j] = compute_mass_action(Xt, r, j)
+    end
   end
 
   return r
