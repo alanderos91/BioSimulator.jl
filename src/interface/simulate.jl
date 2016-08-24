@@ -25,18 +25,13 @@ function simulate(model::Network, algorithm::Algorithm; sampling_interval::Abstr
     r = SparseReactionSystem(reactions, id2ind, c, d)
   end
 
-  simulate(algorithm, X0, r, sampling_interval, nrlz)
-end
-
-##### PartialHistory #####
-function simulate(algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, sampling_interval::AbstractFloat, nrlz::Integer)
   t  = end_time(algorithm)
 
   Xt = deepcopy(X0)
 
   npts = round(Int, t / sampling_interval + 1)
 
-  output = PartialHistory(length(Xt), npts, nrlz, 0.0, t)
+  output = PartialHistory(length(Xt), npts, nrlz, 0.0, t, id2ind)
 
   simulate(output, Xt, algorithm, X0, r, nrlz)
 end
