@@ -50,7 +50,7 @@ end
 function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
 
-  if intensity(a)
+  if intensity(a) > 0
     pq = get_reaction_times(algorithm)
 
     μ, τ = peek(pq)
@@ -85,7 +85,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
 
   for α in dependents
     temp = a[α]
-    a[α] = compute_mass_action(Xt, r, α)
+    update_propensity!(r, Xt, α)
 
     if pq[α] < Inf
       pq[α] = t + (temp / a[α]) * (pq[α] - t)
@@ -94,7 +94,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     end
   end
 
-  a[μ]  = compute_mass_action(Xt, r, μ)
+  update_propensity!(r, Xt, μ)
   pq[μ] = τ + rand(Exponential(1 / a[μ]))
 
   return nothing

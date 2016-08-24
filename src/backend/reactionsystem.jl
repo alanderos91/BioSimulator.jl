@@ -15,35 +15,39 @@ propensities(r::AbstractReactionSystem)  = r.propensities
 scaled_rates(r::AbstractReactionSystem)  = r.scaled_rates
 dependencies(r::AbstractReactionSystem)  = r.dependencies
 
-function compute_propensities!(r::AbstractReactionSystem, Xt)
+function update_propensity!(r::AbstractReactionSystem, Xt, j::Integer)
   a = propensities(r)
 
-  for j in eachindex(a)
-    a[j] = compute_mass_action(Xt, r, j)
+  a_j = compute_mass_action(Xt, r, j)
+  update_errorbound!(a, a_j, j)
+  update_intensity!(a,  a_j, j)
+  a[j] = a_j
+
+  return r
+end
+
+function compute_propensities!(r::AbstractReactionSystem, Xt, iterable::AbstractVector)
+
+  @inbounds for j in iterable
+    update_propensity!(r, Xt, j)
   end
 
   return r
 end
 
-function update_propensities!(r::AbstractReactionSystem, Xt, μ)
+function update_all_propensities!(r::AbstractReactionSystem, Xt)
+  a = propensities(r)
+
+  compute_propensities!(r, Xt, eachindex(a))
+
+  return r
+end
+
+function update_dependent_propensities!(r::AbstractReactionSystem, Xt, μ::Integer)
   a  = propensities(r)
+  dg = dependencies(r)
 
-  # check for loss of random bits
-  if islossy(a)
-    fill!(a.cache, zero(eltype(a)))
-    a.intensity = zero(eltype(a))
-    a.error_bound = zero(eltype(a))
-
-    compute_propensities!(r, Xt)
-  else
-    dg = dependencies(r)
-
-    dependents = dg[μ]
-
-    for j in dependents
-      a[j] = compute_mass_action(Xt, r, j)
-    end
-  end
+  compute_propensities!(r, Xt, dg[μ])
 
   return r
 end

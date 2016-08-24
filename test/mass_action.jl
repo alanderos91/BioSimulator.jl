@@ -2,7 +2,7 @@ import BioSimulator: DenseReactionSystem,
                      SparseReactionSystem,
                      propensities,
                      scaled_rates,
-                     compute_propensities!,
+                     update_all_propensities!,
                      PVec
 
 ∂ = BioSimulator.compute_mass_action_deriv
@@ -21,7 +21,7 @@ function mass_action_tests(Xt, r)
   a = propensities(r)
 
   Xt0 = zero(Xt)
-  compute_propensities!(r, Xt0)
+  update_all_propensities!(r, Xt0)
 
   print("  Zero-Order:             ")
   @test a[1] == k0
@@ -51,7 +51,7 @@ function mass_action_tests(Xt, r)
   @test ∂(Xt0, r, 4, 3) == 0.0
   println("Passed")
 
-  compute_propensities!(r, Xt)
+  update_all_propensities!(r, Xt)
 
   print("  Zero-Order:             ")
   @test a[1] == k0

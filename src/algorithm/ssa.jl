@@ -32,7 +32,7 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(r, Xt, μ)
+      update_dependent_propensities!(r, Xt, μ)
     end
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time

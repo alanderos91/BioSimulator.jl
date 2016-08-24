@@ -67,7 +67,7 @@ function step!(algorithm::ODM, Xt, r)
       #         "\nV  = ", full(stoichiometry(r)),
       #         "\ndg = ", dependencies(r))
       # end
-      update_propensities!(r, Xt, μ)
+      update_dependent_propensities!(r, Xt, μ)
     end
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
@@ -88,7 +88,7 @@ function presimulate!(
   nsteps          :: Integer
   )
 
-  compute_propensities!(r, Xt)
+  update_all_propensities!(r, Xt)
 
   a = propensities(r)
 
@@ -96,7 +96,11 @@ function presimulate!(
     if intensity(a) > 0
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(r, Xt, μ)
+      update_dependent_propensities!(r, Xt, μ)
+      if islossy(a)
+        a.intensity = sum(a)
+        a.error_bound = zero(eltype(a))
+      end
       reaction_events[μ] = reaction_events[μ] + 1
     else
       break

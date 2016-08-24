@@ -19,7 +19,7 @@ function simulate(model::Network, algorithm::Algorithm; sampling_interval::Abstr
 
   X0, id, id2ind = make_species_vector(species)
 
-  if d < 8
+  if d <= 8
     r = DenseReactionSystem(reactions, id2ind, c, d)
   else
     r = SparseReactionSystem(reactions, id2ind, c, d)
@@ -37,18 +37,24 @@ function simulate(model::Network, algorithm::Algorithm; sampling_interval::Abstr
 end
 
 function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, nrlz::Integer) # nrlz is encoded in PartialHistory; refactor
+  a = propensities(r)
 
   init!(algorithm, Xt, r)
   for i in 1:nrlz
     # setup
     copy!(Xt, X0)
-    compute_propensities!(r, Xt)
+    update_all_propensities!(r, Xt)
     reset!(algorithm, propensities(r))
     interval = 1
 
     while !done(algorithm)
       interval = update!(output, Xt, get_time(algorithm), interval, i)
       step!(algorithm, Xt, r)
+
+      if islossy(a)
+        a.intensity = sum(a)
+        a.error_bound = zero(eltype(a))
+      end
     end
 
     interval = update!(output, Xt, get_time(algorithm), interval, i)
