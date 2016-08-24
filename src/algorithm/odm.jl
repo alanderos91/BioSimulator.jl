@@ -50,15 +50,32 @@ end
 function step!(algorithm::ODM, Xt, r)
   a = propensities(r)
 
-  τ  = compute_stepsize(a)
+  if intensity(a) > 0
 
-  # update algorithm variables
-  set_time!(algorithm, τ)
+    τ  = compute_stepsize(a)
 
-  if !done(algorithm) & (intensity(a) > 0)
-    μ = select_reaction(a)
-    fire_reaction!(Xt, r, μ)
-    update_propensities!(r, Xt, μ)
+    # update algorithm variables
+    set_time!(algorithm, τ)
+
+    if !done(algorithm)
+      μ = select_reaction(a)
+      fire_reaction!(Xt, r, μ)
+      # if any(x -> x < 0, Xt)
+      #   error("t  = ",    get_time(algorithm),
+      #         "\nXt = ", Xt,
+      #         "\nμ  = ", μ,
+      #         "\nV  = ", full(stoichiometry(r)),
+      #         "\ndg = ", dependencies(r))
+      # end
+      update_propensities!(r, Xt, μ)
+    end
+  elseif intensity(a) == 0
+    algorithm.t = algorithm.end_time
+  else
+    println("t = ", get_time(algorithm))
+    println("a = ", a)
+    println("Xt = ", Xt)
+    error("intensity = ", intensity(a))
   end
 
   return nothing
@@ -90,21 +107,27 @@ function presimulate!(
 end
 
 function sort!(r, ix)
-  V = stoichiometry(r)
-  U = coefficients(r)
+  V  = stoichiometry(r)
+  U  = coefficients(r)
+  k  = scaled_rates(r)
+  dg = dependencies(r)
 
-  swapcols!(U, ix)
-  swapcols!(V, ix)
+  temp1 = V[:, ix]
+  temp2 = U[:, ix]
+  temp3 = dg[ix]
 
-  return r
-end
+  for i in eachindex(V) # this is correct
+    V[i] = temp1[i]
+    U[i] = temp2[i]
+  end
 
-function swapcols!(A, ix)
-  for i in eachindex(ix)
-    j = ix[i]
-    for k = 1:size(A, 1)
-      A[k,i], A[k,j] = A[k,j], A[k,i]
+  for i in eachindex(dg) # this is not correct
+    k[i], k[ix[i]], = k[ix[i]], k[i]
+    dg[i] = temp3[i]
+    for j in eachindex(dg[i])
+      dg[i][j] = findfirst(ix, dg[i][j])
     end
   end
-  return A
+
+  return r
 end
