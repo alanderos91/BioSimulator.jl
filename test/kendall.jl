@@ -34,7 +34,7 @@ theoretical = kendall_mean(X0,t,α,μ,ν)
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
   for algorithm in algorithms
-    simulate(m, algorithm)
+    simulate(m, algorithm, sampling_interval=dt, nrlz=1)
   end
 end
 
