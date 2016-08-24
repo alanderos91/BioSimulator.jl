@@ -60,7 +60,7 @@ function make_dependency_graph!(dg, reactions_dict)
   return dg
 end
 
-function make_species_vector(dict::Dict{Symbol,Species})
+function make_species_vector(dict::Associative{Symbol,Species})
   X0     = Array(Int,    length(dict))
   id     = Array(Symbol, length(dict))
   id2ind = Dict{Symbol,Int}()
