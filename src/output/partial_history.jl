@@ -16,7 +16,7 @@ function PartialHistory(
   return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind)
 end
 
-function update!(
+@inbounds function update!(
     x           :: PartialHistory,
     Xt          :: Vector,
     t           :: AbstractFloat,

@@ -28,7 +28,7 @@ function dense_stoichiometry(reactions, id2ind, c, d)
   return V, U
 end
 
-function fire_reaction!(
+@inbounds @fastmath function fire_reaction!(
   Xt :: Vector{Int},
   V  :: Matrix{Int},
   μ  :: Integer)
@@ -40,7 +40,7 @@ function fire_reaction!(
   return nothing
 end
 
-function fire_reaction!(
+@inbounds @fastmath function fire_reaction!(
   Xt :: Vector{Int},
   V  :: Matrix{Int},
   μ  :: Integer,
@@ -53,7 +53,7 @@ function fire_reaction!(
   return nothing
 end
 
-function compute_mass_action(
+@inbounds @fastmath function compute_mass_action(
   Xt :: Vector{Int},
   U  :: Matrix{Int},
   j  :: Integer)
@@ -72,7 +72,7 @@ function compute_mass_action(
   return value
 end
 
-function compute_mass_action_deriv(
+@inbounds @fastmath function compute_mass_action_deriv(
   Xt :: Vector{Int},
   U  :: Matrix{Int},
   j  :: Integer,

@@ -15,7 +15,7 @@ propensities(r::AbstractReactionSystem)  = r.propensities
 scaled_rates(r::AbstractReactionSystem)  = r.scaled_rates
 dependencies(r::AbstractReactionSystem)  = r.dependencies
 
-function update_propensity!(r::AbstractReactionSystem, Xt, j::Integer)
+@inbounds function update_propensity!(r::AbstractReactionSystem, Xt, j::Integer)
   a = propensities(r)
 
   a_j = compute_mass_action(Xt, r, j)
@@ -26,9 +26,9 @@ function update_propensity!(r::AbstractReactionSystem, Xt, j::Integer)
   return r
 end
 
-function compute_propensities!(r::AbstractReactionSystem, Xt, iterable::AbstractVector)
+@inbounds function compute_propensities!(r::AbstractReactionSystem, Xt, iterable::AbstractVector)
 
-  @inbounds for j in iterable
+  for j in iterable
     update_propensity!(r, Xt, j)
   end
 

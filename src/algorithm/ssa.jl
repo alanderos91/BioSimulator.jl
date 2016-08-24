@@ -75,7 +75,7 @@ function buildup(a::PropensityVector)
   return μ - 1
 end
 
-function chopdown(a::PropensityVector)
+@inbounds @fastmath function chopdown(a::PropensityVector)
   jump = intensity(a) * rand()
 
   μ = length(a)

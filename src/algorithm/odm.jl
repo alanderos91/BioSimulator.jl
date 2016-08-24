@@ -110,7 +110,7 @@ function presimulate!(
   return reaction_events
 end
 
-function sort!(r, ix)
+@inbounds function sort!(r, ix)
   V  = stoichiometry(r)
   U  = coefficients(r)
   k  = scaled_rates(r)
