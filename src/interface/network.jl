@@ -52,9 +52,9 @@ n_species(x::Network)    = length(species_list(x))
 n_reactions(x::Network)  = length(reaction_list(x))
 
 function Base.show(io::IO, x::Network)
-  println(io, "[ Model: $(x.id) ]")
-  println(io, " no. species:    $(n_species(x))")
-  println(io, " no. reactions:  $(n_reactions(x))")
+  print(io, "[ Model: $(x.id) ]\n")
+  print(io, " no. species:    $(n_species(x))\n")
+  print(io, " no. reactions:  $(n_reactions(x))")
 end
 
 function add_object!(model, object, fieldname)
