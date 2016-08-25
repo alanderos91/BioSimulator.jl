@@ -29,5 +29,5 @@ id(x::Species) = x.id
 value(x::Species) = x.population
 
 function Base.show(io::IO, x::Species)
-  println(io, population(x))
+  println(io, x.population)
 end
