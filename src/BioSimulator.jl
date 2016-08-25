@@ -1,6 +1,7 @@
 module BioSimulator
 
 using Distributions
+using Plots
 
 import Base: (<=),
              (>=),
@@ -40,6 +41,7 @@ include(joinpath("algorithm","sal.jl"))
 
 # Output
 include(joinpath("output","partial_history.jl"))
+include(joinpath("output","plot.jl"))
 
 # Simulate
 include(joinpath("interface","simulate.jl"))
