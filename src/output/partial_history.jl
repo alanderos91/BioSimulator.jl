@@ -16,6 +16,15 @@ function PartialHistory(
   return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind)
 end
 
+function Base.show(io::IO, x::PartialHistory)
+  print(io, "[ Partial Simulation History ]\n")
+  print(io, "  * species = ", keys(x.id2ind), "\n")
+  print(io, "  * no. realizations = ", size(x.data, 3), "\n")
+  print(io, "  * start time = ", x.t.start, "\n")
+  print(io, "  * end time = ", x.t.stop, " \n")
+  print(io, "  * interval stride = ", x.t.stop / x.t.divisor)
+end
+
 @inbounds function update!(
     x           :: PartialHistory,
     Xt          :: Vector,
@@ -38,11 +47,29 @@ end
   return interval
 end
 
+# indexing with symbols should return a species' history
 function Base.getindex(x::PartialHistory, key::Symbol)
   data = x.data
   id2ind = x.id2ind
 
   i = id2ind[key]
 
-  return data[i, : , :]
+  return reshape(data[i, : , :], size(data, 2), size(data, 3))
+end
+
+# indexing with a number should return a particular realization
+function Base.getindex(x::PartialHistory, i::Integer)
+  data = x.data
+
+  return reshape(data[:, :, i], size(data, 1), size(data, 2))
+end
+
+# indexing with a time (float) should return a histogram
+function Base.getindex(x::PartialHistory, tn::AbstractFloat)
+  data = x.data
+
+  t = x.t
+  i = findfirst(t, tn)
+
+  return reshape(data[:, i, :], size(data, 1), size(data, 3))
 end
