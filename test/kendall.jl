@@ -1,6 +1,5 @@
 using BioSimulator
 using Base.Test
-using DataFrames
 
 function kendall_mean(i,t,α,μ,ν)
    x = exp((α-μ)*t)
