@@ -14,13 +14,25 @@ end
     xguide := "time"
     yguide := "mean"
 
-    Xt_mean = transpose(reshape(mean(y, 3), size(y, 1), size(y, 2)))
+    Xt_mean = transpose(reshape(mean(y, 3), size(y, 1, 2)))
+    Xt_std  = transpose( reshape(std(y, 3), size(y, 1, 2)))
+
+    xlims --> (x[1], x[end])
+    ylims := (0.0, Inf)
+    fillalpha --> 0.3
 
     for i in eachindex(ids)
+        col = id2ind[ids[i]]
+
         @series begin
             seriestype := :path
-            label := ids[i]
-            x, Xt_mean[:, id2ind[ids[i]]]
+            label      := ids[i]
+
+            x      := x
+            y      := Xt_mean[:, col]
+
+            ribbon := Xt_std[:, col]
+            ()
         end
     end
 end
@@ -107,3 +119,5 @@ end
         end
     end
 end
+
+export MeanTrajectory, Histogram, SampleTrajectory

@@ -1,7 +1,9 @@
 module BioSimulator
 
 using Distributions
-using Plots
+using Reexport
+
+@reexport using Plots
 
 import Base: (<=),
              (>=),
