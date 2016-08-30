@@ -1,3 +1,17 @@
+"""
+```
+SAL(tf, ϵ, δ, α)
+```
+
+Step Anticipation-τ Leaping. A τ-leaping method that improves upon the accuracy of τ-leaping techniques by incorporating a first-order Taylor expansion on the Reaction Rate Equation. See (references) for techinical details.
+
+### Arguments
+- `tf`: The end time for the simulation.
+- `ϵ`: A τ-leaping parameter controling the size of leaps. NOTE: Not a measure of error!
+- `δ`: A τ-leaping parameter used to switch between `SSA` and `SAL`. For example, if `intensity < δ` the algorithm carries out an ordinary SSA step to avoid negative species populations.
+- `α`: A τ-leaping parameter used to contract a τ-leap in the event of negative populations. NOTE: Using an aggresive contraction schedule will severely bias sample paths.
+"""
+
 type SAL <: TauLeapMethod
     # parameters
     end_time :: Float64

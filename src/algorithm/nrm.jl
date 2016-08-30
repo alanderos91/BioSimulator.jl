@@ -3,13 +3,13 @@ import Base.Order: ForwardOrdering
 
 """
 ```
-NRM(T)
+NRM(tf)
 ```
 
-Gibson and Bruck's Next Reaction Method, equivalent to the original `SSA`.
+Gibson and Bruck's Next Reaction Method, statistically equivalent to the original `SSA`. Provides better computational efficiency on networks with loosely connected reactions.
 
 ### Arguments
-- `T`: The simulation end time.
+- `tf`: The end time for the simulation.
 """
 type NRM <: ExactMethod
   # parameters

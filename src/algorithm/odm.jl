@@ -1,16 +1,13 @@
 """
 ```
-ODM(T)
+ODM(tf, nsteps)
 ```
 
-Optimized Direct Method. Same as SSA, except the system is pre-simulated in order to sort reaction propensities from increasing to decreasing. This improves the search on the propensity vector when selecting the next reaction to fire.
+Optimized Direct Method. Same as `SSA`, except the system is presimulated to sort reaction propensities from increasing to decreasing. This improves the search on the CMF when selecting the next reaction to fire.
 
 ### Arguments
-- `T`: The simulation end time.
-
-### Optional Arguments
-- `init_steps`: Number of time steps to pre-simulate.
-- `init_iters`: Number of iterations to simulate.
+- `tf`: The simulation end time.
+- `nsteps`: Number of time steps to presimulate.
 """
 type ODM <: ExactMethod
   # parameters
