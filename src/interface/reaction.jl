@@ -2,14 +2,14 @@ import Base.show
 
 """
 ```
-Reaction(id, k::Symbol, formula::Expr)
+Reaction(id, k::Float64, formula::Expr)
 ```
 
-Construct a `Reaction` with identifier `id` and rate constant `k`, represented by a `formula` (e.g. X + Y --> XY).
+Construct a `Reaction` with identifier `id` and stochastic rate constant `k`, represented by a `formula` (e.g. X + Y --> XY).
 
 ### Arguments
 - `id`: An identifier for this `Reaction`.
-- `rate`: A `Symbol` identifier for this `Reaction`'s rate constant.
+- `rate`: A real-valued rate constant.
 - `formula`: A chemical formula representation of the `Reaction`. For example, `:(X --> X + X)` defines a birth reaction with reactant `X`, coefficient 1, and product `X`, coefficient 2; :(X --> 2*X) is also valid syntax. The `-->` symbol must be used to separate reactants and products.
 """
 type Reaction

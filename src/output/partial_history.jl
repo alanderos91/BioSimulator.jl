@@ -1,3 +1,25 @@
+"""
+```
+PartialHistory(t, data, id2ind)
+```
+
+Stores the partial output of a simulation job, discretized to specific intervals according to the `sampling_interval` value used when calling `simulate`. Output is stored as a `(t, data)` tuple, where `t` is the time array and data is a 3D array. For example:
+
+- `data[i, j, k]` accesses the value of species at interval `j` along the `k`-th realization.
+- `data[:, :, k]` returns the simulation data for the `k`-th realization
+- `data[:, j, :]` returns a histogram of every species during the `j`-th interval (i.e. t[j]).
+- `data[i, :, :]` returns all the simulation data for the `i`-th species.
+
+For convenience, one may access the simulation data using a special indexing scheme:
+
+```
+result = simulate(...) # returns a PartialHistory
+result[:X]  # indexing by symbols returns the simulation data for species `X`
+result[5.0] # indexing by floats returns simulation data for every species and realization at time `5.0`.
+result[100] # indexing by integers returns simulation data for the 100th realization.
+```
+
+"""
 type PartialHistory
   t      :: LinSpace{Float64}
   data   :: Array{Int, 3}

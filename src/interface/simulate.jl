@@ -1,12 +1,14 @@
 """
 ```
-simulate()
+simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)
 ```
 ### Arguments
-- ?
+- `model`: A `Network` to simulate.
+- `algorithm`: An algorithm to simulate the model.
 
 ### Optional Arguments
-- ?
+- `sampling_interval`: A parameter specifying how frequently output should be recorded. For example, `sampling_interval=0.1` indicates that output is recorded every 0.1 units of time.
+- `nrlz`: The number of Monte Carlo realizations to generate.
 
 """
 function simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)

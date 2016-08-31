@@ -11,13 +11,13 @@ Adding a `Species`, `Reaction`, or `Parameter` is done using the `<=` operator:
 
 ```
 m <= Species("X", 100) # Adds a Species
-m <= Reaction("birth", :α, :(X --> X + X)) # Adds a Reaction
+m <= Reaction("birth", 2.0, :(X --> X + X)) # Adds a Reaction
 ```
 
 A fully specified `Network` model is simulated by calling `simulate`:
 
 ```
-simulate(m, time=10.0, method=:SSA, output=:explicit)
+simulate(m, SSA(4.0))
 ```
 
 A `Network` is visualized by calling `petrinet`:
