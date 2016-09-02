@@ -18,11 +18,11 @@ dt = 0.1
 seed = 5357
 itr = 100_000
 
-ssa = SSA(T)
-frm = FRM(T)
-nrm = NRM(T)
-odm = ODM(T, 1000)
-sal = SAL(T, 0.125, 100.0, 0.75)
+ssa = SSA(end_time=T)
+frm = FRM(end_time=T)
+nrm = NRM(end_time=T)
+odm = ODM(end_time=T)
+sal = SAL(end_time=T)
 algorithms = [ssa, frm, nrm, odm, sal]
 
 # Compute mean for comparison
