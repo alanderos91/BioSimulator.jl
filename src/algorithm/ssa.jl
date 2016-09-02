@@ -1,6 +1,6 @@
 """
 ```
-SSA(tf)
+SSA(end_time=1.0)
 ```
 
 Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and species by:
@@ -26,9 +26,13 @@ type SSA <: ExactMethod
   # metadata
   tags :: Vector{Symbol}
 
-  function SSA(tf)
-    new(tf, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  function SSA(end_time::AbstractFloat)
+    new(end_time, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
   end
+end
+
+function SSA(;end_time=DEFAULT_TIME)
+  return SSA(end_time)
 end
 
 set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)

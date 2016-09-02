@@ -1,12 +1,12 @@
 """
 ```
-FRM(tf)
+FRM(end_time=1.0)
 ```
 
 Gillespie's First Reaction Method. Statistically equivalent to `SSA`, but slower computationally. The algorithm computes the time to the next reaction as the minimum the relative firing times for each reaction.
 
 ### Arguments
-- `tf`: The end time for the simulation.
+- `end_time`: The end time for the simulation.
 """
 type FRM <: ExactMethod
   # parameters
@@ -23,9 +23,13 @@ type FRM <: ExactMethod
   # metadata
   tags :: Vector{Symbol}
 
-  function FRM(T)
-    new(T, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  function FRM(end_time::AbstractFloat)
+    new(end_time, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
   end
+end
+
+function FRM(;end_time=DEFAULT_TIME)
+  return FRM(end_time)
 end
 
 set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)

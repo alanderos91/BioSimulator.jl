@@ -2,6 +2,8 @@
 
 abstract Algorithm
 
+const DEFAULT_TIME = 1.0
+
 ##### accessors #####
 get_time(x::Algorithm) = x.t
 end_time(x::Algorithm) = x.end_time

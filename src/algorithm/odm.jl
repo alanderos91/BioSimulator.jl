@@ -1,13 +1,13 @@
 """
 ```
-ODM(tf, nsteps)
+ODM(end_time=1.0, n_steps=1000)
 ```
 
 Optimized Direct Method. Same as `SSA`, except the system is presimulated to sort reaction propensities from increasing to decreasing. This improves the search on the CMF when selecting the next reaction to fire.
 
 ### Arguments
-- `tf`: The simulation end time.
-- `nsteps`: Number of time steps to presimulate.
+- `end_time`: The simulation end time.
+- `n_steps`: Number of time steps to presimulate.
 """
 type ODM <: ExactMethod
   # parameters
@@ -25,9 +25,13 @@ type ODM <: ExactMethod
   # metadata tags
   tags :: Vector{Symbol}
 
-  function ODM(tf, nsteps)
-    new(tf, nsteps, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+  function ODM(end_time::AbstractFloat, n_steps::Integer)
+    new(end_time, n_steps, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
   end
+end
+
+function ODM(;end_time=DEFAULT_TIME, n_steps=1000)
+  return ODM(end_time, n_steps)
 end
 
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)

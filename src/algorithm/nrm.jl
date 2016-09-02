@@ -3,13 +3,13 @@ import Base.Order: ForwardOrdering
 
 """
 ```
-NRM(tf)
+NRM(end_time=1.0)
 ```
 
 Gibson and Bruck's Next Reaction Method, statistically equivalent to the original `SSA`. Provides better computational efficiency on networks with loosely connected reactions.
 
 ### Arguments
-- `tf`: The end time for the simulation.
+- `end_time`: The end time for the simulation.
 """
 type NRM <: ExactMethod
   # parameters
@@ -27,9 +27,13 @@ type NRM <: ExactMethod
   # metadata tags
   tags :: Vector{Symbol}
 
-  function NRM(tf)
-    new(tf, 0.0, PriorityQueue(Int, Float64), 0, 0.0, 0.0, DEFAULT_EXACT)
+  function NRM(end_time::AbstractFloat)
+    new(end_time, 0.0, PriorityQueue(Int, Float64), 0, 0.0, 0.0, DEFAULT_EXACT)
   end
+end
+
+function NRM(;end_time=DEFAULT_TIME)
+  return NRM(end_time)
 end
 
 get_reaction_times(algorithm::NRM) = algorithm.pq
