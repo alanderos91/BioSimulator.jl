@@ -1,173 +1,146 @@
+function extract_index_ids(id2ind, select)
+    if isempty(select)
+        ix  = collect(values(id2ind))
+        ids = collect(keys(id2ind))
+    else
+        ix  = Int[ id2ind[symbol(id)] for id in select ]
+        ids = map(symbol, select)
+    end
+
+    return ix, ids
+end
+
 @userplot MeanTrajectory
 
-@recipe function f(mt::MeanTrajectory)
-
-    is_one_arg = length(mt.args) == 1 && typeof(mt.args[1]) <: PartialHistory
-    is_two_arg = length(mt.args) == 2 && typeof(mt.args[1]) <: PartialHistory && typeof(mt.args[2]) <: Vector
-
-    if is_one_arg || is_two_arg
-        result = mt.args[1]
-
-        t      = result.t
-        Xt     = result.data
-        id2ind = result.id2ind
-    else
-        error("Mean Trajectory should be given simulation data and, optionally, a vector of identifiers.")
-    end
-
-    if is_one_arg
-        ids = collect(keys(id2ind)) # plot every species
-    elseif is_two_arg
-        ids = map(symbol, mt.args[2])
-    else
-        error("Identifiers should be strings or symbols.")
-    end
-
-    Xt_mean = transpose(reshape(mean(Xt, 3), size(Xt, 1, 2)))
-    Xt_std  = transpose(reshape(std(Xt, 3), size(Xt, 1, 2)))
+@recipe function plot(mt::MeanTrajectory; select=[])
+    t, μ, σ, ids = meanplot(mt.args[1], select)
 
     # global attributes
-    legend :=  true
+    legend -->  true
     grid   --> false
     xguide --> "time"
     yguide --> "population mean"
     xlims  --> (t[1], t[end])
     ylims  --> (0.0, Inf)
     fillalpha --> 0.3
+    seriestype --> :path
+    label --> ids'
+    ribbon --> σ
 
-    # generate each series
-    for i in eachindex(ids)
-        index = id2ind[ids[i]]
-
-        @series begin
-            seriestype --> :path
-            label      --> ids[i]
-
-            x      := t
-            y      := Xt_mean[:, index]
-            ribbon := Xt_std[:, index]
-
-            ()
-        end
-    end
+    t, μ
 end
 
-@userplot FrequencyHistogram
 
-@recipe function f(h::FrequencyHistogram)
+function meanplot(result::PartialHistory, select)
+    t      = result.t
+    data   = result.data
+    id2ind = result.id2ind
 
-    is_two_arg = length(h.args) == 2 && typeof(h.args[1]) <: PartialHistory && typeof(h.args[2]) <: AbstractFloat
-    is_thr_arg = length(h.args) == 3 && typeof(h.args[1]) <: PartialHistory && typeof(h.args[2]) <: AbstractFloat && typeof(h.args[3]) <: Vector
+    ix, ids = extract_index_ids(id2ind, select)
 
-    if is_two_arg || is_thr_arg
-        result = h.args[1]
-        t      = h.args[2]
-        id2ind = result.id2ind
-    else
-        error("Frequency Histogram should be given simulation data, a time, and, optionally, a vector of identifiers.")
-    end
+    tmp = data[ix, :, :]
 
-    if is_two_arg
-        ids = collect(keys(id2ind)) # plot every species
-    elseif is_thr_arg
-        ids = map(symbol, h.args[3])
-    else
-        error("Identifiers should be strings or symbols.")
-    end
+    μ = transpose(reshape(mean(tmp, 3), size(tmp, 1, 2)))
+    σ = transpose(reshape(std(tmp, 3), size(tmp, 1, 2)))
 
-    Xt_hist = transpose(result[t])
+    return t, μ, σ, ids
+end
 
-    legend :=  true
+@userplot FreqHistogram
+
+@recipe function plot(fh::FreqHistogram; select=[])
+    counts, ids = freqplot(fh.args[1], fh.args[2], select)
+
+    # global attributes
+    legend -->  true
     grid   --> false
     xguide --> "population"
     yguide --> "frequency"
+    seriestype --> :histogram
+    label --> ids'
 
-    for i in eachindex(ids)
-        index = id2ind[ids[i]]
-        @series begin
-            seriestype --> :histogram
-            label      --> ids[i]
+    counts
+end
 
-            Xt_hist[:, index]
-        end
-    end
+function freqplot(result::PartialHistory, tval::AbstractFloat, select)
+    t      = result.t
+    data   = result.data
+    id2ind = result.id2ind
+
+    index   = findfirst(t, tval)
+    ix, ids = extract_index_ids(id2ind, select)
+
+    d1 = length(ids)
+    d2 = size(data, 3)
+    counts = transpose(reshape(data[ix, index, :], d1, d2))
+
+    return counts, ids
 end
 
 @userplot SampleTrajectory
 
-@recipe function f(st::SampleTrajectory)
+@recipe function plot(st::SampleTrajectory; nrlz=1)
+    t, x, id = trajplot(st.args..., nrlz)
 
-    is_two_arg = length(st.args) == 2 && typeof(st.args[1]) <: PartialHistory && typeof(st.args[2]) <: Integer
-    is_thr_arg = length(st.args) == 3 && typeof(st.args[1]) <: PartialHistory && typeof(st.args[2]) <: Integer && typeof(st.args[3]) <: Vector
-
-    if is_two_arg || is_thr_arg
-        result = st.args[1]
-        n      = st.args[2]
-
-        t      = result.t
-        Xt     = result.data
-        id2ind = result.id2ind
-    else
-        error("Histogram should be given simulation data, a time, and, optionally, a vector of identifiers.")
-    end
-
-    if is_two_arg
-        ids = collect(keys(id2ind)) # plot every species
-    elseif is_thr_arg
-        ids = map(symbol, st.args[3])
-    else
-        error("Identifiers should be strings or symbols.")
-    end
-
-    legend :=  true
+    # global attributes
+    legend -->  true
     grid   --> false
     xguide --> "time"
     yguide --> "population"
-    layout := grid(length(ids), 1)
+    title --> id
 
-    for i in eachindex(ids)
-        index = id2ind[ids[i]]
+    seriestype --> :steppre
+    label --> transpose([ "realization $(i)" for i in 1:nrlz ])
 
-        for j in 1:n
-            @series begin
-                subplot := i
-                title  --> string(ids[i])
-                label  --> string("realization ", j)
+    t, x
+end
 
-                x := t
-                y := vec(Xt[index, :, j])
+function trajplot(result::PartialHistory, select, n)
+    t      = result.t
+    data   = result.data
+    id2ind = result.id2ind
 
-                ()
-            end
-        end
-    end
+    ix, ids = extract_index_ids(id2ind, select)
+
+    x = result[ids[1]][:, 1:n]
+
+    return t, x, ids[1]
 end
 
 @userplot PhaseTrajectory
 
-@recipe function f(pt::PhaseTrajectory)
-    result = pt.args[1]
-    x_id   = pt.args[2]
-    y_id   = pt.args[3]
-    n      = pt.args[4]
+@recipe function plot(pt::PhaseTrajectory; nrlz=1)
+    x, y, x_id, y_id = phaseplot(pt.args..., nrlz)
 
-    x_data = result[x_id]
-    y_data = result[y_id]
-
-    legend :=  true
+    # global attributes
+    legend -->  true
     grid   --> false
-    xguide --> "population ($x_id)"
-    yguide --> "population ($y_id)"
+    xguide --> x_id
+    yguide --> y_id
 
-    for j in 1:n
+    for i in 1:nrlz
         @series begin
             seriestype --> :path
-            label      --> string("realization ", j)
-
-            x := x_data[:, j]
-            y := y_data[:, j]
-
+            label --> "realization $(i)"
+            x := x[:, i]
+            y := y[:, i]
             ()
         end
     end
+end
+
+function phaseplot(result::PartialHistory, x_id, y_id, n)
+    t      = result.t
+    data   = result.data
+    id2ind = result.id2ind
+
+    ix, ids = extract_index_ids(id2ind, [x_id, y_id])
+
+    d1 = length(t)
+    d2 = n
+
+    x = result[ids[1]][:, 1:n]
+    y = result[ids[2]][:, 1:n]
+
+    return (x, y, ids...)
 end
