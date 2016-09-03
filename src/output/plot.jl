@@ -100,7 +100,7 @@ function trajplot(result::PartialHistory, select, n)
     data   = result.data
     id2ind = result.id2ind
 
-    ix, ids = extract_index_ids(id2ind, select)
+    ix, ids = extract_index_ids(id2ind, [select])
 
     x = result[ids[1]][:, 1:n]
 
