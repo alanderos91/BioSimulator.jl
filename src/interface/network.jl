@@ -61,7 +61,7 @@ function add_object!(model, object, fieldname)
   dict = getfield(model, fieldname)
   id   = object.id
   setindex!(dict, object, symbol(id))
-  return dict
+  return model
 end
 
 function (<=)(model::Network, object::Species)
