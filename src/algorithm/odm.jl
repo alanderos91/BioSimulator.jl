@@ -121,7 +121,8 @@ end
 
   temp1 = V[:, ix]
   temp2 = U[:, ix]
-  temp3 = dg[ix]
+  temp3 = k[ix]
+  temp4 = dg[ix]
 
   for i in eachindex(V) # this is correct
     V[i] = temp1[i]
@@ -129,8 +130,8 @@ end
   end
 
   for i in eachindex(dg) # this is not correct
-    k[i], k[ix[i]], = k[ix[i]], k[i]
-    dg[i] = temp3[i]
+    k[i]  = temp3[i]
+    dg[i] = temp4[i]
     for j in eachindex(dg[i])
       dg[i][j] = findfirst(ix, dg[i][j])
     end

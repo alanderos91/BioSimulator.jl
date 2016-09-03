@@ -8,6 +8,7 @@ include("test_models.jl")
 tests = ["mass_action",
          "time_derivatives",
          "network",
+         "sort",
          "kendall",
          "linear",
          "independent"]
