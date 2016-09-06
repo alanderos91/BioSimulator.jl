@@ -11,9 +11,9 @@ petrinet(model::Network; rankdir=:LR)
 - `model`: The `Network` to visualize.
 
 ### Optional Arguments
-- `rankdir`: Sets direction of graph layout. Options are `:TB` (top-bottom), `:BT` (bottom-top), `:LR` (left-right), and `:RL` (right-left).
+- `rankdir`: Sets direction of graph layout. Options are `"TB"` (top-bottom), `"BT"` (bottom-top), `"LR"` (left-right), and `"RL"` (right-left).
 """
-function petrinet(model::Network; rankdir=:LR)
+function petrinet(model::Network; rankdir="LR")
     reactions = model.reaction_list
     b = IOBuffer()
     modelid = string(model.id)
@@ -47,12 +47,26 @@ function add_reaction!(b::IOBuffer, r)
 
     # add each reactant
     for x in keys(reactants)
-        write(b, "\"", x, "\"", " -> ", "\"", r.id, "\"", ";\n")
+        coefficient = reactants[x]
+        if coefficient == 1
+            write(b, "\"", x, "\"", " -> ", "\"", r.id, "\"", ";\n")
+        elseif coefficient > 1
+            write(b, "\"", x, "\"", " -> ", "\"", r.id, "\"", "[label = $(coefficient)];\n")
+        else
+            error("Coefficients should be >= 1. Got: ", coefficient, " in Reaction ", rname, " for reactant ", x)
+        end
     end
 
     # add each product
     for x in keys(products)
-        write(b, "\"", r.id, "\"", " -> ", "\"", x, "\"", ";\n")
+        coefficient = products[x]
+        if coefficient == 1
+            write(b, "\"", r.id, "\"", " -> ", "\"", x, "\"", ";\n")
+        elseif coefficient > 1
+            write(b, "\"", r.id, "\"", " -> ", "\"", x, "\"", "[label = $(coefficient)];\n")
+        else
+            error("Coefficients should be >= 1. Got: ", coefficient, " in Reaction ", rname, " for product ", x)
+        end
     end
     write(b, "\n")
     return b
