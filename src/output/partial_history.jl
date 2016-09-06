@@ -21,9 +21,10 @@ result[100] # indexing by integers returns simulation data for the 100th realiza
 
 """
 type PartialHistory
-  t      :: LinSpace{Float64}
-  data   :: Array{Int, 3}
-  id2ind :: Dict{Symbol, Int}
+  t        :: LinSpace{Float64}
+  data     :: Array{Int, 3}
+  id2ind   :: Dict{Symbol, Int}
+  metadata :: Dict{Symbol, UTF8String}
 end
 
 function PartialHistory(
@@ -35,7 +36,7 @@ function PartialHistory(
     id2ind  :: Dict{Symbol,Int}
 )
 
-  return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind)
+  return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind, Dict{Symbol, UTF8String}())
 end
 
 function Base.show(io::IO, x::PartialHistory)
@@ -43,9 +44,14 @@ function Base.show(io::IO, x::PartialHistory)
   print(io, "  * species = ", keys(x.id2ind), "\n")
   print(io, "  * no. realizations = ", size(x.data, 3), "\n")
   print(io, "  * start time = ", x.t.start, "\n")
-  print(io, "  * end time = ", x.t.stop, " \n")
+  print(io, "  * end time = ", x.t.stop, "\n")
   print(io, "  * interval stride = ", x.t.stop / x.t.divisor)
 end
+
+get_t(x::PartialHistory) = x.t
+get_data(x::PartialHistory) = x.data
+get_id2ind(x::PartialHistory) = x.id2ind
+get_metadata(x::PartialHistory) = x.metadata
 
 @inbounds function update!(
     x           :: PartialHistory,
@@ -67,6 +73,17 @@ end
   end
 
   return interval
+end
+
+function attach_metadata!(x::PartialHistory, algorithm::Algorithm)
+  tags = algorithm.tags
+  metadata = x.metadata
+
+  for tag in tags
+    metadata[tag] = string(getfield(algorithm, tag))
+  end
+
+  return nothing
 end
 
 # indexing with symbols should return a species' history

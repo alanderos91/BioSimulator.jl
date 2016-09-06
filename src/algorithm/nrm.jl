@@ -18,7 +18,7 @@ type NRM <: ExactMethod
   # state variables
   t            :: Float64
   pq           :: PriorityQueue{Int,Float64,ForwardOrdering}
-  steps        :: Int
+  nsteps       :: Int
 
   # statistics
   avg_nsteps    :: Float64
@@ -40,7 +40,7 @@ get_reaction_times(algorithm::NRM) = algorithm.pq
 
 set_time!(algorithm::NRM, t) = (algorithm.t = t)
 
-function reset!(algorithm::NRM, a)
+function reset!(algorithm::NRM, a::PVec)
   algorithm.t = 0.0
   pq = algorithm.pq
 
@@ -53,7 +53,7 @@ end
 
 function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
-
+  old_t = get_time(algorithm)
   if intensity(a) > 0
     pq = get_reaction_times(algorithm)
 
@@ -66,6 +66,13 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
       fire_reaction!(Xt, r, μ)
       update_reaction_times!(algorithm, Xt, r, μ, τ)
     end
+
+    # update nsteps
+    nsteps!(algorithm)
+
+    # update statistics
+    compute_statistics!(algorithm, τ - old_t)
+
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
@@ -74,7 +81,7 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
     println("Xt = ", Xt)
     error("intensity = ", intensity(a))
   end
-
+  
   return nothing
 end
 

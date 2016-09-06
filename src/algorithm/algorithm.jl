@@ -15,12 +15,6 @@ done(x::Algorithm) = x.t >= x.end_time
 ##### setup outside iteration loop #####
 init!(x::Algorithm, Xt, r) = nothing;
 
-#### setup inside iteration loop #####
-function reset!(x::Algorithm, a)
-    x.t = 0.0
-    return nothing
-end
-
 ##### step through the algorithm #####
 step!(x::Algorithm, Xt, r) = nothing;
 
@@ -33,38 +27,40 @@ abstract ExactMethod <: Algorithm
 const DEFAULT_EXACT = [:avg_nsteps, :avg_stepsz]
 
 ##### accessors #####
-steps(x::ExactMethod)         = x.steps
-avg_nsteps(x::ExactMethod)    = x.avg_nsteps
+steps(x::ExactMethod)      = x.nsteps
+avg_nsteps(x::ExactMethod) = x.avg_nsteps
 avg_stepsz(x::ExactMethod) = x.avg_stepsz
 
+function nsteps!(algorithm::ExactMethod)
+    algorithm.nsteps += 1
+    return nothing
+end
+
 ##### setup inside iteration loop #####
-function reset!(x::ExactMethod)
+function reset!(x::ExactMethod, a::PVec)
     setfield!(x, :t, 0.0)
-    setfield!(x, :steps, 0)
+    setfield!(x, :nsteps, 0)
     return;
 end
 
-# use within the step! method
-function compute_statistics!(x::ExactMethod, τ::Float64)
+function compute_statistics!(x::ExactMethod, τ::AbstractFloat)
     setfield!(x, :avg_stepsz, cumavg(avg_stepsz(x), τ, steps(x)))
-    return;
+
+    return nothing
 end
 
-# use at the end of a realization
 function compute_statistics!(x::ExactMethod, i::Integer)
     setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x), i - 1))
-    return;
+
+    return nothing
 end
-
-
-
 
 ##### TauLeapMethod interface #####
 
 abstract TauLeapMethod <: Algorithm
 
 const DEFAULT_TAULEAP = [:avg_nsteps,
-                         :avg_step_size,
+                         :avg_stepsz,
                          :avg_nssa,
                          :avg_nleaps,
                          :avg_ssa_step,
@@ -78,7 +74,7 @@ leap_steps(x::TauLeapMethod)         = x.leap_steps
 neg_excursions(x::TauLeapMethod)     = x.neg_excursions
 
 avg_nsteps(x::TauLeapMethod)         = x.avg_nsteps
-avg_step_size(x::TauLeapMethod)      = x.avg_step_size
+avg_stepsz(x::TauLeapMethod)         = x.avg_stepsz
 avg_nssa(x::TauLeapMethod)           = x.avg_nssa
 avg_nleaps(x::TauLeapMethod)         = x.avg_nleaps
 avg_ssa_step(x::TauLeapMethod)       = x.avg_ssa_step
@@ -87,29 +83,47 @@ avg_neg_excursions(x::TauLeapMethod) = x.avg_neg_excursions
 
 events(x::TauLeapMethod) = x.events
 
+function nsteps!(algorithm::TauLeapMethod, isleap::Bool)
+    if isleap
+        algorithm.leap_steps += 1
+    else
+        algorithm.ssa_steps += 1
+    end
+
+    return nothing
+end
+
 ##### setup inside iteration loop #####
-function reset!(x::TauLeapMethod)
+function reset!(x::TauLeapMethod, a::PVec)
     setfield!(x, :t, 0.0)
     setfield!(x, :ssa_steps, 0)
     setfield!(x, :leap_steps, 0)
     setfield!(x, :neg_excursions, 0)
-    return;
+
+    return nothing
 end
 
-# use within the step! method
-function compute_statistics!(x::TauLeapMethod, τ::Float64)
-    setfield!(x, :avg_step_size, cumavg(avg_step_size(x), τ, steps(x)))
+function compute_statistics!(x::TauLeapMethod, τ::AbstractFloat, isleap::Bool)
+    setfield!(x, :avg_stepsz, cumavg(avg_stepsz(x), τ, steps(x)))
+
+    if isleap
+        setfield!(x, :avg_leap_step, cumavg(avg_leap_step(x), τ, leap_steps(x)))
+    else
+        setfield!(x, :avg_ssa_step, cumavg(avg_ssa_step(x), τ, ssa_steps(x)))
+    end
+
+    return nothing
 end
 
-# use at the end of a realization
 function compute_statistics!(x::TauLeapMethod, i::Integer)
     setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x), i - 1))
-    setfiedl!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), neg_excursions(x), i -1))
+    setfield!(x, :avg_nssa, cumavg(avg_nssa(x), ssa_steps(x), i - 1))
+    setfield!(x, :avg_nleaps, cumavg(avg_nleaps(x), leap_steps(x), i - 1))
+
+    return nothing
 end
 
 ##### misc #####
 
 # cumulative average
-function cumavg(avg, x, n)
-    avg = (x + n * avg) / (n + 1)
-end
+cumavg(avg, x, n::Integer) = (x + n * avg) / (n + 1)

@@ -45,6 +45,13 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
       fire_reaction!(Xt, r, μ)
       update_dependent_propensities!(r, Xt, μ)
     end
+
+    # update nsteps
+    nsteps!(algorithm)
+
+    # update statistics
+    compute_statistics!(algorithm, τ)
+
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else

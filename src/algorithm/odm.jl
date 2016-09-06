@@ -12,11 +12,11 @@ Optimized Direct Method. Same as `SSA`, except the system is presimulated to sor
 type ODM <: ExactMethod
   # parameters
   end_time :: Float64
-  nsteps   :: Int
+  n_steps   :: Int
 
   # state variables
   t     :: Float64
-  steps :: Int
+  nsteps :: Int
 
   # statistics
   avg_nsteps    :: Float64
@@ -70,6 +70,13 @@ function step!(algorithm::ODM, Xt, r)
       # end
       update_dependent_propensities!(r, Xt, μ)
     end
+
+    # update nsteps
+    nsteps!(algorithm)
+
+    # update statistics
+    compute_statistics!(algorithm, τ)
+
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else

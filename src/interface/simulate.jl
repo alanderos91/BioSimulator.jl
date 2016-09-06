@@ -46,7 +46,7 @@ function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm,
     # setup
     copy!(Xt, X0)
     update_all_propensities!(r, Xt)
-    reset!(algorithm, propensities(r))
+    reset!(algorithm, a)
     interval = 1
 
     while !done(algorithm)
@@ -58,9 +58,11 @@ function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm,
         a.error_bound = zero(eltype(a))
       end
     end
-
+    compute_statistics!(algorithm, i)
     interval = update!(output, Xt, get_time(algorithm), interval, i)
   end
+
+  attach_metadata!(output, algorithm)
 
   return output
 end

@@ -30,7 +30,7 @@ type SAL <: TauLeapMethod
 
     # statistics
     avg_nsteps         :: Float64
-    avg_step_size      :: Float64
+    avg_stepsz         :: Float64
     avg_nssa           :: Float64
     avg_nleaps         :: Float64
     avg_ssa_step       :: Float64
@@ -80,25 +80,13 @@ function reset!(x::SAL, a::PVec)
     return nothing
 end
 
-# for use at the end of a realization
-function compute_statistics!(x::SAL, i::Integer)
-    n = i - 1
-    setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x),     n))
-    setfield!(x, :avg_nssa,    cumavg(avg_nssa(x),    ssa_steps(x), n))
-    setfield!(x, :avg_nleaps,    cumavg(avg_nleaps(x),    leap_steps(x), n))
-    setfield!(x, :avg_neg_excursions, cumavg(avg_neg_excursions(x), neg_excursions(x), n))
-end
-
 function step!(algorithm::SAL, Xt, r)
     a = propensities(r)
+    isleap = intensity(a) < delta(algorithm)
 
     if intensity(a) > 0
-        if intensity(a) < delta(algorithm)
+        if !isleap
             τ = rand(Exponential(1 / intensity(a)))
-
-            #setfield!(x, :ssa_steps, ssa_steps(x) + 1)
-            #setfield!(x, :avg_ssa_step,  cumavg(avg_ssa_step(x),  τ, ssa_steps(x)))
-            #setfield!(x, :t, time(x) + τ)
             set_time!(algorithm, τ)
 
             if !done(algorithm)
@@ -109,11 +97,15 @@ function step!(algorithm::SAL, Xt, r)
         else
             τ = sal_update!(algorithm, Xt, r)
             update_all_propensities!(r, Xt)
-            # setfield!(x, :leap_steps, leap_steps(x) + 1)
-            # setfield!(x, :avg_leap_step,  cumavg(avg_leap_step(x),  τ, leap_steps(x)))
-            # setfield!(x, :t, time(x) + τ)
             set_time!(algorithm, τ)
         end
+
+        # update nsteps
+        nsteps!(algorithm, isleap)
+
+        # update statistics
+        compute_statistics!(algorithm, τ, isleap)
+
     elseif intensity(a) == 0
       algorithm.t = algorithm.end_time
     else
@@ -123,7 +115,6 @@ function step!(algorithm::SAL, Xt, r)
       error("intensity = ", intensity(a))
     end
 
-    #compute_statistics!(x, τ)
     return nothing
 end
 
