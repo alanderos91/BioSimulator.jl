@@ -76,14 +76,14 @@ function Base.getindex(x::PartialHistory, key::Symbol)
 
   i = id2ind[key]
 
-  return reshape(data[i, : , :], size(data, 2), size(data, 3))
+  return reshape(data[i, : , :], size(data, 2, 3))
 end
 
 # indexing with a number should return a particular realization
 function Base.getindex(x::PartialHistory, i::Integer)
   data = x.data
 
-  return reshape(data[:, :, i], size(data, 1), size(data, 2))
+  return reshape(data[:, :, i], size(data, 1, 2))
 end
 
 # indexing with a time (float) should return a histogram
@@ -93,5 +93,51 @@ function Base.getindex(x::PartialHistory, tn::AbstractFloat)
   t = x.t
   i = findfirst(t, tn)
 
-  return reshape(data[:, i, :], size(data, 1), size(data, 3))
+  return reshape(data[:, i, :], size(data, 1, 3))
+end
+
+@eval headfmt(x) = @sprintf("%8s", x)
+@eval timefmt(x) = @sprintf("%8.8e", x)
+@eval datafmt(x) = @sprintf("%8d", x)
+
+"""
+```
+save_data(dataset, result::PartialHistory; dir="")
+```
+
+Saves a simulation `result` to disk under the directory `dataset`. If `dir` is specified, a new folder `dataset` is created under `/dir/dataset/`; otherwise default to user's home directory. Each Monte Carlo realization is saved as a .dat file (e.g. `realization_1.dat`) and includes a header naming each species. The first column in the file contains the time the data was recorded; subsequent columns contain the population count for each species.
+
+"""
+function save_data(dataset, result::PartialHistory; dir="")
+  if dir == ""; dir = homedir(); end
+  if !isdir(joinpath(dir, dataset)); mkdir(joinpath(dir, dataset)); end
+
+  t = result.t
+  data = result.data
+  id2ind = result.id2ind
+
+  n_species, n_points, n_rlz = size(data)
+
+  for k in 1:n_rlz
+    label = string(repeat("0", ndigits(n_rlz) - ndigits(k)), k)
+    file  = open("$(dir)/$(dataset)/realization_$(label).dat", "w")
+
+    # write header
+    print(file, headfmt("time"))
+    for id in keys(id2ind)
+      print(file, ",", headfmt(id))
+    end
+    println(file)
+
+    # write data
+    for j in 1:n_points
+      print(file, timefmt(t[j]))
+      for i in 1:n_species
+        print(file, ",", datafmt(data[i,j,k]))
+      end
+      println(file)
+    end
+
+    close(file)
+  end
 end
