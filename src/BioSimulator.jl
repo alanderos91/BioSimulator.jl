@@ -5,6 +5,8 @@ using Reexport
 
 @reexport using Plots
 
+using GraphViz
+
 import Base: (<=),
              (>=),
              getindex,
@@ -26,6 +28,9 @@ include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))
 include(joinpath("interface","network.jl"))
 
+export Species, Reaction, Network,
+             n_species, n_reactions, species_list, reaction_list
+
 # Backend
 include(joinpath("backend","reactionsystem.jl"))
 include(joinpath("backend","pvec.jl"))
@@ -41,13 +46,18 @@ include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","sal.jl"))
 
+export SSA, FRM, NRM, ODM, SAL
+
 # Output
 include(joinpath("output","partial_history.jl"))
 include(joinpath("output","plot.jl"))
+include(joinpath("output","petrinet.jl"))
+
+export petrinet, get_data, get_metadata, save_data
 
 # Simulate
 include(joinpath("interface","simulate.jl"))
 
-export Species, Reaction, Parameter, Network, simulate, petrinet, n_species, n_reactions, n_parameters, species_list, reaction_list, parameter_list, SSA, FRM, NRM, ODM, SAL
+export simulate
 
 end # module
