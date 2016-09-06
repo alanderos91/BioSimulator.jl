@@ -105,7 +105,9 @@ end
 save_data(dataset, result::PartialHistory; dir="")
 ```
 
-Saves a simulation `result` to disk under the directory `dataset`. If `dir` is specified, a new folder `dataset` is created under `/dir/dataset/`; otherwise default to user's home directory. Each Monte Carlo realization is saved as a .dat file (e.g. `realization_1.dat`) and includes a header naming each species. The first column in the file contains the time the data was recorded; subsequent columns contain the population count for each species.
+Saves a simulation `result` to disk under the directory `dataset`. Use this method to export data outside of `BioSimulator` and/or `Julia`.
+
+If `dir` is specified, a new folder `dataset` is created under `/dir/dataset/`; otherwise default to user's home directory. Each Monte Carlo realization is saved as a .dat file (e.g. `realization_1.dat`) and includes a header naming each species. The first column in the file contains the time the data was recorded; subsequent columns contain the population count for each species.
 
 """
 function save_data(dataset, result::PartialHistory; dir="")
