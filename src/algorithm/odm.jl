@@ -15,18 +15,18 @@ type ODM <: ExactMethod
   n_steps   :: Int
 
   # state variables
-  t     :: Float64
+  t      :: Float64
   nsteps :: Int
 
   # statistics
-  avg_nsteps    :: Float64
-  avg_stepsz :: Float64
+  avg_nsteps :: Mean{EqualWeight}
+  avg_stepsz :: Mean{EqualWeight}
 
   # metadata tags
   tags :: Vector{Symbol}
 
   function ODM(end_time::AbstractFloat, n_steps::Integer)
-    new(end_time, n_steps, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+    new(end_time, n_steps, 0.0, 0, Mean(), Mean(), DEFAULT_EXACT)
   end
 end
 
@@ -71,11 +71,7 @@ function step!(algorithm::ODM, Xt, r)
       update_dependent_propensities!(r, Xt, μ)
     end
 
-    # update nsteps
-    nsteps!(algorithm)
-
-    # update statistics
-    compute_statistics!(algorithm, τ)
+    update_statistics!(algorithm, τ)
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time

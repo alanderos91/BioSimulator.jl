@@ -29,13 +29,13 @@ type SAL <: TauLeapMethod
     neg_excursions :: Int
 
     # statistics
-    avg_nsteps         :: Float64
-    avg_stepsz         :: Float64
-    avg_nssa           :: Float64
-    avg_nleaps         :: Float64
-    avg_ssa_step       :: Float64
-    avg_leap_step      :: Float64
-    avg_neg_excursions :: Float64
+    avg_nsteps         :: Mean{EqualWeight}
+    avg_stepsz         :: Mean{EqualWeight}
+    avg_nssa           :: Mean{EqualWeight}
+    avg_nleaps         :: Mean{EqualWeight}
+    avg_ssa_step       :: Mean{EqualWeight}
+    avg_leap_step      :: Mean{EqualWeight}
+    avg_neg_excursions :: Mean{EqualWeight}
 
     # metadata tags
     tags :: Vector{Symbol}
@@ -43,7 +43,7 @@ type SAL <: TauLeapMethod
     function SAL(end_time::AbstractFloat, ϵ::AbstractFloat, δ::AbstractFloat, α::AbstractFloat)
         new(end_time, ϵ, δ, α,
             0.0, Float64[], Float64[], Int[], 0, 0, 0,
-            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            Mean(), Mean(), Mean(), Mean(), Mean(), Mean(), Mean(),
             DEFAULT_TAULEAP)
     end
 end
@@ -100,11 +100,8 @@ function step!(algorithm::SAL, Xt, r)
             set_time!(algorithm, τ)
         end
 
-        # update nsteps
-        nsteps!(algorithm, isleap)
-
         # update statistics
-        compute_statistics!(algorithm, τ, isleap)
+        update_statistics!(algorithm, τ, isleap)
 
     elseif intensity(a) == 0
       algorithm.t = algorithm.end_time
@@ -135,7 +132,7 @@ function sal_update!(algorithm, Xt, r)
     while is_badleap(Xt, r, events)
         contract!(events, α)
         τ = τ * α
-        #setfield!(x, :neg_excursions, neg_excursions(x) + 1)
+        setfield!(algorithm, :neg_excursions, neg_excursions(algorithm) + 1)
     end
 
     fire_reactions!(Xt, r, events)

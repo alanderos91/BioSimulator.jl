@@ -31,11 +31,6 @@ steps(x::ExactMethod)      = x.nsteps
 avg_nsteps(x::ExactMethod) = x.avg_nsteps
 avg_stepsz(x::ExactMethod) = x.avg_stepsz
 
-function nsteps!(algorithm::ExactMethod)
-    algorithm.nsteps += 1
-    return nothing
-end
-
 ##### setup inside iteration loop #####
 function reset!(x::ExactMethod, a::PVec)
     setfield!(x, :t, 0.0)
@@ -43,14 +38,15 @@ function reset!(x::ExactMethod, a::PVec)
     return;
 end
 
-function compute_statistics!(x::ExactMethod, τ::AbstractFloat)
-    setfield!(x, :avg_stepsz, cumavg(avg_stepsz(x), τ, steps(x)))
+function update_statistics!(x::ExactMethod, τ::AbstractFloat)
+    x.nsteps += 1
+    fit!(avg_stepsz(x), τ)
 
     return nothing
 end
 
-function compute_statistics!(x::ExactMethod, i::Integer)
-    setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x), i - 1))
+function update_statistics!(x::ExactMethod)
+    fit!(avg_nsteps(x), steps(x))
 
     return nothing
 end
@@ -83,16 +79,6 @@ avg_neg_excursions(x::TauLeapMethod) = x.avg_neg_excursions
 
 events(x::TauLeapMethod) = x.events
 
-function nsteps!(algorithm::TauLeapMethod, isleap::Bool)
-    if isleap
-        algorithm.leap_steps += 1
-    else
-        algorithm.ssa_steps += 1
-    end
-
-    return nothing
-end
-
 ##### setup inside iteration loop #####
 function reset!(x::TauLeapMethod, a::PVec)
     setfield!(x, :t, 0.0)
@@ -103,22 +89,25 @@ function reset!(x::TauLeapMethod, a::PVec)
     return nothing
 end
 
-function compute_statistics!(x::TauLeapMethod, τ::AbstractFloat, isleap::Bool)
-    setfield!(x, :avg_stepsz, cumavg(avg_stepsz(x), τ, steps(x)))
+function update_statistics!(x::TauLeapMethod, τ::AbstractFloat, isleap::Bool)
+    fit!(avg_stepsz(x), τ)
 
     if isleap
-        setfield!(x, :avg_leap_step, cumavg(avg_leap_step(x), τ, leap_steps(x)))
+        x.leap_steps += 1
+        fit!(avg_leap_step(x), τ)
     else
-        setfield!(x, :avg_ssa_step, cumavg(avg_ssa_step(x), τ, ssa_steps(x)))
+        x.ssa_steps += 1
+        fit!(avg_ssa_step(x), τ)
     end
 
     return nothing
 end
 
-function compute_statistics!(x::TauLeapMethod, i::Integer)
-    setfield!(x, :avg_nsteps, cumavg(avg_nsteps(x), steps(x), i - 1))
-    setfield!(x, :avg_nssa, cumavg(avg_nssa(x), ssa_steps(x), i - 1))
-    setfield!(x, :avg_nleaps, cumavg(avg_nleaps(x), leap_steps(x), i - 1))
+function update_statistics!(x::TauLeapMethod)
+    fit!(avg_nsteps(x), steps(x))
+    fit!(avg_nssa(x), ssa_steps(x))
+    fit!(avg_nleaps(x), leap_steps(x))
+    fit!(avg_neg_excursions(x), neg_excursions(x))
 
     return nothing
 end

@@ -58,7 +58,8 @@ function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm,
         a.error_bound = zero(eltype(a))
       end
     end
-    compute_statistics!(algorithm, i)
+    update_statistics!(algorithm)
+    
     interval = update!(output, Xt, get_time(algorithm), interval, i)
   end
 

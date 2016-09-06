@@ -2,6 +2,7 @@ module BioSimulator
 
 using Distributions
 using Reexport
+using OnlineStats
 
 @reexport using Plots
 

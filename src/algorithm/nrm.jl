@@ -19,16 +19,15 @@ type NRM <: ExactMethod
   t            :: Float64
   pq           :: PriorityQueue{Int,Float64,ForwardOrdering}
   nsteps       :: Int
-
   # statistics
-  avg_nsteps    :: Float64
-  avg_stepsz :: Float64
+  avg_nsteps :: Mean{EqualWeight}
+  avg_stepsz :: Mean{EqualWeight}
 
   # metadata tags
   tags :: Vector{Symbol}
 
   function NRM(end_time::AbstractFloat)
-    new(end_time, 0.0, PriorityQueue(Int, Float64), 0, 0.0, 0.0, DEFAULT_EXACT)
+    new(end_time, 0.0, PriorityQueue(Int, Float64), 0, Mean(), Mean(), DEFAULT_EXACT)
   end
 end
 
@@ -67,11 +66,7 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
       update_reaction_times!(algorithm, Xt, r, μ, τ)
     end
 
-    # update nsteps
-    nsteps!(algorithm)
-
-    # update statistics
-    compute_statistics!(algorithm, τ - old_t)
+    update_statistics!(algorithm, τ - old_t)
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
@@ -81,7 +76,7 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
     println("Xt = ", Xt)
     error("intensity = ", intensity(a))
   end
-  
+
   return nothing
 end
 

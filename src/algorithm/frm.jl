@@ -15,16 +15,15 @@ type FRM <: ExactMethod
   # state
   t      :: Float64
   nsteps :: Int
-
   # statistics
-  avg_nsteps :: Float64
-  avg_stepsz :: Float64
+  avg_nsteps :: Mean{EqualWeight}
+  avg_stepsz :: Mean{EqualWeight}
 
   # metadata
   tags :: Vector{Symbol}
 
   function FRM(end_time::AbstractFloat)
-    new(end_time, 0.0, 0, 0.0, 0.0, DEFAULT_EXACT)
+    new(end_time, 0.0, 0, Mean(), Mean(), DEFAULT_EXACT)
   end
 end
 
@@ -46,11 +45,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
       update_dependent_propensities!(r, Xt, μ)
     end
 
-    # update nsteps
-    nsteps!(algorithm)
-
-    # update statistics
-    compute_statistics!(algorithm, τ)
+    update_statistics!(algorithm, τ)
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
