@@ -13,7 +13,7 @@ petrinet(model::Network; rankdir=:LR)
 ### Optional Arguments
 - `rankdir`: Sets direction of graph layout. Options are `"TB"` (top-bottom), `"BT"` (bottom-top), `"LR"` (left-right), and `"RL"` (right-left).
 """
-function petrinet(model::Network; rankdir="LR")
+function petrinet(model::Network; rankdir="LR", layout="neato", overlap="false", splines="true")
     reactions = model.reaction_list
     b = IOBuffer()
     modelid = string(model.id)
@@ -25,8 +25,12 @@ function petrinet(model::Network; rankdir="LR")
     """
     digraph $(modelid) {
     // Graph Attributes
-    layout=dot;
-    rankdir=$(rankdir)
+    layout=$(layout);
+    overlap=$(overlap);
+    rankdir=$(rankdir);
+    splines=$(splines);
+    sep=1;
+    nodesep=1;
     """)
     # add reactions
     for r in values(reactions)
