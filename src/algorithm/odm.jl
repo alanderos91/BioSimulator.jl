@@ -20,13 +20,12 @@ type ODM <: ExactMethod
 
   # statistics
   avg_nsteps :: Mean{EqualWeight}
-  avg_stepsz :: Mean{EqualWeight}
 
   # metadata tags
   tags :: Vector{Symbol}
 
   function ODM(end_time::AbstractFloat, n_steps::Integer)
-    new(end_time, n_steps, 0.0, 0, Mean(), Mean(), DEFAULT_EXACT)
+    new(end_time, n_steps, 0.0, 0, Mean(), DEFAULT_EXACT)
   end
 end
 
@@ -61,17 +60,10 @@ function step!(algorithm::ODM, Xt, r)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      # if any(x -> x < 0, Xt)
-      #   error("t  = ",    get_time(algorithm),
-      #         "\nXt = ", Xt,
-      #         "\nμ  = ", μ,
-      #         "\nV  = ", full(stoichiometry(r)),
-      #         "\ndg = ", dependencies(r))
-      # end
       update_dependent_propensities!(r, Xt, μ)
     end
 
-    update_statistics!(algorithm, τ)
+    algorithm.nsteps += 1
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time

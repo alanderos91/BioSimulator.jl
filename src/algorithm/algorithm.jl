@@ -24,25 +24,17 @@ step!(x::Algorithm, Xt, r) = nothing;
 
 abstract ExactMethod <: Algorithm
 
-const DEFAULT_EXACT = [:avg_nsteps, :avg_stepsz]
+const DEFAULT_EXACT = [:avg_nsteps]
 
 ##### accessors #####
 steps(x::ExactMethod)      = x.nsteps
 avg_nsteps(x::ExactMethod) = x.avg_nsteps
-avg_stepsz(x::ExactMethod) = x.avg_stepsz
 
 ##### setup inside iteration loop #####
 function reset!(x::ExactMethod, a::PVec)
     setfield!(x, :t, 0.0)
     setfield!(x, :nsteps, 0)
     return;
-end
-
-function update_statistics!(x::ExactMethod, τ::AbstractFloat)
-    x.nsteps += 1
-    fit!(avg_stepsz(x), τ)
-
-    return nothing
 end
 
 function update_statistics!(x::ExactMethod)
@@ -56,11 +48,8 @@ end
 abstract TauLeapMethod <: Algorithm
 
 const DEFAULT_TAULEAP = [:avg_nsteps,
-                         :avg_stepsz,
                          :avg_nssa,
                          :avg_nleaps,
-                         :avg_ssa_step,
-                         :avg_leap_step,
                          :avg_neg_excursions]
 
 ##### accessors #####
@@ -70,11 +59,8 @@ leap_steps(x::TauLeapMethod)         = x.leap_steps
 neg_excursions(x::TauLeapMethod)     = x.neg_excursions
 
 avg_nsteps(x::TauLeapMethod)         = x.avg_nsteps
-avg_stepsz(x::TauLeapMethod)         = x.avg_stepsz
 avg_nssa(x::TauLeapMethod)           = x.avg_nssa
 avg_nleaps(x::TauLeapMethod)         = x.avg_nleaps
-avg_ssa_step(x::TauLeapMethod)       = x.avg_ssa_step
-avg_leap_step(x::TauLeapMethod)      = x.avg_leap_step
 avg_neg_excursions(x::TauLeapMethod) = x.avg_neg_excursions
 
 events(x::TauLeapMethod) = x.events
@@ -85,20 +71,6 @@ function reset!(x::TauLeapMethod, a::PVec)
     setfield!(x, :ssa_steps, 0)
     setfield!(x, :leap_steps, 0)
     setfield!(x, :neg_excursions, 0)
-
-    return nothing
-end
-
-function update_statistics!(x::TauLeapMethod, τ::AbstractFloat, isleap::Bool)
-    fit!(avg_stepsz(x), τ)
-
-    if isleap
-        x.leap_steps += 1
-        fit!(avg_leap_step(x), τ)
-    else
-        x.ssa_steps += 1
-        fit!(avg_ssa_step(x), τ)
-    end
 
     return nothing
 end

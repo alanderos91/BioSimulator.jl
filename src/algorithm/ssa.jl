@@ -21,13 +21,12 @@ type SSA <: ExactMethod
 
   # statistics
   avg_nsteps :: Mean{EqualWeight}
-  avg_stepsz :: Mean{EqualWeight}
 
   # metadata
   tags :: Vector{Symbol}
 
   function SSA(end_time::AbstractFloat)
-    new(end_time, 0.0, 0, Mean(), Mean(), DEFAULT_EXACT)
+    new(end_time, 0.0, 0, Mean(), DEFAULT_EXACT)
   end
 end
 
@@ -53,7 +52,8 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
       update_dependent_propensities!(r, Xt, μ)
     end
 
-    update_statistics!(algorithm, τ)
+    # update step counter
+    algorithm.nsteps += 1
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time

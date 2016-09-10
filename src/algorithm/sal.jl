@@ -30,11 +30,8 @@ type SAL <: TauLeapMethod
 
     # statistics
     avg_nsteps         :: Mean{EqualWeight}
-    avg_stepsz         :: Mean{EqualWeight}
     avg_nssa           :: Mean{EqualWeight}
     avg_nleaps         :: Mean{EqualWeight}
-    avg_ssa_step       :: Mean{EqualWeight}
-    avg_leap_step      :: Mean{EqualWeight}
     avg_neg_excursions :: Mean{EqualWeight}
 
     # metadata tags
@@ -43,7 +40,7 @@ type SAL <: TauLeapMethod
     function SAL(end_time::AbstractFloat, ϵ::AbstractFloat, δ::AbstractFloat, α::AbstractFloat)
         new(end_time, ϵ, δ, α,
             0.0, Float64[], Float64[], Int[], 0, 0, 0,
-            Mean(), Mean(), Mean(), Mean(), Mean(), Mean(), Mean(),
+            Mean(), Mean(), Mean(), Mean(),
             DEFAULT_TAULEAP)
     end
 end
@@ -82,10 +79,12 @@ end
 
 function step!(algorithm::SAL, Xt, r)
     a = propensities(r)
-    isleap = intensity(a) < delta(algorithm)
+    iscritical = intensity(a) < delta(algorithm)
 
     if intensity(a) > 0
-        if !isleap
+
+        if iscritical
+            algorithm.ssa_steps += 1
             τ = rand(Exponential(1 / intensity(a)))
             set_time!(algorithm, τ)
 
@@ -95,13 +94,11 @@ function step!(algorithm::SAL, Xt, r)
                 update_dependent_propensities!(r, Xt, μ)
             end
         else
+            algorithm.leap_steps += 1
             τ = sal_update!(algorithm, Xt, r)
             update_all_propensities!(r, Xt)
             set_time!(algorithm, τ)
         end
-
-        # update statistics
-        update_statistics!(algorithm, τ, isleap)
 
     elseif intensity(a) == 0
       algorithm.t = algorithm.end_time

@@ -80,7 +80,7 @@ function attach_metadata!(x::PartialHistory, algorithm::Algorithm)
   metadata = x.metadata
 
   for tag in tags
-    metadata[tag] = string(getfield(algorithm, tag))
+    metadata[tag] = string(OnlineStats.value(getfield(algorithm, tag)))
   end
 
   return nothing
