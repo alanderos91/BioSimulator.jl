@@ -35,10 +35,23 @@ function simulate(model::Network, algorithm::Algorithm; sampling_interval::Abstr
 
   output = PartialHistory(length(Xt), npts, nrlz, 0.0, t, id2ind)
 
-  simulate(output, Xt, algorithm, X0, r, nrlz)
+  if nworkers() == 1
+    serial_simulate(output, Xt, algorithm, X0, r, nrlz)
+  else
+    parallel_simulate(output, Xt, algorithm, X0, r, nrlz)
+  end
+
+  return output
 end
 
-function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm, X0::Vector{Int}, r::AbstractReactionSystem, nrlz::Integer) # nrlz is encoded in PartialHistory; refactor
+function serial_simulate(
+  output    :: PartialHistory,
+  Xt        :: Vector{Int},
+  algorithm :: Algorithm,
+  X0        :: Vector{Int},
+  r         :: AbstractReactionSystem,
+  nrlz      :: Integer) # nrlz is encoded in PartialHistory; refactor
+
   a = propensities(r)
 
   init!(algorithm, Xt, r)
@@ -55,6 +68,38 @@ function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm,
     end
 
     interval = update!(output, Xt, get_time(algorithm), interval, i)
+  end
+
+  return output
+end
+
+function parallel_simulate(
+  output    :: PartialHistory,
+  Xt        :: Vector{Int},
+  algorithm :: Algorithm,
+  X0        :: Vector{Int},
+  r         :: AbstractReactionSystem,
+  nrlz      :: Integer) # nrlz is encoded in PartialHistory; refactor
+
+  a = propensities(r)
+
+  init!(algorithm, Xt, r)
+
+  @async begin
+    for i in 1:nrlz
+    # setup
+    copy!(Xt, X0)
+    update_all_propensities!(a, r, Xt)
+    reset!(algorithm, a)
+    interval = 1
+
+    while !done(algorithm)
+      interval = update!(output, Xt, get_time(algorithm), interval, i)
+      step!(algorithm, Xt, r)
+    end
+
+    interval = update!(output, Xt, get_time(algorithm), interval, i)
+    end
   end
 
   return output
