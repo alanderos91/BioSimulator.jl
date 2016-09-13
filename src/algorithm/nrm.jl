@@ -40,8 +40,10 @@ set_time!(algorithm::NRM, t) = (algorithm.t = t)
 function init!(algorithm::NRM, Xt, r)
   dg = dependencies(r)
   a  = propensities(r)
+  pq = get_reaction_times(algorithm)
 
   for j in eachindex(a)
+    pq[j] = zero(eltype(a))
     if j ∉ dg[j]
       push!(dg[j], j)
     end
