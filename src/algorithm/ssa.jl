@@ -17,20 +17,20 @@ type SSA <: ExactMethod
 
   # state
   t      :: Float64
-  nsteps :: Int
 
   # statistics
-  avg_nsteps :: Mean{EqualWeight}
 
   # metadata
-  tags :: Vector{Symbol}
 
   function SSA(end_time::AbstractFloat)
-    new(end_time, 0.0, 0, Mean(), DEFAULT_EXACT)
+    new(end_time, 0.0)
   end
 end
 
-function SSA(;end_time=DEFAULT_TIME)
+function SSA(;end_time=0.0)
+  if end_time == 0.0
+    error("end_time argument must be positive.")
+  end
   return SSA(end_time)
 end
 
@@ -51,9 +51,6 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
       fire_reaction!(Xt, r, μ)
       update_dependent_propensities!(r, Xt, μ)
     end
-
-    # update step counter
-    algorithm.nsteps += 1
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time

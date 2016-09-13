@@ -2,15 +2,12 @@
 
 abstract Algorithm
 
-const DEFAULT_TIME = 1.0
-
 ##### accessors #####
 get_time(x::Algorithm) = x.t
 end_time(x::Algorithm) = x.end_time
-get_tags(x::Algorithm) = x.tags
 
 ##### termination criterion #####
-done(x::Algorithm) = x.t >= x.end_time
+done(x::Algorithm) = (x.t >= x.end_time)
 
 ##### setup outside iteration loop #####
 init!(x::Algorithm, Xt, r) = nothing;
@@ -24,21 +21,9 @@ step!(x::Algorithm, Xt, r) = nothing;
 
 abstract ExactMethod <: Algorithm
 
-const DEFAULT_EXACT = [:avg_nsteps]
-
-##### accessors #####
-steps(x::ExactMethod)      = x.nsteps
-avg_nsteps(x::ExactMethod) = x.avg_nsteps
-
 ##### setup inside iteration loop #####
-function reset!(x::ExactMethod, a::PVec)
-    setfield!(x, :t, 0.0)
-    setfield!(x, :nsteps, 0)
-    return;
-end
-
-function update_statistics!(x::ExactMethod)
-    fit!(avg_nsteps(x), steps(x))
+function reset!(algorithm::ExactMethod, a::PVec)
+    algorithm.t = 0.0
 
     return nothing
 end
@@ -47,44 +32,12 @@ end
 
 abstract TauLeapMethod <: Algorithm
 
-const DEFAULT_TAULEAP = [:avg_nsteps,
-                         :avg_nssa,
-                         :avg_nleaps,
-                         :avg_neg_excursions]
-
 ##### accessors #####
-steps(x::TauLeapMethod)              = x.ssa_steps + x.leap_steps
-ssa_steps(x::TauLeapMethod)          = x.ssa_steps
-leap_steps(x::TauLeapMethod)         = x.leap_steps
-neg_excursions(x::TauLeapMethod)     = x.neg_excursions
-
-avg_nsteps(x::TauLeapMethod)         = x.avg_nsteps
-avg_nssa(x::TauLeapMethod)           = x.avg_nssa
-avg_nleaps(x::TauLeapMethod)         = x.avg_nleaps
-avg_neg_excursions(x::TauLeapMethod) = x.avg_neg_excursions
-
 events(x::TauLeapMethod) = x.events
 
 ##### setup inside iteration loop #####
-function reset!(x::TauLeapMethod, a::PVec)
-    setfield!(x, :t, 0.0)
-    setfield!(x, :ssa_steps, 0)
-    setfield!(x, :leap_steps, 0)
-    setfield!(x, :neg_excursions, 0)
+function reset!(algorithm::TauLeapMethod, a::PVec)
+    algorithm.t = 0.0
 
     return nothing
 end
-
-function update_statistics!(x::TauLeapMethod)
-    fit!(avg_nsteps(x), steps(x))
-    fit!(avg_nssa(x), ssa_steps(x))
-    fit!(avg_nleaps(x), leap_steps(x))
-    fit!(avg_neg_excursions(x), neg_excursions(x))
-
-    return nothing
-end
-
-##### misc #####
-
-# cumulative average
-cumavg(avg, x, n::Integer) = (x + n * avg) / (n + 1)

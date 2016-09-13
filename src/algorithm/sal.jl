@@ -24,28 +24,22 @@ type SAL <: TauLeapMethod
     dxdt           :: Vector{Float64}
     drdt           :: Vector{Float64}
     events         :: Vector{Int}
-    ssa_steps      :: Int
-    leap_steps     :: Int
-    neg_excursions :: Int
 
     # statistics
-    avg_nsteps         :: Mean{EqualWeight}
-    avg_nssa           :: Mean{EqualWeight}
-    avg_nleaps         :: Mean{EqualWeight}
-    avg_neg_excursions :: Mean{EqualWeight}
 
     # metadata tags
     tags :: Vector{Symbol}
 
     function SAL(end_time::AbstractFloat, ϵ::AbstractFloat, δ::AbstractFloat, α::AbstractFloat)
         new(end_time, ϵ, δ, α,
-            0.0, Float64[], Float64[], Int[], 0, 0, 0,
-            Mean(), Mean(), Mean(), Mean(),
-            DEFAULT_TAULEAP)
+            0.0, Float64[], Float64[], Int[])
     end
 end
 
-function SAL(;end_time=DEFAULT_TIME, epsilon=0.125, delta=100.0, alpha=0.75)
+function SAL(;end_time=0.0, epsilon=0.125, delta=100.0, alpha=0.75)
+    if end_time == 0.0
+      error("end_time argument must be positive.")
+    end
     return SAL(end_time, epsilon, delta, alpha)
 end
 
@@ -70,21 +64,17 @@ end
 
 function reset!(x::SAL, a::PVec)
     setfield!(x, :t, 0.0)
-    setfield!(x, :ssa_steps, 0)
-    setfield!(x, :leap_steps, 0)
-    setfield!(x, :neg_excursions, 0)
 
     return nothing
 end
 
 function step!(algorithm::SAL, Xt, r)
     a = propensities(r)
-    iscritical = intensity(a) < delta(algorithm)
+    iscritical = (intensity(a) < delta(algorithm))
 
     if intensity(a) > 0
 
         if iscritical
-            algorithm.ssa_steps += 1
             τ = rand(Exponential(1 / intensity(a)))
             set_time!(algorithm, τ)
 
@@ -94,7 +84,6 @@ function step!(algorithm::SAL, Xt, r)
                 update_dependent_propensities!(r, Xt, μ)
             end
         else
-            algorithm.leap_steps += 1
             τ = sal_update!(algorithm, Xt, r)
             update_all_propensities!(r, Xt)
             set_time!(algorithm, τ)
@@ -129,7 +118,6 @@ function sal_update!(algorithm, Xt, r)
     while is_badleap(Xt, r, events)
         contract!(events, α)
         τ = τ * α
-        setfield!(algorithm, :neg_excursions, neg_excursions(algorithm) + 1)
     end
 
     fire_reactions!(Xt, r, events)

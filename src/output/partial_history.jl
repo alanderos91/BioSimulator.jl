@@ -24,7 +24,6 @@ type PartialHistory
   t        :: LinSpace{Float64}
   data     :: Array{Int, 3}
   id2ind   :: Dict{Symbol, Int}
-  metadata :: Dict{Symbol, UTF8String}
 end
 
 function PartialHistory(
@@ -36,7 +35,7 @@ function PartialHistory(
     id2ind  :: Dict{Symbol,Int}
 )
 
-  return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind, Dict{Symbol, UTF8String}())
+  return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind)
 end
 
 function Base.show(io::IO, x::PartialHistory)
@@ -51,7 +50,6 @@ end
 get_t(x::PartialHistory) = x.t
 get_data(x::PartialHistory) = x.data
 get_id2ind(x::PartialHistory) = x.id2ind
-get_metadata(x::PartialHistory) = x.metadata
 
 @inbounds function update!(
     x           :: PartialHistory,
@@ -73,17 +71,6 @@ get_metadata(x::PartialHistory) = x.metadata
   end
 
   return interval
-end
-
-function attach_metadata!(x::PartialHistory, algorithm::Algorithm)
-  tags = algorithm.tags
-  metadata = x.metadata
-
-  for tag in tags
-    metadata[tag] = string(OnlineStats.value(getfield(algorithm, tag)))
-  end
-
-  return nothing
 end
 
 # indexing with symbols should return a species' history

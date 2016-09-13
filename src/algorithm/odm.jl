@@ -12,34 +12,30 @@ Optimized Direct Method. Same as `SSA`, except the system is presimulated to sor
 type ODM <: ExactMethod
   # parameters
   end_time :: Float64
-  n_steps   :: Int
 
   # state variables
   t      :: Float64
-  nsteps :: Int
 
   # statistics
-  avg_nsteps :: Mean{EqualWeight}
 
-  # metadata tags
-  tags :: Vector{Symbol}
-
-  function ODM(end_time::AbstractFloat, n_steps::Integer)
-    new(end_time, n_steps, 0.0, 0, Mean(), DEFAULT_EXACT)
+  function ODM(end_time::AbstractFloat)
+    new(end_time, 0.0)
   end
 end
 
-function ODM(;end_time=DEFAULT_TIME, n_steps=1000)
-  return ODM(end_time, n_steps)
+function ODM(;end_time=0.0)
+  if end_time == 0.0
+    error("end_time argument must be positive.")
+  end
+  return ODM(end_time)
 end
 
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 
 function init!(algorithm::ODM, Xt, r)
-  nsteps = algorithm.nsteps
   reaction_events = zeros(Int, size(stoichiometry(r), 2))
 
-  presimulate!(reaction_events, Xt, r, nsteps)
+  presimulate!(reaction_events, Xt, r, end_time(algorithm))
 
   ix = sortperm(reaction_events)
   sort!(r, ix)
@@ -63,8 +59,6 @@ function step!(algorithm::ODM, Xt, r)
       update_dependent_propensities!(r, Xt, μ)
     end
 
-    algorithm.nsteps += 1
-
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
@@ -81,18 +75,24 @@ function presimulate!(
   reaction_events :: Vector{Int},
   Xt              :: Vector{Int},
   r               :: AbstractReactionSystem,
-  nsteps          :: Integer
+  end_time        :: AbstractFloat
   )
 
   update_all_propensities!(r, Xt)
 
   a = propensities(r)
+  t = zero(typeof(end_time))
 
-  for i = 1:nsteps
+  while t < end_time
     if intensity(a) > 0
-      μ = select_reaction(a)
-      fire_reaction!(Xt, r, μ)
-      update_dependent_propensities!(r, Xt, μ)
+      τ = compute_stepsize(a)
+      t = t + τ
+
+      if t < end_time
+        μ = select_reaction(a)
+        fire_reaction!(Xt, r, μ)
+        update_dependent_propensities!(r, Xt, μ)
+      end
 
       if islossy(a)
         a.intensity = sum(a)

@@ -13,21 +13,19 @@ type FRM <: ExactMethod
   end_time :: Float64
 
   # state
-  t      :: Float64
-  nsteps :: Int
-  # statistics
-  avg_nsteps :: Mean{EqualWeight}
-  avg_stepsz :: Mean{EqualWeight}
+  t :: Float64
 
-  # metadata
-  tags :: Vector{Symbol}
+  # statistics
 
   function FRM(end_time::AbstractFloat)
-    new(end_time, 0.0, 0, Mean(), Mean(), DEFAULT_EXACT)
+    new(end_time, 0.0)
   end
 end
 
-function FRM(;end_time=DEFAULT_TIME)
+function FRM(;end_time=0.0)
+  if end_time == 0.0
+    error("end_time argument must be positive.")
+  end
   return FRM(end_time)
 end
 
@@ -44,8 +42,6 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
       fire_reaction!(Xt, r, μ)
       update_dependent_propensities!(r, Xt, μ)
     end
-
-    update_statistics!(algorithm, τ)
 
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
