@@ -15,44 +15,70 @@ propensities(r::AbstractReactionSystem)  = r.propensities
 scaled_rates(r::AbstractReactionSystem)  = r.scaled_rates
 dependencies(r::AbstractReactionSystem)  = r.dependencies
 
-@inbounds function update_propensity!(r::AbstractReactionSystem, Xt, j::Integer)
-  a = propensities(r)
+@inbounds function update_propensity!{T}(
+  a  :: PVec{T},
+  r  :: AbstractReactionSystem,
+  Xt :: Vector{Int},
+  j  :: Integer)
 
-  a_j = compute_mass_action(Xt, r, j)
-  update_errorbound!(a, a_j, j)
-  update_intensity!(a,  a_j, j)
-  a[j] = a_j
+  aⱼ = compute_mass_action(Xt, r, j)
+  update_errorbound!(a, aⱼ, j)
+  update_intensity!(a,  aⱼ, j)
+  a[j] = aⱼ
 
-  return r
+  return nothing
 end
 
-@inbounds function compute_propensities!(r::AbstractReactionSystem, Xt, iterable::AbstractVector)
+@inbounds function update_all_propensities!{T}(
+  a  :: PVec{T},
+  r  :: AbstractReactionSystem,
+  Xt :: Vector{Int})
 
-  for j in iterable
-    update_propensity!(r, Xt, j)
+  total_sum = zero(T)
+
+  for j in eachindex(a)
+    a[j] = compute_mass_action(Xt, r, j)
+    total_sum = total_sum + a[j]
   end
 
-  return r
+  a.intensity   = total_sum
+  a.error_bound = length(a) * intensity(a) * eps(T)
+
+  return nothing
 end
 
-function update_all_propensities!(r::AbstractReactionSystem, Xt)
-  a = propensities(r)
+@inbounds function update_dependent_propensities!{T}(
+  a  :: PVec{T},
+  r  :: AbstractReactionSystem,
+  Xt :: Vector{Int},
+  μ  :: Integer)
 
-  compute_propensities!(r, Xt, eachindex(a))
-
-  return r
-end
-
-function update_dependent_propensities!(r::AbstractReactionSystem, Xt, μ::Integer)
-  a  = propensities(r)
   dg = dependencies(r)
+  dependents = dg[μ]
 
-  compute_propensities!(r, Xt, dg[μ])
+  for j in dependents
+    update_propensity!(a, r, Xt, j)
+  end
 
-  return r
+  return nothing
 end
 
-function compute_mass_action(
+@inline function update_propensities!(
+  a  :: PVec,
+  r  :: AbstractReactionSystem,
+  Xt :: Vector{Int},
+  μ  :: Integer)
+
+  if isstable(a)
+    update_dependent_propensities!(a, r, Xt, μ)
+  else
+    update_all_propensities!(a, r, Xt)
+  end
+
+  return nothing
+end
+
+@inbounds function compute_mass_action(
     Xt :: Vector{Int},
     r  :: AbstractReactionSystem,
     j  :: Integer)
@@ -63,7 +89,7 @@ function compute_mass_action(
     return c[j] * compute_mass_action(Xt, U, j)
 end
 
-function compute_mass_action_deriv(
+@inbounds function compute_mass_action_deriv(
     Xt :: Vector{Int},
     r  :: AbstractReactionSystem,
     j  :: Integer,

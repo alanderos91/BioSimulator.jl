@@ -1,7 +1,6 @@
 import BioSimulator: DenseReactionSystem,
                      SparseReactionSystem,
                      propensities,
-                     compute_propensities!,
                      mean_derivatives!,
                      time_derivatives!
 
@@ -9,7 +8,7 @@ import BioSimulator: DenseReactionSystem,
 
 function time_derivatives_tests(Xt, r)
   a = propensities(r)
-  update_all_propensities!(r, Xt)
+  update_all_propensities!(a, r, Xt)
 
   dxdt = zeros(Float64, length(Xt))
   drdt = zeros(Float64, length(a))

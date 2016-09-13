@@ -49,7 +49,7 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_dependent_propensities!(r, Xt, μ)
+      update_propensities!(a, r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -98,8 +98,6 @@ end
   while jump > 0
     jump -= a[μ]
     μ -= 1
-
-    if μ == 0 && (jump > 0) println("a = ", a, " intensity = ", intensity(a)) end
   end
 
   return μ + 1

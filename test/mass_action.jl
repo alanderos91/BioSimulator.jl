@@ -21,7 +21,7 @@ function mass_action_tests(Xt, r)
   a = propensities(r)
 
   Xt0 = zero(Xt)
-  update_all_propensities!(r, Xt0)
+  update_all_propensities!(a, r, Xt0)
 
   print("  Zero-Order:             ")
   @test a[1] == k0
@@ -51,7 +51,7 @@ function mass_action_tests(Xt, r)
   @test ∂(Xt0, r, 4, 3) == 0.0
   println("Passed")
 
-  update_all_propensities!(r, Xt)
+  update_all_propensities!(a, r, Xt)
 
   print("  Zero-Order:             ")
   @test a[1] == k0

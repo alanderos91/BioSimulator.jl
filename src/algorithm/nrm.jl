@@ -37,6 +37,17 @@ get_reaction_times(algorithm::NRM) = algorithm.pq
 
 set_time!(algorithm::NRM, t) = (algorithm.t = t)
 
+function init!(algorithm::NRM, Xt, r)
+  dg = dependencies(r)
+  a  = propensities(r)
+
+  for j in eachindex(a)
+    if j ∉ dg[j]
+      push!(dg[j], j)
+    end
+  end
+end
+
 function reset!(algorithm::NRM, a::PVec)
   algorithm.t = 0.0
   pq = algorithm.pq
@@ -50,7 +61,7 @@ end
 
 function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   a = propensities(r)
-  old_t = get_time(algorithm)
+
   if intensity(a) > 0
     pq = get_reaction_times(algorithm)
 
@@ -81,23 +92,33 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
   k  = scaled_rates(r)
   dg = dependencies(r)
   pq = get_reaction_times(algorithm)
-  t  = get_time(algorithm)
 
   dependents = dg[μ]
+  T = eltype(a)
 
   for α in dependents
-    temp = a[α]
-    update_propensity!(r, Xt, α)
+    oldval = a[α]
+    old_t  = pq[α]
+    update_propensity!(a, r, Xt, α)
 
-    if pq[α] < Inf
-      pq[α] = t + (temp / a[α]) * (pq[α] - t)
+    if α != μ && oldval != zero(T)
+
+      if a[α] > zero(T)
+        pq[α] = τ + (oldval / a[α]) * (old_t - τ)
+      else
+        pq[α] = Inf
+      end
+
     else
-      pq[α] = τ + rand(Exponential(1 / a[α]))
+
+      if a[α] > zero(T)
+        pq[α] = τ + rand(Exponential(1 / a[α]))
+      else
+        pq[α] = Inf
+      end
+
     end
   end
-
-  update_propensity!(r, Xt, μ)
-  pq[μ] = τ + rand(Exponential(1 / a[μ]))
 
   return nothing
 end

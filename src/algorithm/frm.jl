@@ -40,7 +40,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
 
     if !done(algorithm)
       fire_reaction!(Xt, r, μ)
-      update_dependent_propensities!(r, Xt, μ)
+      update_propensities!(a, r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -55,7 +55,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
   return nothing
 end
 
-function select_reaction(::FRM, a::PropensityVector)
+@inbounds function select_reaction(::FRM, a::PropensityVector)
   min_val = Inf
   min_ind = 0
 

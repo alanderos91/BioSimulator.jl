@@ -47,14 +47,14 @@ function make_dependency_graph!(dg, reactions_dict)
 
   for (i, reaction) in enumerate(reactions)
     for (j, other) in enumerate(reactions)
-      s1 = intersect(keys(reaction.reactants), keys(other.reactants))
-      s2 = intersect(keys(reaction.products),  keys(other.reactants))
+      affected_species = union(keys(reaction.reactants), keys(reaction.products))
+      other_reactants  = keys(other.reactants)
 
-      if !isempty(union(s1, s2))
+      if !isempty(intersect(affected_species, other_reactants))
         push!(dg[i], j)
       end
     end
-    dg[i] = unique(dg[i])
+    #dg[i] = unique(dg[i]) do we need this?
   end
 
   return dg

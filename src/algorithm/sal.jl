@@ -81,11 +81,11 @@ function step!(algorithm::SAL, Xt, r)
             if !done(algorithm)
                 μ = select_reaction(a)
                 fire_reaction!(Xt, r, μ)
-                update_dependent_propensities!(r, Xt, μ)
+                update_propensities!(a, r, Xt, μ)
             end
         else
             τ = sal_update!(algorithm, Xt, r)
-            update_all_propensities!(r, Xt)
+            update_all_propensities!(a, r, Xt)
             set_time!(algorithm, τ)
         end
 

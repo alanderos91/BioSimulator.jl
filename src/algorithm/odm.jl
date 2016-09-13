@@ -56,7 +56,7 @@ function step!(algorithm::ODM, Xt, r)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_dependent_propensities!(r, Xt, μ)
+      update_propensities!(a, r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -78,10 +78,10 @@ function presimulate!(
   end_time        :: AbstractFloat
   )
 
-  update_all_propensities!(r, Xt)
-
   a = propensities(r)
   t = zero(typeof(end_time))
+
+  update_all_propensities!(a, r, Xt)
 
   while t < end_time
     if intensity(a) > 0
@@ -91,12 +91,7 @@ function presimulate!(
       if t < end_time
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
-        update_dependent_propensities!(r, Xt, μ)
-      end
-
-      if islossy(a)
-        a.intensity = sum(a)
-        a.error_bound = zero(eltype(a))
+        update_propensities!(a, r, Xt, μ)
       end
 
       reaction_events[μ] = reaction_events[μ] + 1

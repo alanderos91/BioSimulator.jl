@@ -45,18 +45,13 @@ function simulate(output::PartialHistory, Xt::Vector{Int}, algorithm::Algorithm,
   for i in 1:nrlz
     # setup
     copy!(Xt, X0)
-    update_all_propensities!(r, Xt)
+    update_all_propensities!(a, r, Xt)
     reset!(algorithm, a)
     interval = 1
 
     while !done(algorithm)
       interval = update!(output, Xt, get_time(algorithm), interval, i)
       step!(algorithm, Xt, r)
-
-      if islossy(a)
-        a.intensity = sum(a)
-        a.error_bound = zero(eltype(a))
-      end
     end
 
     interval = update!(output, Xt, get_time(algorithm), interval, i)
