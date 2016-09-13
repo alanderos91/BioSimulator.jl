@@ -32,8 +32,8 @@ export Species, Reaction, Network,
              n_species, n_reactions, species_list, reaction_list
 
 # Backend
-include(joinpath("backend","reactionsystem.jl"))
 include(joinpath("backend","pvec.jl"))
+include(joinpath("backend","reactionsystem.jl"))
 include(joinpath("backend","util.jl"))
 include(joinpath("backend","dense.jl"))
 include(joinpath("backend","sparse.jl"))
