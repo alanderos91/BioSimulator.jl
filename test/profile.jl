@@ -20,10 +20,10 @@ end
 cmdargs = map(symbol, ARGS)
 algorithms = []
 
-if :SSA ∈ cmdargs push!(algorithms, SSA(1000.0)) end
-if :FRM ∈ cmdargs push!(algorithms, FRM(1000.0)) end
-if :ODM ∈ cmdargs push!(algorithms, ODM(1000.0, 1000)) end
-if :NRM ∈ cmdargs push!(algorithms, NRM(1000.0)) end
-if :SAL ∈ cmdargs push!(algorithms, SAL(1000.0, 0.125, 100.0, 0.75)) end
+if :SSA ∈ cmdargs push!(algorithms, SSA(end_time=1000.0)) end
+if :FRM ∈ cmdargs push!(algorithms, FRM(end_time=1000.0)) end
+if :ODM ∈ cmdargs push!(algorithms, ODM(end_time=1000.0)) end
+if :NRM ∈ cmdargs push!(algorithms, NRM(end_time=1000.0)) end
+if :SAL ∈ cmdargs push!(algorithms, SAL(end_time=1000.0)) end
 
 test(algorithms)
