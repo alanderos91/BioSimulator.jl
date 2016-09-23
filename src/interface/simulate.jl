@@ -33,12 +33,12 @@ function simulate(model::Network, algorithm::Algorithm; sampling_interval::Abstr
 
   npts = round(Int, t / sampling_interval + 1)
 
-  output = PartialHistory(length(Xt), npts, nrlz, 0.0, t, id2ind)
-
   if nworkers() == 1
+    output = PartialHistory(DenseArray, length(Xt), npts, nrlz, 0.0, t, id2ind)
     serial_simulate(output, Xt, algorithm, X0, r, nrlz)
   else
-    parallel_simulate(output, Xt, algorithm, X0, r, nrlz)
+    output = PartialHistory(SharedArray, length(Xt), npts, nrlz, 0.0, t, id2ind)
+    parallel_simulate(output, Xt, algorithm, X0, r)
   end
 
   return output
@@ -78,16 +78,42 @@ function parallel_simulate(
   Xt        :: Vector{Int},
   algorithm :: Algorithm,
   X0        :: Vector{Int},
-  r         :: AbstractReactionSystem,
-  nrlz      :: Integer) # nrlz is encoded in PartialHistory; refactor
-
-  a = propensities(r)
+  r         :: AbstractReactionSystem) # nrlz is encoded in PartialHistory; refactor
 
   init!(algorithm, Xt, r)
 
-  @async begin
-    for i in 1:nrlz
-    # setup
+  @sync for pid in procs(output.data)
+      @async remotecall_fetch(pid, trajectory_shared_chunk!, output, Xt, algorithm, X0, r)
+  end
+
+  return output
+end
+
+# Adapted from SharedArrays documentation
+function nrlz_partition(output::PartialHistory)
+    q = output.data
+    idx = indexpids(q)
+    if idx == 0
+        # This worker is not assigned a piece
+        return 1:0, 1:0
+    end
+    nchunks = length(procs(q))
+    splits = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
+    splits[idx]+1:splits[idx+1]
+end
+
+function trajectory_chunk!(
+  output :: PartialHistory,
+  Xt        :: Vector{Int},
+  algorithm :: Algorithm,
+  X0        :: Vector{Int},
+  r         :: AbstractReactionSystem,
+  krange    :: UnitRange
+  )
+
+  a = propensities(r)
+
+  for i in krange
     copy!(Xt, X0)
     update_all_propensities!(a, r, Xt)
     reset!(algorithm, a)
@@ -99,8 +125,18 @@ function parallel_simulate(
     end
 
     interval = update!(output, Xt, get_time(algorithm), interval, i)
-    end
   end
 
   return output
+end
+
+# the wrapper
+@inline function trajectory_shared_chunk!(
+  output :: PartialHistory,
+  Xt        :: Vector{Int},
+  algorithm :: Algorithm,
+  X0        :: Vector{Int},
+  r         :: AbstractReactionSystem
+  )
+  trajectory_chunk!(output, Xt, algorithm, X0, r, nrlz_partition(output))
 end

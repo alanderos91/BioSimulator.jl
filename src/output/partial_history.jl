@@ -20,13 +20,14 @@ result[100] # indexing by integers returns simulation data for the 100th realiza
 ```
 
 """
-type PartialHistory
+type PartialHistory{T}
   t        :: LinSpace{Float64}
-  data     :: Array{Int, 3}
+  data     :: T
   id2ind   :: Dict{Symbol, Int}
 end
 
 function PartialHistory(
+    ::Type{SharedArray},
     d1      :: Integer, # number of species
     d2      :: Integer, # number of intervals
     d3      :: Integer, # number of realizations
@@ -35,7 +36,24 @@ function PartialHistory(
     id2ind  :: Dict{Symbol,Int}
 )
 
-  return PartialHistory(linspace(start, stop, d2), zeros(Int, d1, d2, d3), id2ind)
+  #data = isparallel ? dzeros(Int, (d1, d2, d3), workers(), [1, 1, nworkers()]) : zeros(Int, d1, d2, d3)
+  data = SharedArray(Int, (d1, d2, d3), pids=workers())
+  return PartialHistory(linspace(start, stop, d2), data, id2ind)
+end
+
+function PartialHistory(
+    ::Type{DenseArray},
+    d1      :: Integer, # number of species
+    d2      :: Integer, # number of intervals
+    d3      :: Integer, # number of realizations
+    start   :: Float64, # start time
+    stop    :: Float64, # end time
+    id2ind  :: Dict{Symbol,Int}
+)
+
+  #data = isparallel ? dzeros(Int, (d1, d2, d3), workers(), [1, 1, nworkers()]) : zeros(Int, d1, d2, d3)
+  data = zeros(Int, (d1, d2, d3))
+  return PartialHistory(linspace(start, stop, d2), data, id2ind)
 end
 
 function Base.show(io::IO, x::PartialHistory)
