@@ -60,6 +60,8 @@ function print_participants(io, participants)
   end
 end
 
+parse_reaction(str::AbstractString) = parse_reaction(parse(str))
+
 function parse_reaction(ex::Expr)
     reactants = Dict{Symbol,Int}()
     products  = Dict{Symbol,Int}()

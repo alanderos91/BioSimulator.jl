@@ -1,16 +1,62 @@
 """
 ```
-simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)
+simulate{T<:Algorithm}(model::Network, algorithm::Type{T};
+           time::AbstractFloat=1.0,
+           epochs::Integer=1,
+           trials::Integer=1,
+           algvars...)
 ```
 ### Arguments
-- `model`: A `Network` to simulate.
-- `algorithm`: An algorithm to simulate the model.
+- `model`: The `Network` to simulate.
+- `algorithm`: The algorithm used to carry out simulation. One of `SSA`, `FRM`, `NRM`, `ODM`, or `SAL`.
 
 ### Optional Arguments
-- `sampling_interval`: A parameter specifying how frequently output should be recorded. For example, `sampling_interval=0.1` indicates that output is recorded every 0.1 units of time.
-- `nrlz`: The number of Monte Carlo realizations to generate.
+- `time`: The amount of time to simulate the model, in units of the model.
+- `epochs`: The number of times to sample the vector of counts.
+- `trials`: The number of independent realizations to generate.
+- `algvars`: Additional keyword arguments specific to each algorithm.
 
 """
+function simulate{T}(model::Network, algorithm::Type{T}=SSA;
+           time::AbstractFloat=1.0,
+           epochs::Integer=1,
+           trials::Integer=1,
+           algvars...)
+
+    # extract model information
+    c = n_species(model)
+    d = n_reactions(model)
+
+    species = species_list(model)
+    reactions = reaction_list(model)
+
+    # create simulation data structures
+    x0, rxn, output = make_datastructs(species, reactions, c, d)
+
+    # initialize algorithm
+    alg = call(algorithm, algvars...)
+
+    # run simulation
+    simulate(...)
+end
+
+function make_datastructs(species, reactions, c, d)
+  # state vector
+  x0, id, id2ind = make_species_vector(species, reactions)
+
+  # reactions
+  if d <= 8
+    r = DenseReactionSystem(reactions, id2ind, c, d)
+  else
+    r = SparseReactionSystem(reactions, id2ind, c, d)
+  end
+
+  # output
+  output = initialize_history(c, epochs, trials, time, id2ind)
+
+  return x0, rxn, output
+end
+
 function simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)
 
   c = n_species(model)
