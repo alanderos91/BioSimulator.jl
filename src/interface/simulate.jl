@@ -14,14 +14,14 @@ simulate{T<:Algorithm}(model::Network, algorithm::Type{T};
 - `time`: The amount of time to simulate the model, in units of the model.
 - `epochs`: The number of times to sample the vector of counts.
 - `trials`: The number of independent realizations to generate.
-- `algvars`: Additional keyword arguments specific to each algorithm.
+- `kwargs`: Additional keyword arguments specific to each algorithm.
 
 """
 function simulate{T}(model::Network, algorithm::Type{T}=SSA;
            time::AbstractFloat=1.0,
            epochs::Integer=1,
            trials::Integer=1,
-           algvars...)
+           kwargs...)
 
     # extract model information
     c = n_species(model)
@@ -31,63 +31,33 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
     reactions = reaction_list(model)
 
     # create simulation data structures
-    x0, rxn, output = make_datastructs(species, reactions, c, d)
+    x0, rxn, output, id2ind = make_datastructs(species, reactions, c, d)
 
     # initialize algorithm
-    alg = call(algorithm, algvars...)
+    alg = algorithm(;end_time=time, kwargs...)
 
     # run simulation
-    simulate(...)
+    if nworkers() == 1
+      output = PartialHistory(DenseArray, c, epochs+1, trials, 0.0, time, id2ind)
+      serial_simulate(output, x0, alg, deepcopy(x0), rxn)
+    else
+      output = PartialHistory(SharedArray, c, epochs+1, trials, 0.0, time, id2ind)
+      parallel_simulate(output, x0, alg, deepcopy(x0), rxn)
+    end
 end
 
 function make_datastructs(species, reactions, c, d)
   # state vector
-  x0, id, id2ind = make_species_vector(species, reactions)
+  x0, id, id2ind = make_species_vector(species)
 
   # reactions
   if d <= 8
-    r = DenseReactionSystem(reactions, id2ind, c, d)
+    rxn = DenseReactionSystem(reactions, id2ind, c, d)
   else
-    r = SparseReactionSystem(reactions, id2ind, c, d)
+    rxn = SparseReactionSystem(reactions, id2ind, c, d)
   end
 
-  # output
-  output = initialize_history(c, epochs, trials, time, id2ind)
-
-  return x0, rxn, output
-end
-
-function simulate(model::Network, algorithm::Algorithm; sampling_interval::AbstractFloat=1.0, nrlz::Integer=1)
-
-  c = n_species(model)
-  d = n_reactions(model)
-
-  species   = species_list(model)
-  reactions = reaction_list(model)
-
-  X0, id, id2ind = make_species_vector(species)
-
-  if d <= 8
-    r = DenseReactionSystem(reactions, id2ind, c, d)
-  else
-    r = SparseReactionSystem(reactions, id2ind, c, d)
-  end
-
-  t  = end_time(algorithm)
-
-  Xt = deepcopy(X0)
-
-  npts = round(Int, t / sampling_interval + 1)
-
-  if nworkers() == 1
-    output = PartialHistory(DenseArray, length(Xt), npts, nrlz, 0.0, t, id2ind)
-    serial_simulate(output, Xt, algorithm, X0, r, nrlz)
-  else
-    output = PartialHistory(SharedArray, length(Xt), npts, nrlz, 0.0, t, id2ind)
-    parallel_simulate(output, Xt, algorithm, X0, r)
-  end
-
-  return output
+  return x0, rxn, id, id2ind
 end
 
 function serial_simulate(
@@ -95,13 +65,12 @@ function serial_simulate(
   Xt        :: Vector{Int},
   algorithm :: Algorithm,
   X0        :: Vector{Int},
-  r         :: AbstractReactionSystem,
-  nrlz      :: Integer) # nrlz is encoded in PartialHistory; refactor
+  r         :: AbstractReactionSystem) # nrlz is encoded in PartialHistory; refactor
 
   a = propensities(r)
 
   init!(algorithm, Xt, r)
-  for i in 1:nrlz
+  for i in 1:size(output.data, 3)
     # setup
     copy!(Xt, X0)
     update_all_propensities!(a, r, Xt)
