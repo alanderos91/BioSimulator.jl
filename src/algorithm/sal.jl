@@ -36,7 +36,7 @@ type SAL <: TauLeapMethod
     end
 end
 
-function SAL(;end_time=0.0, epsilon=0.125, delta=100.0, alpha=0.75)
+function SAL(;end_time=0.0, epsilon=0.125, delta=100.0, alpha=0.75, na...)
     if end_time == 0.0
       error("end_time argument must be positive.")
     end

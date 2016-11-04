@@ -27,7 +27,7 @@ type SSA <: ExactMethod
   end
 end
 
-function SSA(;end_time=0.0)
+function SSA(;end_time=0.0, na...)
   if end_time == 0.0
     error("end_time argument must be positive.")
   end

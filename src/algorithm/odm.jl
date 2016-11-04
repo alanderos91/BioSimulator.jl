@@ -23,7 +23,7 @@ type ODM <: ExactMethod
   end
 end
 
-function ODM(;end_time=0.0)
+function ODM(;end_time=0.0, na...)
   if end_time == 0.0
     error("end_time argument must be positive.")
   end
