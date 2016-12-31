@@ -58,11 +58,11 @@ end
 
 function Base.show(io::IO, x::PartialHistory)
   print(io, "[ Partial Simulation History ]\n")
-  print(io, "  * species = ", keys(x.id2ind), "\n")
-  print(io, "  * no. realizations = ", size(x.data, 3), "\n")
-  print(io, "  * start time = ", x.t.start, "\n")
-  print(io, "  * end time = ", x.t.stop, "\n")
-  print(io, "  * interval stride = ", x.t.stop / x.t.divisor)
+  print(io, "  * species  = ", keys(x.id2ind), "\n")
+  print(io, "  * time     = ", x.t.stop, "\n")
+  print(io, "  * trials   = ", size(x.data, 3), "\n")
+  print(io, "  * epochs   = ", size(x.data, 2), "\n")
+  print(io, "  * interval = ", x.t.stop / x.t.divisor)
 end
 
 get_t(x::PartialHistory) = x.t
@@ -91,32 +91,55 @@ get_id2ind(x::PartialHistory) = x.id2ind
   return interval
 end
 
-# indexing with symbols should return a species' history
-function Base.getindex(x::PartialHistory, key::Symbol)
-  data = x.data
+function get_data(
+  x :: PartialHistory;
+  species = Colon(),
+  epochs  = Colon(),
+  trials  = Colon()
+  )
+  data   = x.data
   id2ind = x.id2ind
 
-  i = id2ind[key]
+  i = isa(species, Colon) ? Colon() : find(map(key -> get(id2ind, key, 0), species))
+  j = epoch
+  k = trial
 
-  return reshape(data[i, : , :], size(data, 2, 3))
+  d1 = isa(i, Colon) ? size(data, 1) : length(i)
+  d2 = isa(j, Colon) ? size(data, 2) : length(j)
+  d3 = isa(k, Colon) ? size(data, 3) : length(k)
+
+  old_dim = [d1,d2,d3]
+  new_dim = old_dim[old_dim .> 1]
+
+  return reshape(data[i,j,k], tuple(new_dim...))
 end
-
-# indexing with a number should return a particular realization
-function Base.getindex(x::PartialHistory, i::Integer)
-  data = x.data
-
-  return reshape(data[:, :, i], size(data, 1, 2))
-end
-
-# indexing with a time (float) should return a histogram
-function Base.getindex(x::PartialHistory, tn::AbstractFloat)
-  data = x.data
-
-  t = x.t
-  i = findfirst(t, tn)
-
-  return reshape(data[:, i, :], size(data, 1, 3))
-end
+#
+# # indexing with symbols should return a species' history
+# function Base.getindex(x::PartialHistory, key::Symbol)
+#   data = x.data
+#   id2ind = x.id2ind
+#
+#   i = id2ind[key]
+#
+#   return reshape(data[i, : , :], size(data, 2, 3))
+# end
+#
+# # indexing with a number should return a particular realization
+# function Base.getindex(x::PartialHistory, i::Integer)
+#   data = x.data
+#
+#   return reshape(data[:, :, i], size(data, 1, 2))
+# end
+#
+# # indexing with a time (float) should return a histogram
+# function Base.getindex(x::PartialHistory, tn::AbstractFloat)
+#   data = x.data
+#
+#   t = x.t
+#   i = findfirst(t, tn)
+#
+#   return reshape(data[:, i, :], size(data, 1, 3))
+# end
 
 @eval headfmt(x) = @sprintf("%8s", x)
 @eval timefmt(x) = @sprintf("%8.8e", x)
