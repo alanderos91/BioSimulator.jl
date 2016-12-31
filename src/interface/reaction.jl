@@ -33,6 +33,9 @@ type Reaction
   end
 end
 
+function Reaction(id, rate, str::AbstractString) Reaction(id, rate, parse(str))
+end
+
 function Base.show(io::IO, x::Reaction)
   print_participants(io, x.reactants)
   print(io, " --> ")
