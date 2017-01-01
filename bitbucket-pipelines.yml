@@ -1,0 +1,17 @@
+# This is a sample build configuration for other languages.
+# Check our guides at https://confluence.atlassian.com/x/VYk8Lw for more examples.
+# Only use spaces to indent your .yml configuration.
+# -----
+# You can specify a custom docker image from Docker Hub as your build environment.
+# image: docker-image:tag
+image: julia:0.5.0
+
+pipelines:
+  default:
+    - step:
+        script:
+          - julia --version
+          - julia -e 'Pkg.clone(pwd(), "BioSimulator")'
+          - julia -e 'Pkg.checkout("BioSimulator", "0.5-rev-gen")'
+          - julia -e 'Pkg.build("BioSimulator")'
+          - julia -e 'Pkg.test("BioSimulator")'
