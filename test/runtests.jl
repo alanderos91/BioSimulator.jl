@@ -1,6 +1,18 @@
 using BioSimulator
 using Base.Test
 
+import BioSimulator: Algorithm
+
+function run_test{T}(
+  model :: Network,
+  alg   :: T,
+  t     :: Real,
+  n     :: Integer,
+  m     :: Integer;
+  kwargs...)
+  result = simulate(model, alg, time=t, epochs=n, trials=m, kwargs...)
+end
+
 # Load test models
 include("test_models.jl")
 
@@ -11,7 +23,8 @@ tests = ["mass_action",
          "sort",
          "kendall",
          "linear",
-         "independent"]
+         "independent",
+         "sir"]
 
 println("Running tests:")
 

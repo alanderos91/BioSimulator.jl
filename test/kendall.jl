@@ -1,47 +1,49 @@
 using BioSimulator
 using Base.Test
 
-function kendall_mean(i,t,α,μ,ν)
-   x = exp((α-μ)*t)
-  return i * x + ν/(α-μ)*(x-1)
+function kendall_mean(i, t, α, μ, ν)
+  x = exp((α - μ) * t)
+  return i * x + ν / (α - μ) * (x - 1)
 end
 
-X0 = 5
-α  = 2.0
-μ  = 1.0
-ν  = 0.5
+i = 5
+α = 2.0
+μ = 1.0
+ν = 0.5
 
-m = kendall(X0, α, μ, ν)
+t = 4.0
+n = 100
+u = 5357
+m = 100_000
 
-T = 4.0
-dt = 0.1
-seed = 5357
-itr = 100_000
+model = kendall(i, α, μ, ν)
 
-ssa = SSA(end_time=T)
-frm = FRM(end_time=T)
-nrm = NRM(end_time=T)
-odm = ODM(end_time=T)
-sal = SAL(end_time=T)
-algorithms = [ssa, frm, nrm, odm, sal]
+theoretical = kendall_mean(i, linspace(0.0, t, n + 1), α, μ, ν)
 
-# Compute mean for comparison
-npts = round(Int, T / dt) + 1
-t = linspace(0.0, T, npts)
-theoretical = kendall_mean(X0,t,α,μ,ν)
+algorithms = [SSA, FRM, NRM, ODM, SAL]
 
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
   for algorithm in algorithms
-    simulate(m, algorithm, sampling_interval=dt, nrlz=1)
+    run_test(model, algorithm, t, n, 1)
   end
 end
 
 print("    Running tests...\n\n")
 for algorithm in algorithms
-  print("   - Uniform ", uppercase(string(typeof(algorithm))))
-  srand(seed); @time result = simulate(m, algorithm, sampling_interval=dt, nrlz=itr)
-  computed = mean(result.data, 3)
-  print("     |observed - theoretical| = ", abs(computed[end] - theoretical[end]), "\n")
+  print("   - $(split(uppercase(string(algorithm)),".")[2]): ")
+
+  srand(u)
+
+  @time result = run_test(model, algorithm, t, n, m)
+
+  # count the number of relative errors that lie outside the interval [0.98, 1.02]
+  observed = reshape(mean(result.data, 3), n+1)
+  relative = observed ./ theoretical
+  badness = count(x -> !isapprox(x, 1.0, rtol=0.4), relative)
+
+  @test badness / n ≤ 0.05
+
+  print("     % bad estimates = ", badness / n, " out of $(n)\n")
   println()
 end

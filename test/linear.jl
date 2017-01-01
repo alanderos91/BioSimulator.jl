@@ -1,21 +1,19 @@
-T = 10.
 x0 = 1_000
 model_size = [10, 100, 500]
 
-ssa = SSA(end_time=T)
-frm = FRM(end_time=T)
-nrm = NRM(end_time=T)
-odm = ODM(end_time=T)
-sal = SAL(end_time=T)
+t = 10.0
+n = 1
+u = 5357
+m = 1
 
-algorithms = [ssa, frm, nrm, odm, sal]
+algorithms = [SSA, FRM, NRM, ODM, SAL]
 
 for algorithm in algorithms
-    @printf "%+6s\n" uppercase(string(typeof(algorithm)))
+    @printf "%+6s\n" split(uppercase(string(algorithm)),".")[2]
     for M in model_size
         model = linear(M, x0)
-
+        srand(u)
         @printf "%+6s: %3d" "M" M
-        @time simulate(model, algorithm)
+        @time run_test(model, algorithm, t, n, m)
     end
 end
