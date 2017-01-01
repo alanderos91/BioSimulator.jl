@@ -10,4 +10,4 @@ pipelines:
   default:
     - step:
         script:
-          - julia --version
+          - julia -e 'Pkg.clone(pwd()); Pkg.checkout("biosimulator", "0.5-rev-gen"); Pkg.build("biosimulator"); Pkg.test("biosimulator")'
