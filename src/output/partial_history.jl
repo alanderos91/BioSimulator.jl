@@ -91,54 +91,29 @@ get_id2ind(x::PartialHistory) = x.id2ind
   return interval
 end
 
-function get_data(
-  x :: PartialHistory;
-  species = Colon(),
-  epochs  = Colon(),
-  trials  = Colon()
-  )
-  data   = x.data
-  id2ind = x.id2ind
-
-  i = isa(species, Colon) ? Colon() : find(map(key -> get(id2ind, key, 0), species))
-  j = epoch
-  k = trial
-
-  d1 = isa(i, Colon) ? size(data, 1) : length(i)
-  d2 = isa(j, Colon) ? size(data, 2) : length(j)
-  d3 = isa(k, Colon) ? size(data, 3) : length(k)
-
-  old_dim = [d1,d2,d3]
-  new_dim = old_dim[old_dim .> 1]
-
-  return reshape(data[i,j,k], tuple(new_dim...))
-end
+# function get_dataframe{T}(x::PartialHistory{T})
+#     t      = x.t
+#     data   = x.data
+#     id2ind = x.id2ind
 #
-# # indexing with symbols should return a species' history
-# function Base.getindex(x::PartialHistory, key::Symbol)
-#   data = x.data
-#   id2ind = x.id2ind
+#     d1 = size(data, 1)
+#     d2 = size(data, 2)
+#     d3 = size(data, 3)
 #
-#   i = id2ind[key]
+#     myprod = product(1:d1, 1:d2, 1:d3)
+#     s_id = collect(keys(id2ind))
 #
-#   return reshape(data[i, : , :], size(data, 2, 3))
-# end
-#
-# # indexing with a number should return a particular realization
-# function Base.getindex(x::PartialHistory, i::Integer)
-#   data = x.data
-#
-#   return reshape(data[:, :, i], size(data, 1, 2))
-# end
-#
-# # indexing with a time (float) should return a histogram
-# function Base.getindex(x::PartialHistory, tn::AbstractFloat)
-#   data = x.data
-#
-#   t = x.t
-#   i = findfirst(t, tn)
-#
-#   return reshape(data[:, i, :], size(data, 1, 3))
+# #     df = @from ix in myprod begin
+# #     @select {time = t[ix[2]], count = data[ix[1], ix[2], ix[3]], species = s_id[ix[1]], trial = ix[3]}
+# #     @collect DataFrame
+# #     end
+#     df = DataFrame()
+#     df[:time] = repeat(collect(t), outer=[d3])
+#     for i = 1:d1
+#         df[s_id[i]] = vec(convert(Array, view(data, i, :, :)))
+#     end
+#     df[:trial] = repeat(collect(1:d3), inner=[d2])
+#     return df
 # end
 
 @eval headfmt(x) = @sprintf("%8s", x)
