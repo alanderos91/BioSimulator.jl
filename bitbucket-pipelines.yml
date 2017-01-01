@@ -10,8 +10,8 @@ pipelines:
   default:
     - step:
         script:
-          - julia -e 'Pkg.clone("https://alanderos@bitbucket.org/alanderos/biosimulator.jl.git", "BioSimulator")'
+          - julia --version
+          - julia -e 'Pkg.clone(pwd(), "BioSimulator")'
           - julia -e 'Pkg.checkout("BioSimulator", "0.5-rev-gen")'
           - julia -e 'Pkg.build("BioSimulator")'
-          - julia -e 'Pkg.add("BioSimulator")'
           - julia -e 'Pkg.test("BioSimulator")'
