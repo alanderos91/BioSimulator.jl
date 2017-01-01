@@ -110,8 +110,15 @@ end
 
 """
 ```
-SIR()
+sir(s, i, r, [β=0.1], [γ=0.05])
 ```
+A Susceptible-Infected-Recovered model. The rate of infection is computed as `β / (s + i + r)`.
+
+- `s`: the initial number of susceptible individuals
+- `i`: the initial number of infected individuals
+- `r`: the initial number of recovered individals
+- `β`: the infection rate for the population
+- `γ`: the recovery rate
 """
 function sir(
   s :: Integer,
