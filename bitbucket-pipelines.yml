@@ -12,6 +12,6 @@ pipelines:
         script:
           - julia --version
           - julia -e 'Pkg.clone(pwd(), "BioSimulator")'
-          - julia -e 'Pkg.checkout("BioSimulator", "0.5-rev-gen")'
+          - julia -e 'Pkg.checkout("BioSimulator")'
           - julia -e 'Pkg.build("BioSimulator")'
           - julia -e 'Pkg.test("BioSimulator")'
