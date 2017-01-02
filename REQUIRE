@@ -2,4 +2,3 @@ julia 0.4
 Distributions
 Reexport
 Plots
-GraphViz

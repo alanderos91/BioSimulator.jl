@@ -5,8 +5,6 @@ using Reexport
 
 @reexport using Plots
 
-using GraphViz
-
 import Base: (<=),
              (>=),
              getindex,
@@ -51,9 +49,8 @@ export SSA, FRM, NRM, ODM, SAL
 # Output
 include(joinpath("output","partial_history.jl"))
 include(joinpath("output","plot.jl"))
-include(joinpath("output","petrinet.jl"))
 
-export petrinet, get_data, get_metadata, save_data
+export get_data, get_metadata, save_data
 
 # Simulate
 include(joinpath("interface","simulate.jl"))
