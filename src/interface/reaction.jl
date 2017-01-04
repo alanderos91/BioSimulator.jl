@@ -33,8 +33,7 @@ type Reaction
   end
 end
 
-function Reaction(id, rate, str::AbstractString) Reaction(id, rate, parse(str))
-end
+Reaction(id, rate, str::AbstractString) = Reaction(id, rate, parse(str))
 
 function Base.show(io::IO, x::Reaction)
   print_participants(io, x.reactants)
@@ -62,8 +61,6 @@ function print_participants(io, participants)
     end
   end
 end
-
-parse_reaction(str::AbstractString) = parse_reaction(parse(str))
 
 function parse_reaction(ex::Expr)
     reactants = Dict{Symbol,Int}()

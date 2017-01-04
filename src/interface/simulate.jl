@@ -18,9 +18,9 @@ simulate{T<:Algorithm}(model::Network, algorithm::Type{T};
 
 """
 function simulate{T}(model::Network, algorithm::Type{T}=SSA;
-           time::AbstractFloat=1.0,
-           epochs::Integer=1,
-           trials::Integer=1,
+           time::Float64=1.0,
+           epochs::Int=1,
+           trials::Int=1,
            kwargs...)
 
     # extract model information
