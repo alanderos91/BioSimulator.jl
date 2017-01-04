@@ -92,9 +92,8 @@ function presimulate!(
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
         update_propensities!(a, r, Xt, μ)
+        reaction_events[μ] = reaction_events[μ] + 1
       end
-
-      reaction_events[μ] = reaction_events[μ] + 1
     else
       break
     end
