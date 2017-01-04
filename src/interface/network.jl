@@ -32,7 +32,7 @@ See also: `Species`, `Reaction`, `Parameter`, `simulate`, `petrinet`
 `id`: An string identifier for the `Network`.
 """
 type Network
-  id :: UTF8String
+  id :: String
 
   species_list   :: Dict{Symbol,Species}
   reaction_list  :: Dict{Symbol,Reaction}
@@ -41,7 +41,7 @@ type Network
     s = Dict{Symbol,Species}()
     r = Dict{Symbol,Reaction}()
 
-    return new(UTF8String(id), s, r)
+    return new(string(id), s, r)
   end
 end
 
@@ -60,7 +60,7 @@ end
 function add_object!(model, object, fieldname)
   dict = getfield(model, fieldname)
   id   = object.id
-  setindex!(dict, object, symbol(id))
+  setindex!(dict, object, Symbol(id))
   return model
 end
 
@@ -83,7 +83,7 @@ end
 function validate(participants, model)
   species_dict = species_list(model)
   for species in keys(participants)
-    if !haskey(species_dict, symbol(species))
+    if !haskey(species_dict, Symbol(species))
       error("$(species) is not defined.")
     end
   end

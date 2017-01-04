@@ -14,14 +14,14 @@ Construct a Species object named `id` with initial copy number `value`.
 - `value`: Initial copy number. Defaults to `0`.
 """
 type Species
-  id         :: UTF8String
+  id         :: String
   population :: Int
 
   function Species(id, value::Int=0)
     if value < 0
       error("Species population must be nonnegative.")
     end
-    new(UTF8String(string(id)), value)
+    new(string(id), value)
   end
 end
 

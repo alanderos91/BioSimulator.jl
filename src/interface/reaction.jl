@@ -13,7 +13,7 @@ Construct a `Reaction` with identifier `id` and stochastic rate constant `k`, re
 - `formula`: A chemical formula representation of the `Reaction`. For example, `:(X --> X + X)` defines a birth reaction with reactant `X`, coefficient 1, and product `X`, coefficient 2; :(X --> 2*X) is also valid syntax. The `-->` symbol must be used to separate reactants and products.
 """
 type Reaction
-  id   :: UTF8String
+  id   :: String
   rate :: Float64
 
   reactants :: Dict{Symbol,Int}
@@ -29,7 +29,7 @@ type Reaction
     if any(x -> x < 0, values(reactants)) || any(x -> x < 0, values(products))
       error("Coefficients must be positive.")
     end
-    return new(UTF8String(string(id)), rate, reactants, products)
+    return new(string(id), rate, reactants, products)
   end
 end
 
