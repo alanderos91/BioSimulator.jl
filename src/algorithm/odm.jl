@@ -38,7 +38,7 @@ function init!(algorithm::ODM, Xt, r)
   presimulate!(reaction_events, Xt, r, end_time(algorithm))
 
   ix = sortperm(reaction_events)
-  sort!(r, ix)
+  _sort!(r, ix)
 
   return nothing
 end
@@ -102,7 +102,7 @@ function presimulate!(
   return reaction_events
 end
 
-@inbounds function sort!(r, ix)
+@inbounds function _sort!(r, ix)
   V  = stoichiometry(r)
   U  = coefficients(r)
   k  = scaled_rates(r)
