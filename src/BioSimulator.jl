@@ -2,6 +2,8 @@ module BioSimulator
 
 using Distributions
 using Reexport
+using DataFrames
+using Iterators
 
 @reexport using Plots
 
@@ -50,7 +52,7 @@ export SSA, FRM, NRM, ODM, SAL
 include(joinpath("output","partial_history.jl"))
 include(joinpath("output","plot.jl"))
 
-export get_data, get_metadata, save_data
+export get_dataframe, save_data
 
 # Simulate
 include(joinpath("interface","simulate.jl"))

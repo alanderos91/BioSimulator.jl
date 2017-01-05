@@ -2,22 +2,7 @@
 ```
 PartialHistory(t, data, id2ind)
 ```
-
-Stores the partial output of a simulation job, discretized to specific intervals according to the `sampling_interval` value used when calling `simulate`. Output is stored as a `(t, data)` tuple, where `t` is the time array and data is a 3D array. For example:
-
-- `data[i, j, k]` accesses the value of species at interval `j` along the `k`-th realization.
-- `data[:, :, k]` returns the simulation data for the `k`-th realization
-- `data[:, j, :]` returns a histogram of every species during the `j`-th interval (i.e. t[j]).
-- `data[i, :, :]` returns all the simulation data for the `i`-th species.
-
-For convenience, one may access the simulation data using a special indexing scheme:
-
-```
-result = simulate(...) # returns a PartialHistory
-result[:X]  # indexing by symbols returns the simulation data for species `X`
-result[5.0] # indexing by floats returns simulation data for every species and realization at time `5.0`.
-result[100] # indexing by integers returns simulation data for the 100th realization.
-```
+TODO
 
 """
 type PartialHistory{T}
@@ -35,8 +20,6 @@ function PartialHistory(
     stop    :: Float64, # end time
     id2ind  :: Dict{Symbol,Int}
 )
-
-  #data = isparallel ? dzeros(Int, (d1, d2, d3), workers(), [1, 1, nworkers()]) : zeros(Int, d1, d2, d3)
   data = SharedArray(Int, (d1, d2, d3), pids=workers())
   return PartialHistory(linspace(start, stop, d2), data, id2ind)
 end
@@ -50,8 +33,6 @@ function PartialHistory(
     stop    :: Float64, # end time
     id2ind  :: Dict{Symbol,Int}
 )
-
-  #data = isparallel ? dzeros(Int, (d1, d2, d3), workers(), [1, 1, nworkers()]) : zeros(Int, d1, d2, d3)
   data = zeros(Int, (d1, d2, d3))
   return PartialHistory(linspace(start, stop, d2), data, id2ind)
 end
@@ -65,7 +46,7 @@ function Base.show(io::IO, x::PartialHistory)
   print(io, "  * interval = ", x.t.stop / x.t.divisor)
 end
 
-get_t(x::PartialHistory) = x.t
+get_time(x::PartialHistory) = x.t
 get_data(x::PartialHistory) = x.data
 get_id2ind(x::PartialHistory) = x.id2ind
 
@@ -77,8 +58,8 @@ get_id2ind(x::PartialHistory) = x.id2ind
     realization :: Integer
 )
 
-  ttt      = x.t
-  data     = x.data
+  ttt      = get_time(x)
+  data     = get_data(x)
   maxindex = length(ttt)
 
   while (interval <= maxindex) && (t >= ttt[interval])
@@ -91,30 +72,33 @@ get_id2ind(x::PartialHistory) = x.id2ind
   return interval
 end
 
-# function get_dataframe{T}(x::PartialHistory{T})
-#     t      = x.t
-#     data   = x.data
-#     id2ind = x.id2ind
-#
-#     d1 = size(data, 1)
-#     d2 = size(data, 2)
-#     d3 = size(data, 3)
-#
-#     myprod = product(1:d1, 1:d2, 1:d3)
-#     s_id = collect(keys(id2ind))
-#
-# #     df = @from ix in myprod begin
-# #     @select {time = t[ix[2]], count = data[ix[1], ix[2], ix[3]], species = s_id[ix[1]], trial = ix[3]}
-# #     @collect DataFrame
-# #     end
-#     df = DataFrame()
-#     df[:time] = repeat(collect(t), outer=[d3])
-#     for i = 1:d1
-#         df[s_id[i]] = vec(convert(Array, view(data, i, :, :)))
-#     end
-#     df[:trial] = repeat(collect(1:d3), inner=[d2])
-#     return df
-# end
+"""
+```
+get_dataframe(x::PartialHistory)
+```
+
+Retrieve simulation data as a `DataFrame` (provided by `DataFrames.jl`). The `DataFrame` is organized as follows: Each row represents a record, which is an observation at a particular `time` and `trial`. The value of each species is represented as a column. The additional columsn for `time` and `trial` allow one to filter or aggregate the data (i.e. to compute a histogram or mean trajectory).
+"""
+function get_dataframe{T}(x::PartialHistory{T})
+    t      = get_time(x)
+    data   = get_data(x)
+    id2ind = get_id2ind(x)
+
+    d1 = size(data, 1)
+    d2 = size(data, 2)
+    d3 = size(data, 3)
+
+    myprod = product(1:d1, 1:d2, 1:d3)
+    s_id = collect(keys(id2ind))
+
+    df = DataFrame()
+    df[:time] = repeat(collect(t), outer=[d3])
+    for i = 1:d1
+        df[s_id[i]] = vec(convert(Array, view(data, i, :, :)))
+    end
+    df[:trial] = repeat(collect(1:d3), inner=[d2])
+    return df
+end
 
 @eval headfmt(x) = @sprintf("%8s", x)
 @eval timefmt(x) = @sprintf("%8.8e", x)
