@@ -2,16 +2,10 @@ import Base.show
 
 """
 ```
-Species(id, value::Int=0)
+Species(id, [value=0])
 ```
 
-Construct a Species object named `id` with initial copy number `value`.
-
-### Arguments
-- `id`: The name of the `Species`.
-
-### Optional Arguments
-- `value`: Initial copy number. Defaults to `0`.
+Define a `Species` with a `name` and initial population `value`.
 """
 type Species
   id         :: String

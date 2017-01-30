@@ -1,10 +1,3 @@
-"""
-```
-PartialHistory(t, data, id2ind)
-```
-TODO
-
-"""
 type PartialHistory{T}
   t        :: LinSpace{Float64}
   data     :: T
@@ -77,7 +70,7 @@ end
 get_dataframe(x::PartialHistory)
 ```
 
-Retrieve simulation data as a `DataFrame` (provided by `DataFrames.jl`). The `DataFrame` is organized as follows: Each row represents a record, which is an observation at a particular `time` and `trial`. The value of each species is represented as a column. The additional columsn for `time` and `trial` allow one to filter or aggregate the data (i.e. to compute a histogram or mean trajectory).
+Retrieve simulation data as a `DataFrame` (provided by `DataFrames.jl`). The `DataFrame` is organized as follows: Each row represents a record, which is an observation at a particular `time` and `trial`. The value of each species is represented as a column. The columns for `time` and `trial` allow one to filter or aggregate the data (e.g. to compute a histogram or mean trajectory).
 """
 function get_dataframe{T}(x::PartialHistory{T})
     t      = get_time(x)

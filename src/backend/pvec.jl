@@ -1,3 +1,15 @@
+"""
+```
+PropensityVector(m::Integer)
+```
+
+An m-vector that caches reaction propensities and maintains their running sum.
+
+### Internals
+`cache`: The cached reaction propensities.
+`intensity`: The running sum of cached propensities.
+`error_bound`: A number that quantifies the error resulting from updating sums with Kahan summation. Once this value exceeds a threshold, the running sum is explicitly recalculated.
+"""
 type PropensityVector{T <: AbstractFloat} <: AbstractVector{T}
   cache       :: Vector{T}
   intensity   :: T

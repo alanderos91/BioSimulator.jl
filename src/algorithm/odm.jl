@@ -1,13 +1,13 @@
 """
 ```
-ODM(end_time=1.0, n_steps=1000)
+ODM
 ```
 
-Optimized Direct Method. Same as `SSA`, except the system is presimulated to sort reaction propensities from increasing to decreasing. This improves the search on the CMF when selecting the next reaction to fire.
+Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF when selecting the next reaction to fire.
 
-### Arguments
-- `end_time`: The simulation end time.
-- `n_steps`: Number of time steps to presimulate.
+### Internals
+- `end_time`: The termination time, supplied by a user.
+- `t`: The current simulation time.
 """
 type ODM <: ExactMethod
   # parameters
@@ -23,12 +23,7 @@ type ODM <: ExactMethod
   end
 end
 
-function ODM(;end_time=0.0, na...)
-  if end_time == 0.0
-    error("end_time argument must be positive.")
-  end
-  return ODM(end_time)
-end
+ODM(end_time; na...) = ODM(end_time)
 
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 

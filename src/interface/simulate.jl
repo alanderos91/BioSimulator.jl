@@ -1,11 +1,16 @@
 """
 ```
-simulate{T<:Algorithm}(model::Network, algorithm::Type{T};
-           time::AbstractFloat=1.0,
-           epochs::Integer=1,
-           trials::Integer=1,
-           algvars...)
+simulate{T}(model, [algorithm::Type{T}=SSA];
+  time   :: AbstractFloat=1.0,
+  epochs :: Integer=1,
+  trials :: Integer=1,
+  algvars...)
 ```
+
+Simulate a `Network` using the given `algorithm`.
+
+The simulation routine will run until the termination `time` and record the system state at evenly spaced `epochs`. This repeats for the given number of `trials`.
+
 ### Arguments
 - `model`: The `Network` to simulate.
 - `algorithm`: The algorithm used to carry out simulation. One of `SSA`, `FRM`, `NRM`, `ODM`, or `SAL`.
@@ -18,32 +23,32 @@ simulate{T<:Algorithm}(model::Network, algorithm::Type{T};
 
 """
 function simulate{T}(model::Network, algorithm::Type{T}=SSA;
-           time::Float64=1.0,
-           epochs::Int=1,
-           trials::Int=1,
-           kwargs...)
+  time::Float64=1.0,
+  epochs::Int=1,
+  trials::Int=1,
+  kwargs...)
 
-    # extract model information
-    c = n_species(model)
-    d = n_reactions(model)
+  # extract model information
+  c = n_species(model)
+  d = n_reactions(model)
 
-    species = species_list(model)
-    reactions = reaction_list(model)
+  species = species_list(model)
+  reactions = reaction_list(model)
 
-    # create simulation data structures
-    x0, rxn, output, id2ind = make_datastructs(species, reactions, c, d)
+  # create simulation data structures
+  x0, rxn, output, id2ind = make_datastructs(species, reactions, c, d)
 
-    # initialize algorithm
-    alg = algorithm(;end_time=time, kwargs...)
+  # initialize algorithm
+  alg = algorithm(time; kwargs...)
 
-    # run simulation
-    if nworkers() == 1
-      output = PartialHistory(DenseArray, c, epochs+1, trials, 0.0, time, id2ind)
-      serial_simulate(output, x0, alg, deepcopy(x0), rxn)
-    else
-      output = PartialHistory(SharedArray, c, epochs+1, trials, 0.0, time, id2ind)
-      parallel_simulate(output, x0, alg, deepcopy(x0), rxn)
-    end
+  # run simulation
+  if nworkers() == 1
+    output = PartialHistory(DenseArray, c, epochs+1, trials, 0.0, time, id2ind)
+    serial_simulate(output, x0, alg, deepcopy(x0), rxn)
+  else
+    output = PartialHistory(SharedArray, c, epochs+1, trials, 0.0, time, id2ind)
+    parallel_simulate(output, x0, alg, deepcopy(x0), rxn)
+  end
 end
 
 function make_datastructs(species, reactions, c, d)
@@ -98,7 +103,7 @@ function parallel_simulate(
   init!(algorithm, Xt, r)
 
   @sync for pid in procs(output.data)
-      @async remotecall_fetch(pid, trajectory_shared_chunk!, output, Xt, algorithm, X0, r)
+    @async remotecall_fetch(pid, trajectory_shared_chunk!, output, Xt, algorithm, X0, r)
   end
 
   return output
@@ -106,15 +111,15 @@ end
 
 # Adapted from SharedArrays documentation
 function nrlz_partition(output::PartialHistory)
-    q = output.data
-    idx = indexpids(q)
-    if idx == 0
-        # This worker is not assigned a piece
-        return 1:0, 1:0
-    end
-    nchunks = length(procs(q))
-    splits = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
-    splits[idx]+1:splits[idx+1]
+  q = output.data
+  idx = indexpids(q)
+  if idx == 0
+    # This worker is not assigned a piece
+    return 1:0, 1:0
+  end
+  nchunks = length(procs(q))
+  splits = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
+  splits[idx]+1:splits[idx+1]
 end
 
 function trajectory_chunk!(
