@@ -25,7 +25,7 @@ r2 = deepcopy(r1)
 
 reaction_events = [1, 2, 3, 4, 5, 6, 7, 8]
 ix = sortperm(reaction_events)
-BioSimulator.sort!(r2, ix)
+BioSimulator._sort!(r2, ix)
 
 @test stoichiometry(r1) == stoichiometry(r2)
 @test coefficients(r1) == coefficients(r2)
@@ -36,7 +36,7 @@ BioSimulator.sort!(r2, ix)
 r2 = deepcopy(r1)
 reaction_events = [8, 7, 6, 5, 4, 3, 2, 1]
 ix = sortperm(reaction_events)
-BioSimulator.sort!(r2, ix)
+BioSimulator._sort!(r2, ix)
 
 @test stoichiometry(r1) != stoichiometry(r2)
 @test coefficients(r1) != coefficients(r2)
