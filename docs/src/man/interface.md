@@ -1,4 +1,4 @@
-# Inteface
+# Interface
 
 ```@meta
 CurrentModule = BioSimulator
