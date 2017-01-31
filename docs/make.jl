@@ -9,8 +9,12 @@ makedocs(
   authors  = "Alfonso Landeros, Mary E. Sehl, Kenneth Lange",
   pages = [
     "Home"       => "index.md",
-    "Interface"  => "interface.md",
-    "Algorithms" => "algorithms.md"
+    "Overview"   => "man/overview.md",
+    "Modeling"   => "man/modeling.md",
+    "Algorithms" => "man/algorithms.md",
+    "Examples"   => "man/examples.md",
+    "Benchmarks" => [],
+    "Developers" => []
   ]
 )
 

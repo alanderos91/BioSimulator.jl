@@ -29,33 +29,8 @@ This package supports Julia `0.5`.
 
 ## Table of Contents
 
-##### Stochastic Simulation Overview
-```@contents
-Pages = [
-  "man/modeling_assumptions.md",
-  "man/algorithms.md"
-]
-Depth = 1
-```
+##### Overview
 ##### Modeling
-```@contents
-Pages = [
-  "man/interface.md",
-  "man/creating_a_model.md",
-  "man/running_simulations.md",
-  "man/visualizing_results.md",
-  "man/gui_generations.md"
-]
-Depth = 1
-```
 ##### Examples
-```@contents
-Pages = [
-  "man/birth-death-immigration_process.md",
-  "man/michaelis-menten_enzyme_kinetics.md",
-  "man/prokaryotic_auto-regulatory_gene_network.md"
-]
-Depth = 1
-```
 ##### Benchmarks
 ##### Developers
