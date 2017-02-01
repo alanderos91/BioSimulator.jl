@@ -2,10 +2,11 @@ module BioSimulator
 
 using Distributions
 using Reexport
-using DataFrames
-using Iterators
 
 @reexport using Plots
+@reexport using DataFrames
+
+import Iterators: product
 
 import Base: (<=),
              (>=),
