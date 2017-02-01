@@ -21,7 +21,9 @@ using BioSimulator
 
   plot(
     meantrajectory(result),
-    freqhistogram(result, 4.0)
+    freqhistogram(result, 4.0),
+    layout = 2,
+    size   = (800,400)
   )
 
   savefig("kendall.svg"); nothing # hide
@@ -51,7 +53,13 @@ Michaelis-Menten enzyme kinetics is a stepwise process combining first- and seco
 
   plot(
     meantrajectory(result),
-    freqhistogram(result, 50.0)
+    freqhistogram(result, 50.0, select=["S"]),
+    freqhistogram(result, 50.0, select=["E"]),
+    freqhistogram(result, 50.0, select=["SE"]),
+    freqhistogram(result, 50.0, select=["P"]),
+    size   = (800, 600),
+    layout = @layout [a{0.5h}
+                      grid(2,2)]
   )
 
   savefig("mmek.svg"); nothing # hide
@@ -93,8 +101,11 @@ The influence of noise at the cellular level is difficult to capture in determin
   result = simulate(model, algorithm=SSA, time=1000.0, epochs=500, trials=100)
 
   plot(
-    meantrajectory(result),
-    freqhistogram(result, 4.0)
+    meantrajectory(result, select=["P", "P2"]),
+    freqhistogram(result, 1000.0, select=["P"]),
+    freqhistogram(result, 1000.0, select=["P2"]),
+    layout = @layout [a{0.5h}
+                      grid(1,2)]
   )
 
   savefig("gene.svg"); nothing # hide

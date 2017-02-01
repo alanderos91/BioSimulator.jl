@@ -2,4 +2,4 @@
 
 ## Assumptions
 
-## Continuous-Time Markov Chain
+## Continuous-Time Markov Chains
