@@ -21,6 +21,6 @@ makedocs(
 deploydocs(
   repo   = "bitbucket.com/alanderos/biosimulator.jl.git",
   target = "build",
-  deps   = nothing,
+  deps   = Deps.pip("mkdocs", "python-markdown-math"),
   make   = nothing
 )
