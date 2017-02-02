@@ -1,122 +1,87 @@
 immutable PetriNet
-    g::GraphViz.Graph
+  g :: DiGraph
+
+  species_nodes  :: Vector{Int}
+  reaction_nodes :: Vector{Int}
+
+  species_styles  :: Dict{Int,String}
+  reaction_styles :: Dict{Int,String}
+
+  node_labels :: Vector{String}
+  edge_labels :: Dict{Tuple{Int,Int},String}
 end
 
-"""
-```
-petrinet(model::Network; rankdir=:LR)
-```
+function petri_net(model :: Network)
+  s = n_species(model)
+  r = n_reactions(model)
+  g = DiGraph(s + r)
 
-### Arguments
-- `model`: The `Network` to visualize.
+  species   = species_list(model)
+  reactions = reaction_list(model)
+  id2ind    = Dict( id => i for (i, id) in enumerate(keys(species)) )
+  edge_set = Tuple{Int,Int}[]
+  stoc_set = Dict{Tuple{Int,Int},Int}()
 
-### Optional Arguments
-- `rankdir`: Sets direction of graph layout. Options are `"TB"` (top-bottom), `"BT"` (bottom-top), `"LR"` (left-right), and `"RL"` (right-left).
-"""
-function petrinet(model::Network; rankdir="LR", layout="neato", overlap="false", splines="true")
-    reactions = model.reaction_list
-    b = IOBuffer()
-    modelid = string(model.id)
-    modelid = replace(modelid, r"(\W\s?|_)", "")
-    modelid = replace(modelid, " ", "_")
+  # construct edges and extract stoichiometries
+  # species numbered 1 thru s
+  # reactions numbered s+1 thru s + r
+  for (k, reaction) in enumerate(values(reactions))
+    j = k + s
+    reactants = reaction.reactants
+    products  = reaction.products
 
-    # graph attributes
-    write(b,
-    """
-    digraph $(modelid) {
-    // Graph Attributes
-    layout=$(layout);
-    overlap=$(overlap);
-    rankdir=$(rankdir);
-    splines=$(splines);
-    sep=1;
-    nodesep=1;
-    """)
-    # add reactions
-    for r in values(reactions)
-        add_reaction!(b, r)
-    end
-    write(b, "}")
-    g = GraphViz.Graph(takebuf_string(b))
-    return PetriNet(g)
-end
-
-function add_reaction!(b::IOBuffer, r)
-    rname     = r.id
-    reactants = r.reactants
-    products  = r.products
-
-    # add reaction node style
-    write(b, "\"", r.id, "\"", " [shape=box, style=filled];\n")
-
-    # add each reactant
-    for x in keys(reactants)
-        coefficient = reactants[x]
-        if coefficient == 1
-            write(b, "\"", x, "\"", " -> ", "\"", r.id, "\"", ";\n")
-        elseif coefficient > 1
-            write(b, "\"", x, "\"", " -> ", "\"", r.id, "\"", "[label = $(coefficient)];\n")
-        else
-            error("Coefficients should be >= 1. Got: ", coefficient, " in Reaction ", rname, " for reactant ", x)
-        end
+    for (reactant, v) in reactants
+      i = id2ind[reactant]
+      e = (i, j)
+      push!(edge_set, e)
+      v > 1 && (stoc_set[e] = v)
     end
 
-    # add each product
-    for x in keys(products)
-        coefficient = products[x]
-        if coefficient == 1
-            write(b, "\"", r.id, "\"", " -> ", "\"", x, "\"", ";\n")
-        elseif coefficient > 1
-            write(b, "\"", r.id, "\"", " -> ", "\"", x, "\"", "[label = $(coefficient)];\n")
-        else
-            error("Coefficients should be >= 1. Got: ", coefficient, " in Reaction ", rname, " for product ", x)
-        end
+    for (product, v) in products
+      i = id2ind[product]
+      e = (j, i)
+      push!(edge_set, e)
+      v > 1 && (stoc_set[e] = v)
     end
-    write(b, "\n")
-    return b
+  end
+
+  for edge in edge_set
+    add_edge!(g, edge[1], edge[2])
+  end
+
+  species_nodes  = collect(1:s)
+  species_labels = map(string, keys(species))
+  species_styles = Dict( i => "draw, rounded corners, fill=blue!10" for i in species_nodes )
+
+  reaction_nodes = collect(s+1:s+r)
+  reaction_labels = map(string, keys(reactions))
+  reaction_styles = Dict( i => "draw, rounded corners, fill=red!10" for i in reaction_nodes)
+
+  node_labels = [ species_labels; reaction_labels ]
+  edge_labels = Dict( e => string(v) for (e, v) in stoc_set )
+
+  return PetriNet(
+    g,
+    species_nodes,
+    reaction_nodes,
+    species_styles,
+    reaction_styles,
+    node_labels,
+    edge_labels
+  )
 end
 
-# From Gadfly
+function draw(x :: PetriNet)
+  graph           = x.g
+  labels          = x.node_labels
+  species_styles  = x.species_styles
+  reaction_styles = x.reaction_styles
+  edge_labels     = x.edge_labels
 
-function default_mime()
-    "image/svg+xml"
-end
-
-import Base: display
-import Base.REPL: REPLDisplay
-import Base.Multimedia: @try_display, xdisplayable
-
-function display(p::PetriNet)
-    displays = Base.Multimedia.displays
-    for i = length(displays):-1:1
-        m = default_mime()
-        if xdisplayable(displays[i], m, p)
-             @try_display return display(displays[i], m, p)
-        end
-
-        if xdisplayable(displays[i], p)
-            @try_display return display(displays[i], p)
-        end
-    end
-    invoke(display,(Any,),p)
-end
-
-function display(d::REPLDisplay, ::MIME"image/svg+xml", p::PetriNet)
-    filename = string(tempname(), ".svg")
-    output = open(filename, "w")
-    GraphViz.writemime(output, "image/svg+xml", p.g)
-    close(output)
-    open_file(filename)
-end
-
-function open_file(filename)
-    if OS_NAME == :Darwin
-        run(`open $(filename)`)
-    elseif OS_NAME == :Linux || OS_NAME == :FreeBSD
-        run(`xdg-open $(filename)`)
-    elseif OS_NAME == :Windows
-        run(`$(ENV["COMSPEC"]) /c start $(filename)`)
-    else
-        warn("Showing petri nets is not supported on OS $(string(OS_NAME))")
-    end
+  TikzGraphs.plot(graph,
+    labels,
+    node_styles = merge(species_styles, reaction_styles),
+    edge_labels = edge_labels,
+    edge_style  = "bend left"
+  )
 end
