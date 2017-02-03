@@ -78,6 +78,8 @@ function draw(x :: PetriNet)
   reaction_styles = x.reaction_styles
   edge_labels     = x.edge_labels
 
+  labels = map(x -> replace(x, "_", "\$\\cdot\$"), labels)
+
   TikzGraphs.plot(graph,
     labels,
     node_styles = merge(species_styles, reaction_styles),
