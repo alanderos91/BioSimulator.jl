@@ -1,13 +1,13 @@
 function extract_index_ids(id2ind, select)
     if isempty(select)
         ix  = collect(values(id2ind))
-        ids = collect(keys(id2ind))
+        ids = map(string, collect(keys(id2ind)))
     else
-        ix  = Int[ id2ind[symbol(id)] for id in select ]
-        ids = map(symbol, select)
+        ix  = Int[ id2ind[Symbol(id)] for id in select ]
+        ids = map(string, select)
     end
 
-    return ix, ids
+    return ix, reshape(ids, 1, length(ids))
 end
 
 @userplot MeanTrajectory
@@ -16,16 +16,16 @@ end
     t, μ, σ, ids = meanplot(mt.args[1], select)
 
     # global attributes
-    legend -->  true
-    grid   --> false
-    xguide --> "time"
-    yguide --> "population mean"
-    xlims  --> (t[1], t[end])
-    ylims  --> (0.0, Inf)
-    fillalpha --> 0.3
+    legend     --> true
+    grid       --> false
+    xguide     --> "time"
+    yguide     --> "population mean"
+    xlims      --> (t[1], t[end])
+    ylims      --> (0.0, Inf)
+    fillalpha  --> 0.3
     seriestype --> :path
-    label --> ids'
-    ribbon --> σ
+    label      --> ids
+    ribbon     --> σ
 
     t, μ
 end
@@ -57,7 +57,7 @@ end
     xguide --> "population"
     yguide --> "frequency"
     seriestype --> :histogram
-    label --> ids'
+    label --> ids
 
     counts
 end
