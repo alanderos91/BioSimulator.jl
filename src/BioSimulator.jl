@@ -6,9 +6,8 @@ using Reexport
 @reexport using Plots
 @reexport using DataFrames
 
-# using TikzGraphs
-# using TikzPictures
-# using LightGraphs
+import TikzGraphs: plot
+import LightGraphs: DiGraph, add_edge!
 
 import Iterators: product
 

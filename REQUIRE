@@ -1,6 +1,8 @@
-julia 0.4
+julia 0.5
 Distributions
 Reexport
 Plots
 DataFrames
 Iterators
+TikzGraphs
+LightGraphs
