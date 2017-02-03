@@ -14,4 +14,5 @@ pipelines:
           - julia -e 'Pkg.clone(pwd(), "BioSimulator")'
           - julia -e 'Pkg.test("BioSimulator")'
           - julia -e 'Pkg.add("Documenter"); Pkg.update()'
+          - julia -e 'using Plots'
           - julia -e 'cd(Pkg.dir("BioSimulator")); include(joinpath("docs", "make.jl"))'
