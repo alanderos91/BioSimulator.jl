@@ -8,6 +8,12 @@
 
 ## Installation
 
+`BioSimulator` is not yet registered and must be installed with `Pkg.clone`:
+
+```julia
+Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git")
+```
+
 ## Documentation
 
 - [**STABLE**][docs-stable-url] &mdash; **most recently tagged version of the documentation.**
