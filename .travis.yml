@@ -1,7 +1,5 @@
 language: julia
 
-sudo: required
-
 os:
   - linux
 
@@ -10,13 +8,6 @@ julia:
 
 notifications:
   email: false
-  
-before_install:
-  - sudo apt-get install -y pdf2svg
-  - sudo apt-get install -y texlive-latex-base
-  - sudo apt-get install -y texlive-binaries
-  - sudo apt-get install -y texlive-pictures
-  - sudo apt-get install -y texlive-latex-extra
 
 after_success:
   - julia -e 'Pkg.add("Documenter"); Pkg.add("JSON")'

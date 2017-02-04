@@ -18,7 +18,7 @@ using BioSimulator
   model <= Reaction("immigration", 0.5, "0 --> X")
 
   fig = draw(petri_net(model))
-  using TikzPictures; save(SVG("./kendall_fig"), fig) # hide
+  using TikzPictures; save(SVG("kendall_fig"), fig) # hide
 ```
 ![](kendall_fig.svg)
 
@@ -56,7 +56,7 @@ Michaelis-Menten enzyme kinetics is a stepwise process combining first- and seco
   model <= Reaction("Conversion", 0.1, "SE --> P + E")
 
   fig = draw(petri_net(model))
-  using TikzPictures; save(SVG("./mmek_fig"), fig) # hide
+  using TikzPictures; save(SVG("mmek_fig"), fig) # hide
 ```
 ![](mmek_fig.svg)
 
@@ -111,7 +111,7 @@ The influence of noise at the cellular level is difficult to capture in determin
   model = autoreg()
 
   fig = draw(petri_net(model))
-  using TikzPictures; save(SVG("./gene_fig"), fig) # hide
+  using TikzPictures; save(SVG("gene_fig"), fig) # hide
 ```
 ![](gene_fig.svg)
 
