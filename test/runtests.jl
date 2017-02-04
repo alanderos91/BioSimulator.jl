@@ -23,7 +23,7 @@ tests = ["mass_action",
          "sort",
          #"kendall",
          "linear",
-         "independent",
+         #"independent",
          "sir"]
 
 println("Running tests:")
