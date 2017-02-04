@@ -1,7 +1,7 @@
 site_name:        BioSimulator.jl
-repo_url:         https://bitbucket.com/alanderos/BioSimulator.jl
+repo_url:         https://github.com/alanderos91/BioSimulator.jl
 site_description: A stochastic simulation framework in Julia.
-site_author:      alanderos
+site_author:      alanderos91
 
 theme: readthedocs
 
