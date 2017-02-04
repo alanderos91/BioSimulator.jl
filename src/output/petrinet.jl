@@ -87,3 +87,5 @@ function draw(x :: PetriNet)
     edge_style  = "bend left"
   )
 end
+
+visualize(x :: Network) = draw(petri_net(x))
