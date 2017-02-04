@@ -22,7 +22,7 @@ Examples of such systems include gene expression networks, tumor suppressor path
 `BioSimulator` is not yet registered and must be installed with `Pkg.clone`:
 
 ```julia
-Pkg.clone("https://alanderos@bitbucket.org/alanderos/biosimulator.jl.git")
+Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git")
 ```
 
 This package supports Julia `0.5`.
