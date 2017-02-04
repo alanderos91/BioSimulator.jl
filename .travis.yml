@@ -13,7 +13,9 @@ notifications:
   
 before_install:
   - sudo apt-get install -y pdf2svg
+  - sudo apt-get install -y texlive-latex-base
+  - sudo apt-get install -y texlive-binaries
 
 after_success:
-  - julia -e 'Pkg.add("Documenter")'
+  - julia -e 'Pkg.add("Documenter"); Pkg.add("JSON")'
   - julia -e 'cd(Pkg.dir("BioSimulator")); include(joinpath("docs", "make.jl"))'
