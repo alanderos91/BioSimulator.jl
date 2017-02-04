@@ -13,8 +13,8 @@ makedocs(
     "Modeling"   => "man/modeling.md",
     "Algorithms" => "man/algorithms.md",
     "Examples"   => "man/examples.md",
-    "Benchmarks" => [],
-    "Developers" => []
+    "Benchmarks" => "man/benchmarks.md",
+    "Developers" => "man/developers.md"
   ]
 )
 
