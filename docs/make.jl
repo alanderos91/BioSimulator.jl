@@ -19,8 +19,8 @@ makedocs(
 )
 
 deploydocs(
-  repo   = "bitbucket.com/alanderos/biosimulator.jl.git",
+  repo   = "github.com/alanderos91/BioSimulator.jl.git",
   target = "build",
-  deps   = nothing,
-  make   = nothing
+  julia  = "0.5",
+  latest = "develop"
 )
