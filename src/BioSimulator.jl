@@ -6,10 +6,9 @@ using Reexport
 @reexport using Plots
 @reexport using DataFrames
 
-using TikzGraphs
-using LightGraphs
-
-import Iterators: product
+import TikzGraphs
+using LightGraphs: DiGraph, add_edge!
+using Iterators: product
 
 import Base: (<=),
              (>=),
@@ -54,7 +53,7 @@ export SSA, FRM, NRM, ODM, SAL
 
 # Output
 include(joinpath("output","partial_history.jl"))
-# include(joinpath("output","petrinet.jl"))
+include(joinpath("output","petrinet.jl"))
 include(joinpath("output","plot.jl"))
 
 export get_dataframe, save_data, petri_net, draw

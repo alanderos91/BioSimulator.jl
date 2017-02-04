@@ -17,6 +17,10 @@ using BioSimulator
   model <= Reaction("death", 1.0, "X --> 0")
   model <= Reaction("immigration", 0.5, "0 --> X")
 
+  draw(petri_net(model))
+```
+
+```@example kendall
   result = simulate(model, algorithm=SSA, time=4.0, epochs=40, trials=1000)
 
   plot(
@@ -46,9 +50,13 @@ Michaelis-Menten enzyme kinetics is a stepwise process combining first- and seco
   model <= Species("P",   0)
 
   model <= Reaction("Binding", 0.00166, "S + E --> SE")
-  model <= Reaction("Disociation", 0.0001, "SE --> S + E")
+  model <= Reaction("Dissociation", 0.0001, "SE --> S + E")
   model <= Reaction("Conversion", 0.1, "SE --> P + E")
 
+  draw(petri_net(model))
+```
+
+```@example mmek
   result = simulate(model, algorithm=SSA, time=50.0, epochs=100, trials=1000)
 
   plot(
@@ -98,6 +106,10 @@ The influence of noise at the cellular level is difficult to capture in determin
 
   model = autoreg()
 
+  draw(petri_net(model))
+```
+
+```@example gene
   result = simulate(model, algorithm=SSA, time=1000.0, epochs=500, trials=100)
 
   plot(
