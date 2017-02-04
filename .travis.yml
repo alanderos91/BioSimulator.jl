@@ -1,5 +1,7 @@
 language: julia
 
+sudo: required
+
 os:
   - linux
 
@@ -8,6 +10,9 @@ julia:
 
 notifications:
   email: false
+  
+before_install:
+  - sudo apt-get install -y pdf2svg
 
 after_success:
   - julia -e 'Pkg.add("Documenter")'
