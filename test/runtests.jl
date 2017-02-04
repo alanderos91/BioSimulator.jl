@@ -21,7 +21,7 @@ tests = ["mass_action",
          "time_derivatives",
          "network",
          "sort",
-         "kendall",
+         #"kendall",
          "linear",
          "independent",
          "sir"]
