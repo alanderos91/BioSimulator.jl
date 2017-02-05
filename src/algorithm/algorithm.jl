@@ -51,7 +51,7 @@ A `TauLeapMethod` is an abstract type for algorithms that utilize the `τ-leapin
 It subtypes the `Algorithm` type and provides:
 
 - `events` : Returns the number of reaction events.
-- `reset!` : This method defaults to resetting the interal simulation time for a `TauLeapMethod` after each trial.
+- `reset!` : This method defaults to resetting the internal simulation time for a `TauLeapMethod` after each trial.
 """
 abstract TauLeapMethod <: Algorithm
 
