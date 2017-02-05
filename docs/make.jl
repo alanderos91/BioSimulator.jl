@@ -14,7 +14,8 @@ makedocs(
     "Algorithms" => "man/algorithms.md",
     "Examples"   => "man/examples.md",
     "Benchmarks" => "man/benchmarks.md",
-    "Developers" => "man/developers.md"
+    "Developers" => "man/developers.md",
+    "References" => "man/references.md"
   ]
 )
 
