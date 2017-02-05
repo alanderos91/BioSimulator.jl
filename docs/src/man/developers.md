@@ -1,5 +1,9 @@
 # Developers
 
+```@meta
+CurrentModule = BioSimulator
+```
+
 ## The `simulate` Routine
 
 The flexibility of the `simulate` routine allows one to easily implement additional algorithms:
