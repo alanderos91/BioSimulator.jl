@@ -3,16 +3,15 @@
 ```@meta
 CurrentModule = BioSimulator
 ```
-
-## Interface
+## Creating a Model
 
 The `Network` type is the starting point of the modeling process in `BioSimulator`. It represents a collection related `Species` that interact through the rules defined by `Reaction`s.
+
+### Interface
 
 ```@docs
   Network
 ```
-
-A `Species` is simply a named quantity that represents a population.
 
 ```@docs
   Species
@@ -22,19 +21,21 @@ A `Species` is simply a named quantity that represents a population.
   Reaction
 ```
 
-## Creating a Model
-
 ## Running Simulations
+
+```@docs
+  simulate
+```
 
 ## Visualizing Results
 
-Simulation output is stored within a `PartialHistory` as a 3D array where
+Simulation output is stored as a 3D array within a `PartialHistory` type where
 
-- the *x* dimension spans the species in the `Network`,
-- the *y* dimension spans the epochs sampled, and
-- the *z* dimension spans the number of trials.
+- the *i* dimension spans the species in the `Network`,
+- the *j* dimension spans the epochs sampled, and
+- the *k* dimension spans the number of trials.
 
-`BioSimulator` provides convenience methods to quickly visualize sample and mean trajectories, distributions, and phase plots via the `Plots` package.
+`BioSimulator` provides quick visualizations of sample and mean trajectories, distributions, and phase plots via the `Plots` package. Please see the [Examples](examples.html) page for specific examples.
 
 ## Manipulating and Exporting Data
 
@@ -42,4 +43,4 @@ Manipulating the simulation data directly can be cumbersome. `BioSimulator` uses
 
 ## GUI Generation
 
-`BioSimulator` provides **experimental** automatic graphical user interface generation. One simply specifies the fields that should be exposed in the interface while providing defaults for any outstanding fields.
+`BioSimulator` provides **experimental** automatic graphical user interface generation. One must specify the parameters to expose in the interface and provide default values where necessary.
