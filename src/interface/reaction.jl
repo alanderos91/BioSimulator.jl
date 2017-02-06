@@ -33,6 +33,8 @@ type Reaction
     end
     return new(string(name), rate, reactants, products)
   end
+
+  Reaction(name, rate, reactants, products) = new(string(name), rate, reactants, products)
 end
 
 function Base.show(io::IO, x::Reaction)
