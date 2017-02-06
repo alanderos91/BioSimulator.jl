@@ -1,10 +1,12 @@
-# species widgets
+const ALGORITHMS = [SSA, FRM, NRM, ODM, SAL]
+const PLOT_TYPES = ["Mean Trajectory", "Histogram"]
+
 function make_species_widgets(model, list_of_species)
   species = species_list(model)
   species_controls = Interact.Textbox{Int64}[]
 
   for key in list_of_species
-    s   = species[symbol(key)]
+    s   = species[Symbol(key)]
     val = s.population
     box = textbox(value=val, label=key)
     push!(species_controls, box)
@@ -31,7 +33,7 @@ function make_reaction_widgets(model, list_of_reactions)
   reaction_controls = Interact.Textbox{Float64}[]
 
   for key in list_of_reactions
-    r   = reactions[symbol(key)]
+    r   = reactions[Symbol(key)]
     val = r.rate
     box = textbox(value=val, label="$key")
     push!(reaction_controls, box)
@@ -42,7 +44,7 @@ end
 
 function add_reaction_callback(gui, reaction_controls)
   for ctrl in reaction_controls
-    r    = reaction_list(value(gui))[symbol(ctrl.label)]
+    r    = reaction_list(value(gui))[Symbol(ctrl.label)]
     id   = r.id
     reac = r.reactants
     prod = r.products
@@ -58,69 +60,88 @@ end
 
 function init_and_simulate(vars)
   model  = vars[1]
-  algnm  = vars[2]
+  algo   = vars[2]
   time   = vars[3]
   trials = vars[4]
   epochs = vars[5]
 
-  algorithm = algnm(end_time=time)
-
-  return simulate(model, algorithm, sampling_interval=time/epochs, nrlz=trials)
-end
-
-function make_visualization(fplot::Function, result, selected)
-  return fplot(result, select=[selected])
+  return simulate(model, algo, time=time, epochs=epochs, trials=trials)
 end
 
 function generate_gui(model::Network, list_of_species, list_of_reactions)
-  # make the Network into a signal
-  m_sig = Signal(model)
+    # make the Network into a signal
+    m_sig = Signal(model)
 
-  # make species controls
-  swidgs = make_species_widgets(value(m_sig), list_of_species)
+    # make species controls
+    swidgs = make_species_widgets(value(m_sig), list_of_species)
 
-  # make reaction rate controls
-  rwidgs = make_reaction_widgets(value(m_sig), list_of_reactions)
+    # make reaction rate controls
+    rwidgs = make_reaction_widgets(value(m_sig), list_of_reactions)
 
-  # make algorithm controls
-  runbtn = button("Run")
+    # make algorithm controls
+    runbtn = button("Run")
 
-  sel_alg    = dropdown(ALGORITHMS)
-  set_time   = textbox(value=1.0, label="time")
-  set_trials = textbox(value=1,   label="trials")
-  set_epochs = textbox(value=1,   label="epochs")
+    sel_alg    = dropdown(ALGORITHMS, label="algorithm")
+    set_time   = textbox(value=1.0,   label="time")
+    set_trials = textbox(value=1,     label="trials")
+    set_epochs = textbox(value=1,     label="epochs")
 
-  # display everything so far
-  map(display, swidgs)
-  map(display, rwidgs)
-  display(sel_alg)
-  display(set_time)
-  display(set_trials)
-  display(set_epochs)
-  display(runbtn)
+    # display everything so far
+    map(display, swidgs)
+    map(display, rwidgs)
+    display(sel_alg)
+    display(set_time)
+    display(set_trials)
+    display(set_epochs)
+    display(runbtn)
 
-  add_species_callback(m_sig, swidgs)
-  add_reaction_callback(m_sig, rwidgs)
+    add_species_callback(m_sig, swidgs)
+    add_reaction_callback(m_sig, rwidgs)
 
-  # couple updates with a button click
-  vars = map((m, alg, t, k, n) -> (m, alg, t, k, n),
-  signal(m_sig), signal(sel_alg), signal(set_time), signal(set_trials), signal(set_epochs))
+    # couple updates with a button click
+    vars = map((m, alg, t, k, n) -> (m, alg, t, k, n),
+    signal(m_sig), signal(sel_alg), signal(set_time), signal(set_trials), signal(set_epochs))
 
-  update_sig = sampleon(signal(runbtn), vars)
-  result = map(init_and_simulate, signal(update_sig))
+    update_sig = sampleon(signal(runbtn), vars)
+    result = map(init_and_simulate, signal(update_sig))
 
-  # make plot type control
-  sel_plot = dropdown(PLOT_TYPES)
+    return result
+end
 
-  # make visualization control
-  sel_species = dropdown(collect(keys(value(result).id2ind)))
-  sel_epoch      = textbox(value=1, label="epoch no.")
+function plot_interface(result)
+    # make visualization controls
+    sel_plot    = dropdown(PLOT_TYPES, label="Plot:")
+    sel_species = dropdown(collect(keys(value(result).id2ind)), label="Selected Species:")
+    sel_epoch   = dropdown(collect(value(result).t), label="Selected Time:")
+    plt_btn     = button("Plot")
 
-  display(sel_plot)
-  display(sel_species)
+    display(sel_plot)
+    display(sel_species)
+    display(sel_epoch)
+    display(plt_btn)
 
-  # couple result to visualization
-  viz = map(make_visualization, signal(sel_plot), signal(result), signal(sel_species))
+    # couple result to visualization
+    vars = map( (r, t, s, p) -> (r, t, s, p),
+        signal(result),
+        signal(sel_epoch),
+        signal(sel_species),
+        signal(sel_plot)
+    )
+    update_sig = sampleon(signal(plt_btn), vars)
+    viz = map(make_visualization, signal(update_sig))
 
-  return viz
+    return viz
+end
+
+function make_visualization(vars)
+    result   = vars[1]
+    time     = vars[2]
+    selected = vars[3]
+    ftype    = vars[4]
+
+    if ftype == "Mean Trajectory"
+        meantrajectory(result, select=[selected])
+    elseif ftype == "Histogram"
+        freqhistogram(result, time, select=[selected])
+    end
 end
