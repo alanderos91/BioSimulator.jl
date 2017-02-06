@@ -3,21 +3,23 @@ import Base.Order: ForwardOrdering
 
 """
 ```
-NRM(end_time=1.0)
+NRM
 ```
 
-Gibson and Bruck's Next Reaction Method, statistically equivalent to the original `SSA`. Provides better computational efficiency on networks with loosely connected reactions.
+Gibson and Bruck's Next Reaction Method, statistically equivalent to `SSA`. It provides better computational efficiency on networks with loosely connected reactions.
 
-### Arguments
-- `end_time`: The end time for the simulation.
+### Internals
+- `end_time`: The termination time, supplied by a user.
+- `t`: The current simulation time.
+- `pq`: A priority queue that sorts reaction according to the their next firing times.
 """
 type NRM <: ExactMethod
   # parameters
   end_time :: Float64
 
   # state variables
-  t            :: Float64
-  pq           :: PriorityQueue{Int,Float64,ForwardOrdering}
+  t        :: Float64
+  pq       :: PriorityQueue{Int,Float64,ForwardOrdering}
 
   # statistics
 
@@ -26,12 +28,7 @@ type NRM <: ExactMethod
   end
 end
 
-function NRM(;end_time=0.0, na...)
-  if end_time == 0.0
-    error("end_time argument must be positive.")
-  end
-  return NRM(end_time)
-end
+NRM(end_time; na...) = NRM(end_time)
 
 get_reaction_times(algorithm::NRM) = algorithm.pq
 
@@ -44,6 +41,7 @@ function init!(algorithm::NRM, Xt, r)
 
   for j in eachindex(a)
     pq[j] = zero(eltype(a))
+    # This is a check for reactions with constant propensities. We do not need to update their propensities, but we do need to update their putative times.
     if j ∉ dg[j]
       push!(dg[j], j)
     end

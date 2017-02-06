@@ -1,5 +1,10 @@
-julia 0.4
+julia 0.5
 Distributions
 Reexport
 Plots
-GraphViz
+DataFrames
+Iterators
+TikzGraphs
+LightGraphs
+Interact
+Reactive

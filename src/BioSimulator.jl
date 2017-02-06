@@ -1,13 +1,16 @@
-__precompile__(true)
-
 module BioSimulator
 
 using Distributions
 using Reexport
+using Interact
+using Reactive
 
 @reexport using Plots
+@reexport using DataFrames
 
-using GraphViz
+import TikzGraphs
+using LightGraphs: DiGraph, add_edge!
+using Iterators: product
 
 import Base: (<=),
              (>=),
@@ -23,20 +26,9 @@ import Base: (<=),
              enumerate,
              fill!
 
-const ALGORITHMS = [:ODM, :SSA, :FRM, :NRM, :SAL]
-
-# Interface
-include(joinpath("interface","species.jl"))
-include(joinpath("interface","reaction.jl"))
-include(joinpath("interface","network.jl"))
-
-export Species, Reaction, Network,
-             n_species, n_reactions, species_list, reaction_list
-
 # Backend
 include(joinpath("backend","pvec.jl"))
 include(joinpath("backend","reactionsystem.jl"))
-include(joinpath("backend","util.jl"))
 include(joinpath("backend","dense.jl"))
 include(joinpath("backend","sparse.jl"))
 
@@ -50,14 +42,25 @@ include(joinpath("algorithm","sal.jl"))
 
 export SSA, FRM, NRM, ODM, SAL
 
+# Interface
+include(joinpath("interface","species.jl"))
+include(joinpath("interface","reaction.jl"))
+include(joinpath("interface","network.jl"))
+include(joinpath("interface","gui.jl"))
+include(joinpath("backend","util.jl"))
+
+export Species, Reaction, Network,
+             n_species, n_reactions, species_list, reaction_list
+
+export generate_gui, plot_interface
+
 # Output
 include(joinpath("output","partial_history.jl"))
-include(joinpath("output","plot.jl"))
 include(joinpath("output","petrinet.jl"))
+include(joinpath("output","plot.jl"))
 
-export petrinet, get_data, get_metadata, save_data
+export get_dataframe, save_data, visualize
 
-# Simulate
 include(joinpath("interface","simulate.jl"))
 
 export simulate

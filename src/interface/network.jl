@@ -5,34 +5,34 @@ import Base.show
 Network(id)
 ```
 
-Constructs an empty `Network` that models a system of interacting particles. A particle is represented by a `Species`; an interaction is represented by a `Reaction`. Model parameters (e.g. an intrinsic birth rate) are represented by a `Parameter` type.
+Construct an empty `Network` representing a system of interacting particles. A particle is represented by a `Species`, and an interaction is represented by a `Reaction`.
 
-Adding a `Species`, `Reaction`, or `Parameter` is done using the `<=` operator:
+Add a `Species` or `Reaction` using `<=`:
 
 ```
 m <= Species("X", 100) # Adds a Species
-m <= Reaction("birth", 2.0, :(X --> X + X)) # Adds a Reaction
+m <= Reaction("birth", 2.0, "X --> X + X")
 ```
 
-A fully specified `Network` model is simulated by calling `simulate`:
+Simulate a `Network` by calling `simulate`:
 
 ```
-simulate(m, SSA(4.0))
+simulate(m, SSA, time=1000.0, epochs=1000, trials=100)
 ```
 
-A `Network` is visualized by calling `petrinet`:
+Visualize a `Network` as a Petri net:
 
 ```
-petrinet(m)
+visualize(m)
 ```
 
-See also: `Species`, `Reaction`, `Parameter`, `simulate`, `petrinet`
+See also: `Species`, `Reaction`, `simulate`, `visualize`
 
 ### Arguments
-`id`: An string identifier for the `Network`.
+- `id`: An string identifier for the `Network`.
 """
 type Network
-  id :: UTF8String
+  id :: String
 
   species_list   :: Dict{Symbol,Species}
   reaction_list  :: Dict{Symbol,Reaction}
@@ -41,11 +41,14 @@ type Network
     s = Dict{Symbol,Species}()
     r = Dict{Symbol,Reaction}()
 
-    return new(UTF8String(id), s, r)
+    return new(string(id), s, r)
   end
 end
 
+"Retrieve `Species` from a `Network`."
 species_list(x::Network)   = x.species_list
+
+"Retrieve `Reaction`s from a `Network`."
 reaction_list(x::Network)  = x.reaction_list
 
 n_species(x::Network)    = length(species_list(x))
@@ -60,7 +63,7 @@ end
 function add_object!(model, object, fieldname)
   dict = getfield(model, fieldname)
   id   = object.id
-  setindex!(dict, object, symbol(id))
+  setindex!(dict, object, Symbol(id))
   return model
 end
 
@@ -83,7 +86,7 @@ end
 function validate(participants, model)
   species_dict = species_list(model)
   for species in keys(participants)
-    if !haskey(species_dict, symbol(species))
+    if !haskey(species_dict, Symbol(species))
       error("$(species) is not defined.")
     end
   end
