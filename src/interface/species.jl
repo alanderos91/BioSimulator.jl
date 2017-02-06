@@ -20,7 +20,7 @@ type Species
 end
 
 id(x::Species) = x.id
-value(x::Species) = x.population
+population(x::Species) = x.population
 
 function Base.show(io::IO, x::Species)
   println(io, x.population)
