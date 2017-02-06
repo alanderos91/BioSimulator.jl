@@ -23,7 +23,6 @@ deploydocs(
   repo   = "github.com/alanderos91/BioSimulator.jl.git",
   target = "build",
   julia  = "0.5",
-  latest = "develop",
   deps   = nothing,
   make   = nothing
 )
