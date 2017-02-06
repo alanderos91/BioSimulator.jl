@@ -1,0 +1,23 @@
+\documentclass[tikz]{standalone}
+\usepackage{fontspec}
+\setmainfont{Latin Modern Math}
+\usetikzlibrary{graphs}
+\usetikzlibrary{graphdrawing}
+
+\usegdlibrary{layered}
+\begin{document}
+\begin{tikzpicture}[]
+\graph [layered layout, ] {
+1/"X" [,draw, rounded corners, fill=blue!10],
+2/"immigration" [,draw, rounded corners, fill=red!10],
+3/"birth" [,draw, rounded corners, fill=red!10],
+4/"death" [,draw, rounded corners, fill=red!10],
+;
+1 -> [bend left,] 3;
+1 -> [bend left,] 4;
+2 -> [bend left,] 1;
+3 -> [bend left,edge label={2},] 1;
+};
+
+\end{tikzpicture}
+\end{document}
