@@ -1,0 +1,46 @@
+\documentclass[tikz]{standalone}
+\usepackage{fontspec}
+\setmainfont{Latin Modern Math}
+\usetikzlibrary{graphs}
+\usetikzlibrary{graphdrawing}
+
+\usegdlibrary{layered}
+\begin{document}
+\begin{tikzpicture}[]
+\graph [layered layout, ] {
+1/"P2" [,draw, rounded corners, fill=blue!10],
+2/"RNA" [,draw, rounded corners, fill=blue!10],
+3/"P" [,draw, rounded corners, fill=blue!10],
+4/"P2$\cdot$gene" [,draw, rounded corners, fill=blue!10],
+5/"gene" [,draw, rounded corners, fill=blue!10],
+6/"dimerization" [,draw, rounded corners, fill=red!10],
+7/"repression binding" [,draw, rounded corners, fill=red!10],
+8/"reverse repression binding" [,draw, rounded corners, fill=red!10],
+9/"transcription" [,draw, rounded corners, fill=red!10],
+10/"RNA degradation" [,draw, rounded corners, fill=red!10],
+11/"dissociation" [,draw, rounded corners, fill=red!10],
+12/"protein degradation" [,draw, rounded corners, fill=red!10],
+13/"translation" [,draw, rounded corners, fill=red!10],
+;
+1 -> [bend left,] 7;
+1 -> [bend left,] 11;
+2 -> [bend left,] 10;
+2 -> [bend left,] 13;
+3 -> [bend left,edge label={2},] 6;
+3 -> [bend left,] 12;
+4 -> [bend left,] 8;
+5 -> [bend left,] 7;
+5 -> [bend left,] 9;
+6 -> [bend left,] 1;
+7 -> [bend left,] 4;
+8 -> [bend left,] 1;
+8 -> [bend left,] 5;
+9 -> [bend left,] 2;
+9 -> [bend left,] 5;
+11 -> [bend left,edge label={2},] 3;
+13 -> [bend left,] 2;
+13 -> [bend left,] 3;
+};
+
+\end{tikzpicture}
+\end{document}
