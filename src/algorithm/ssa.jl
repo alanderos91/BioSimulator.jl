@@ -1,15 +1,13 @@
 """
 ```
-SSA(end_time=1.0)
+SSA
 ```
 
-Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and species by:
+Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and species by computing the time to the next reaction and searching on the CMF.
 
-1. computing the time to the next reaction as an exponential deviate
-2. selecting the next reaction to fire using a reverse CMF search (chop-down method)
-
-### Arguments
-- `tf`: The end time for the simulation.
+### Internals
+- `end_time`: The termination time, supplied by a user.
+- `t`: The current simulation time.
 """
 type SSA <: ExactMethod
   # parameters
@@ -27,12 +25,7 @@ type SSA <: ExactMethod
   end
 end
 
-function SSA(;end_time=0.0, na...)
-  if end_time == 0.0
-    error("end_time argument must be positive.")
-  end
-  return SSA(end_time)
-end
+SSA(end_time; na...) = SSA(end_time)
 
 set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 

@@ -14,7 +14,7 @@ i = 5
 t = 4.0
 n = 100
 u = 5357
-m = 100_000
+m = 1_000 # for a real test, use 100_000
 
 model = kendall(i, α, μ, ν)
 

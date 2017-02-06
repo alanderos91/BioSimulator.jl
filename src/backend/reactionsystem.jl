@@ -7,6 +7,19 @@
   dependencies  :: Vector{Vector{Int}}
 =#
 
+"""
+```
+AbstractReactionSystem
+```
+
+An `AbstractReactionSystem` represents the underlying reactions in a system of interacting particles.
+
+`stoichiometry`: A net stoichiometric matrix that describes how each species (rows) changes when a reaction fires (columns).
+`coefficients`: A stoichiometric matrix for the reactants.
+`scaled_rates`: A vector of reaction rates, scaled by any additional coefficients (e.g. if the reaction `X + X --> X2` has rate `k`, then its mass-action propensity is `0.5 * k * X * (X - 1)` and the scaled rate is `0.5 * k`.)
+`propensities`: A `PropensityVector` that caches each reaction propensity as well as their running sum.
+`dependencies`: An adjacency matrix that represents how a given reaction's propensity depends on the other reactions.
+"""
 abstract AbstractReactionSystem
 
 stoichiometry(r::AbstractReactionSystem) = r.stoichiometry

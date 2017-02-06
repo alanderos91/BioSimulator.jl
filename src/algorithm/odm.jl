@@ -1,13 +1,13 @@
 """
 ```
-ODM(end_time=1.0, n_steps=1000)
+ODM
 ```
 
-Optimized Direct Method. Same as `SSA`, except the system is presimulated to sort reaction propensities from increasing to decreasing. This improves the search on the CMF when selecting the next reaction to fire.
+Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF when selecting the next reaction to fire.
 
-### Arguments
-- `end_time`: The simulation end time.
-- `n_steps`: Number of time steps to presimulate.
+### Internals
+- `end_time`: The termination time, supplied by a user.
+- `t`: The current simulation time.
 """
 type ODM <: ExactMethod
   # parameters
@@ -23,12 +23,7 @@ type ODM <: ExactMethod
   end
 end
 
-function ODM(;end_time=0.0, na...)
-  if end_time == 0.0
-    error("end_time argument must be positive.")
-  end
-  return ODM(end_time)
-end
+ODM(end_time; na...) = ODM(end_time)
 
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 
@@ -38,7 +33,7 @@ function init!(algorithm::ODM, Xt, r)
   presimulate!(reaction_events, Xt, r, end_time(algorithm))
 
   ix = sortperm(reaction_events)
-  sort!(r, ix)
+  _sort!(r, ix)
 
   return nothing
 end
@@ -92,9 +87,8 @@ function presimulate!(
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
         update_propensities!(a, r, Xt, μ)
+        reaction_events[μ] = reaction_events[μ] + 1
       end
-
-      reaction_events[μ] = reaction_events[μ] + 1
     else
       break
     end
@@ -103,7 +97,7 @@ function presimulate!(
   return reaction_events
 end
 
-@inbounds function sort!(r, ix)
+@inbounds function _sort!(r, ix)
   V  = stoichiometry(r)
   U  = coefficients(r)
   k  = scaled_rates(r)
