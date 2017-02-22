@@ -80,7 +80,7 @@ end
 @userplot SampleTrajectory
 
 @recipe function plot(st::SampleTrajectory; nrlz=1)
-    t, x, id = trajplot(st.args..., nrlz)
+    t, x, id = trajplot(st.args[1], st.args[2], nrlz)
 
     # global attributes
     legend -->  true
@@ -90,7 +90,7 @@ end
     title --> id
 
     seriestype --> :steppre
-    label --> transpose([ "realization $(i)" for i in 1:nrlz ])
+    label --> reshape([ "trial $(i)" for i in 1:nrlz ], 1, length(1:nrlz))
 
     t, x
 end
@@ -102,7 +102,9 @@ function trajplot(result::PartialHistory, select, n)
 
     ix, ids = extract_index_ids(id2ind, [select])
 
-    x = result[ids[1]][:, 1:n]
+    d1 = length(t)
+    d2 = length(1:n)
+    x  = reshape(data[ix, :, 1:n], d1, d2)
 
     return t, x, ids[1]
 end
@@ -121,7 +123,7 @@ end
     for i in 1:nrlz
         @series begin
             seriestype --> :path
-            label --> "realization $(i)"
+            label --> "trial $(i)"
             x := x[:, i]
             y := y[:, i]
             ()

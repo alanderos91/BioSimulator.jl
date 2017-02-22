@@ -57,9 +57,9 @@ export generate_gui, plot_interface
 # Output
 include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
-include(joinpath("output","plot.jl"))
+#include(joinpath("output","plot.jl"))
 
-export get_dataframe, save_data, visualize
+#export get_dataframe, save_data, visualize
 
 include(joinpath("interface","simulate.jl"))
 
