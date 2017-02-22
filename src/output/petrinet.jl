@@ -84,7 +84,7 @@ function draw(x :: PetriNet)
     labels,
     node_styles = merge(species_styles, reaction_styles),
     edge_labels = edge_labels,
-    edge_style  = "bend left"
+    edge_style = "-stealth, relative=true, out=45"
   )
 end
 
