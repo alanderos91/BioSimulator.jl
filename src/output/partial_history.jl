@@ -1,13 +1,12 @@
 immutable SimData{T}
-  data :: T
+  data    :: T
+  t_index :: LinSpace{Float64}
 end
 
 get_data(output :: SimData) = output.data
 
-function Base.setindex!(output :: SimData, inds...)
-  data = get_data(output)
-  setindex!(data, inds...)
-end
+Base.getindex(output :: SimData, inds...) = getindex(output.data, inds...)
+Base.setindex!(output :: SimData, inds...) = setindex!(output.data, inds...)
 
 @inbounds function update!(
     output    :: SimData,

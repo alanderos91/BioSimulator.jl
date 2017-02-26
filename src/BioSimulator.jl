@@ -59,7 +59,7 @@ include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
 #include(joinpath("output","plot.jl"))
 
-#export get_dataframe, save_data, visualize
+export visualize
 
 include(joinpath("interface","simulate.jl"))
 
