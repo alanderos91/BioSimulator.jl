@@ -8,10 +8,10 @@ get_data(output :: SimData) = output.t_index, output.data
 
 @inline function Base.getindex(output :: SimData, key :: Symbol)
   index = output.id2ind[key]
-  return output.t_index, output.data[index, :, :]
+  return output.data[index, :, :]
 end
 
-Base.getindex(output :: SimData, key :: AbstractString) = getindex(output, symbol(key))
+Base.getindex(output :: SimData, key :: AbstractString) = getindex(output, Symbol(key))
 Base.getindex(output :: SimData, inds...)  = getindex(output.data, inds...)
 Base.setindex!(output :: SimData, inds...) = setindex!(output.data, inds...)
 
