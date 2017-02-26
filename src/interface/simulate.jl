@@ -48,7 +48,7 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
 
   # simulation
   @sync for pid in procs(output.data)
-    @async remotecall_fetch(pid, simulate_shared_chunk!, output, xt, x0, alg, rxn, t_index)
+    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn, t_index)
   end
 
   return output
