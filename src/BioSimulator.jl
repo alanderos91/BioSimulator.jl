@@ -10,7 +10,6 @@ using Reactive
 
 import TikzGraphs
 using LightGraphs: DiGraph, add_edge!
-using Iterators: product
 
 import Base: (<=),
              (>=),
@@ -59,7 +58,7 @@ include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
 #include(joinpath("output","plot.jl"))
 
-export visualize
+export get_dataframe, visualize
 
 include(joinpath("interface","simulate.jl"))
 

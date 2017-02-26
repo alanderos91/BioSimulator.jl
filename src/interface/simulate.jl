@@ -37,18 +37,21 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
 
   # create simulation data structures
   x0, rxn, id, id2ind = make_datastructs(species, reactions, c, d)
-  t_index = linspace(0.0, time, epochs + 1)
 
   # initialize
   xt     = copy(x0)
   alg    = algorithm(time; kwargs...)
-  output = SimData(SharedArray(eltype(x0), c, epochs + 1, trials))
+  output = SimData(
+    id2ind,
+    linspace(0.0, time, epochs + 1),
+    SharedArray(eltype(x0), c, epochs + 1, trials)
+  )
 
   init!(alg, xt, rxn)
 
   # simulation
   @sync for pid in procs(output.data)
-    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn, t_index)
+    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
   end
 
   return output
@@ -74,26 +77,25 @@ function simulate!(
     Xt        :: Vector{Int},
     algorithm :: Algorithm,
     reactions :: AbstractReactionSystem,
-    t_index   :: Range,
     trial     :: Integer
   )
   epoch = 1
   while !done(algorithm)
     t     = get_time(algorithm)
-    epoch = update!(output, Xt, t, t_index, epoch, trial)
+    epoch = update!(output, Xt, t, epoch, trial)
 
     step!(algorithm, Xt, reactions)
   end
   t = get_time(algorithm)
-  update!(output, Xt, t, t_index, epoch, trial)
+  update!(output, Xt, t, epoch, trial)
 
   return output
 end
 
 # this retrieves trials assigned to process
 function partition(output :: SimData)
-  q   = get_data(output)
-  idx = indexpids(q)
+  _, q = get_data(output)
+  idx  = indexpids(q)
   if idx == 0
     # This worker is not assigned a piece
     return 1:0, 1:0
@@ -110,7 +112,6 @@ function simulate_chunk!(
   X0        :: Vector{Int},
   algorithm :: Algorithm,
   reactions :: AbstractReactionSystem,
-  t_index   :: Range,
   trial_set :: UnitRange
 )
   a = propensities(reactions)
@@ -120,7 +121,7 @@ function simulate_chunk!(
     update_all_propensities!(a, reactions, Xt)
     reset!(algorithm, a)
 
-    simulate!(output, Xt, algorithm, reactions, t_index, trial)
+    simulate!(output, Xt, algorithm, reactions, trial)
   end
 
   return output
@@ -132,8 +133,7 @@ end
   Xt        :: Vector{Int},
   X0        :: Vector{Int},
   algorithm :: Algorithm,
-  reactions :: AbstractReactionSystem,
-  t_index   :: Range
+  reactions :: AbstractReactionSystem
 )
-  simulate_chunk!(output, Xt, X0, algorithm, reactions, t_index, partition(output))
+  simulate_chunk!(output, Xt, X0, algorithm, reactions, partition(output))
 end
