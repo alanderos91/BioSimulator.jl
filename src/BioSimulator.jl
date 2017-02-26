@@ -56,9 +56,11 @@ export generate_gui, plot_interface
 # Output
 include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
+include(joinpath("output","stats.jl"))
 #include(joinpath("output","plot.jl"))
 
 export get_dataframe, visualize
+export Trajectory, MeanTrajectory, Histogram
 
 include(joinpath("interface","simulate.jl"))
 
