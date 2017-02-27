@@ -120,5 +120,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     end
   end
 
+  !isstable(a) && update_all_propensities!(a, r, Xt)
+
   return nothing
 end

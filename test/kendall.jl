@@ -38,12 +38,12 @@ for algorithm in algorithms
   @time result = run_test(model, algorithm, t, n, m)
 
   # count the number of relative errors that lie outside the interval [0.98, 1.02]
-  observed = reshape(mean(result.data, 3), n+1)
+  observed = reshape(mean(result.data, 3), n + 1)
   relative = observed ./ theoretical
   badness = count(x -> !isapprox(x, 1.0, rtol=0.4), relative)
 
   @test badness / n ≤ 0.05
 
-  print("     % bad estimates = ", badness / n, " out of $(n)\n")
+  print("     % bad estimates = ", badness / m, " out of $(m)\n")
   println()
 end

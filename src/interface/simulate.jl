@@ -36,19 +36,25 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
   reactions = reaction_list(model)
 
   # create simulation data structures
-  x0, rxn, output, id2ind = make_datastructs(species, reactions, c, d)
+  x0, rxn, id, id2ind = make_datastructs(species, reactions, c, d)
 
-  # initialize algorithm
-  alg = algorithm(time; kwargs...)
+  # initialize
+  xt     = copy(x0)
+  alg    = algorithm(time; kwargs...)
+  output = SimData(
+    id2ind,
+    linspace(0.0, time, epochs + 1),
+    SharedArray(eltype(x0), c, epochs + 1, trials)
+  )
 
-  # run simulation
-  if nworkers() == 1
-    output = PartialHistory(DenseArray, c, epochs+1, trials, 0.0, time, id2ind)
-    serial_simulate(output, x0, alg, deepcopy(x0), rxn)
-  else
-    output = PartialHistory(SharedArray, c, epochs+1, trials, 0.0, time, id2ind)
-    parallel_simulate(output, x0, alg, deepcopy(x0), rxn)
+  init!(alg, xt, rxn)
+
+  # simulation
+  @sync for pid in procs(output.data)
+    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
   end
+
+  return output
 end
 
 function make_datastructs(species, reactions, c, d)
@@ -65,98 +71,69 @@ function make_datastructs(species, reactions, c, d)
   return x0, rxn, id, id2ind
 end
 
-function serial_simulate(
-  output    :: PartialHistory,
-  Xt        :: Vector{Int},
-  algorithm :: Algorithm,
-  X0        :: Vector{Int},
-  r         :: AbstractReactionSystem) # nrlz is encoded in PartialHistory; refactor
+# generate a single trajectory
+function simulate!(
+    output    :: SimData,
+    Xt        :: Vector{Int},
+    algorithm :: Algorithm,
+    reactions :: AbstractReactionSystem,
+    trial     :: Integer
+  )
+  epoch = 1
+  while !done(algorithm)
+    t     = get_time(algorithm)
+    epoch = update!(output, Xt, t, epoch, trial)
 
-  a = propensities(r)
-
-  init!(algorithm, Xt, r)
-  for i in 1:size(output.data, 3)
-    # setup
-    copy!(Xt, X0)
-    update_all_propensities!(a, r, Xt)
-    reset!(algorithm, a)
-    interval = 1
-
-    while !done(algorithm)
-      interval = update!(output, Xt, get_time(algorithm), interval, i)
-      step!(algorithm, Xt, r)
-    end
-
-    interval = update!(output, Xt, get_time(algorithm), interval, i)
+    step!(algorithm, Xt, reactions)
   end
+  t = get_time(algorithm)
+  update!(output, Xt, t, epoch, trial)
 
   return output
 end
 
-function parallel_simulate(
-  output    :: PartialHistory,
-  Xt        :: Vector{Int},
-  algorithm :: Algorithm,
-  X0        :: Vector{Int},
-  r         :: AbstractReactionSystem) # nrlz is encoded in PartialHistory; refactor
-
-  init!(algorithm, Xt, r)
-
-  @sync for pid in procs(output.data)
-    @async remotecall_fetch(pid, trajectory_shared_chunk!, output, Xt, algorithm, X0, r)
-  end
-
-  return output
-end
-
-# Adapted from SharedArrays documentation
-function nrlz_partition(output::PartialHistory)
-  q = output.data
-  idx = indexpids(q)
+# this retrieves trials assigned to process
+function partition(output :: SimData)
+  _, q = get_data(output)
+  idx  = indexpids(q)
   if idx == 0
     # This worker is not assigned a piece
     return 1:0, 1:0
   end
   nchunks = length(procs(q))
-  splits = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
+  splits  = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
   splits[idx]+1:splits[idx+1]
 end
 
-function trajectory_chunk!(
-  output :: PartialHistory,
+# iterate over trials assigned to process
+function simulate_chunk!(
+  output    :: SimData,
   Xt        :: Vector{Int},
-  algorithm :: Algorithm,
   X0        :: Vector{Int},
-  r         :: AbstractReactionSystem,
-  krange    :: UnitRange
-  )
+  algorithm :: Algorithm,
+  reactions :: AbstractReactionSystem,
+  trial_set :: UnitRange
+)
+  a = propensities(reactions)
 
-  a = propensities(r)
-
-  for i in krange
+  for trial in trial_set
     copy!(Xt, X0)
-    update_all_propensities!(a, r, Xt)
+    update_all_propensities!(a, reactions, Xt)
     reset!(algorithm, a)
-    interval = 1
 
-    while !done(algorithm)
-      interval = update!(output, Xt, get_time(algorithm), interval, i)
-      step!(algorithm, Xt, r)
-    end
-
-    interval = update!(output, Xt, get_time(algorithm), interval, i)
+    simulate!(output, Xt, algorithm, reactions, trial)
   end
 
   return output
 end
 
 # the wrapper
-@inline function trajectory_shared_chunk!(
-  output :: PartialHistory,
+@inline function simulate_shared_chunk!(
+  output    :: SimData,
   Xt        :: Vector{Int},
-  algorithm :: Algorithm,
   X0        :: Vector{Int},
-  r         :: AbstractReactionSystem
-  )
-  trajectory_chunk!(output, Xt, algorithm, X0, r, nrlz_partition(output))
+  algorithm :: Algorithm,
+  reactions :: AbstractReactionSystem
+)
+  simulate_chunk!(output, Xt, X0, algorithm, reactions, partition(output))
 end

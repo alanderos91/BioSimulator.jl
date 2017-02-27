@@ -3,7 +3,6 @@ Distributions
 Reexport
 Plots
 DataFrames
-Iterators
 TikzGraphs
 LightGraphs
 Interact
