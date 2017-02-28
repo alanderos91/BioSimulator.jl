@@ -25,6 +25,8 @@ This package is tested against Julia `0.5` on Linux, OS X, and Windows.
 
 ## Contributing
 
+TODO
+
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://alanderos91.github.io/BioSimulator.jl/latest/
 
