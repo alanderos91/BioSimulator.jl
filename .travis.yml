@@ -10,5 +10,6 @@ notifications:
   email: false
 
 after_success:
+  - julia -e 'ENV["PYTHON"]=""; Pkg.build("PyCall"); using PyPlot;'
   - julia -e 'Pkg.add("Documenter"); Pkg.add("JSON")'
   - julia -e 'cd(Pkg.dir("BioSimulator")); include(joinpath("docs", "make.jl"))'
