@@ -32,6 +32,8 @@
 
 - [15] Darren J. Wilkinson. Stochastic Modeling for Systems Biology. *Chapman & Hall/CRC Press*, Boca Raton, FL, 1 edition, 2006.
 
+- [16] Shibata, Tatsuo. Amplification of noise in a cascade chemical reaction. *Phys. Rev.* E 69, 056218 (2004).
+
 ## Julia Packages
 
 - [DataFrames](https://github.com/juliastats/dataframes.jl)
