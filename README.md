@@ -32,7 +32,7 @@ This package is tested against Julia `0.5` on Linux, OS X, and Windows.
 [docs-stable-url]: https://alanderos91.github.io/BioSimulator.jl/stable
 
 [travis-img]: https://travis-ci.org/alanderos91/BioSimulator.jl.svg?branch=master
-[travis-url]: https://travis-ci.com/alanderos91/BioSimulator.jl.svg?token=mqwtpg9Uqqtb5mpBNzMb&branch=master
+[travis-url]: https://travis-ci.org/alanderos91/BioSimulator.jl
 
 [//]: # (setup appveyor)
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/xe0ghtyas12wv555/branch/master?svg=true
