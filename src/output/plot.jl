@@ -9,7 +9,6 @@
   xguide     --> "time"
   yguide     --> "population"
   xlims      --> (t[1], t[end])
-  ylims      --> (0.0, Inf)
   seriestype --> :steppre
   label      --> id
 
@@ -28,7 +27,6 @@ end
   xguide     --> "time"
   yguide     --> "population mean"
   xlims      --> (t[1], t[end])
-  ylims      --> (0.0, Inf)
   fillalpha  --> 0.3
   seriestype --> :path
   label      --> id
