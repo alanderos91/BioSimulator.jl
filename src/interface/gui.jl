@@ -112,7 +112,7 @@ function plot_interface(result)
     # make visualization controls
     sel_plot    = dropdown(PLOT_TYPES, label="Plot:")
     sel_species = dropdown(collect(keys(value(result).id2ind)), label="Selected Species:")
-    sel_epoch   = dropdown(collect(value(result).t), label="Selected Time:")
+    sel_epoch   = dropdown(collect(value(result).t_index), label="Selected Time:")
     plt_btn     = button("Plot")
 
     display(sel_plot)
@@ -140,8 +140,8 @@ function make_visualization(vars)
     ftype    = vars[4]
 
     if ftype == "Mean Trajectory"
-        meantrajectory(result, select=[selected])
+        plot(MeanTrajectory(result, selected))
     elseif ftype == "Histogram"
-        freqhistogram(result, time, select=[selected])
+        plot(Histogram(result, selected, time))
     end
 end
