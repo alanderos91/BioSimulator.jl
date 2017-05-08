@@ -7,7 +7,7 @@
   legend     --> true
   grid       --> false
   xguide     --> "time"
-  yguide     --> "population"
+  yguide     --> "population size"
   xlims      --> (t[1], t[end])
   seriestype --> :steppre
   label      --> id
@@ -25,7 +25,7 @@ end
   legend     --> true
   grid       --> false
   xguide     --> "time"
-  yguide     --> "population mean"
+  yguide     --> "mean population size"
   xlims      --> (t[1], t[end])
   fillalpha  --> 0.3
   seriestype --> :path
@@ -42,9 +42,8 @@ end
 
   legend     --> true
   grid       --> false
-  xguide     --> "population"
+  xguide     --> "population size"
   yguide     --> "frequency"
-  title      --> "distribution at t = $(t)"
   seriestype --> :histogram
 
   x
@@ -73,8 +72,8 @@ end
   # global attributes
   legend     --> false
   grid       --> false
-  xguide     --> "$(ids[1]) population"
-  yguide     --> "$(ids[2]) population"
+  xguide     --> "$(ids[1]) population size"
+  yguide     --> "$(ids[2]) population size"
   seriestype --> :path
   label      --> ids
 
