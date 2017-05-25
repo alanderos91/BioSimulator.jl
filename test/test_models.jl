@@ -41,12 +41,13 @@ function linear(
 
   m <= Species("S1", x0)
 
-  for i = 2:(M+1)
-      m <= Species("S$(i)", 0)
+  for i = 2:M
+    m <= Species("S$(i)", 0)
   end
 
-  for i = 1:M
-      m <= Reaction("R$(i)", 1.0, "S$(i) --> S$(i+1)")
+  for i = 1:M-1
+    m <= Reaction("R$(i)", 1.0, "S$(i) --> S$(i+1)")
+    m <= Reaction("R$(M+i-1)", 1.0, "S$(i+1) --> S$(i)")
   end
 
   return m
