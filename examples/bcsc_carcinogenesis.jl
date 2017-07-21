@@ -26,22 +26,26 @@ k9 = 0.01
 network = Network("BCSC Carcinogenesis")
 
 # Species Definitions
-network <= Species(:EMT,   200)
-network <= Species(:MET,   800)
-network <= Species(:BPP, 99000)
-network <= Species(:TD,      0)
+network <= Species("EMT",   200)
+network <= Species("MET",   800)
+network <= Species("BPP", 99000)
+network <= Species("TD",      0)
 
 # Reaction Definitions
-network <= Reaction(r1, k1, :(EMT --> MET))
-network <= Reaction(r2, k2, :(MET --> EMT))
-network <= Reaction(r3, k3, :(MET --> 2*MET))
-network <= Reaction(r4, k4, :(MET --> MET + BPP))
-network <= Reaction(r5, k5, :(MET --> 2*BPP))
-network <= Reaction(r6, k6, :(BPP --> 2*BPP))
-network <= Reaction(r7, k7, :(BPP --> 0))
-network <= Reaction(r8, k8, :(BPP --> TD))
-network <= Reaction(r9, k9, :(TD  --> 0))
+network <= Reaction(r1, k1, "EMT --> MET")
+network <= Reaction(r2, k2, "MET --> EMT")
+network <= Reaction(r3, k3, "MET --> 2*MET")
+network <= Reaction(r4, k4, "MET --> MET + BPP")
+network <= Reaction(r5, k5, "MET --> 2*BPP")
+network <= Reaction(r6, k6, "BPP --> 2*BPP")
+network <= Reaction(r7, k7, "BPP --> 0")
+network <= Reaction(r8, k8, "BPP --> TD")
+network <= Reaction(r9, k9, "TD  --> 0")
 
-@time result = simulate(network, SAL(2*365.0, 0.125, 100.0, 0.75), sampling_interval=1.0, nrlz=10);
+@time result = simulate(network, SAL, time = 2*365.0, epochs = 2 * 365, trials = 100)
 
-plot(result)
+plot(MeanTrajectory(result, "EMT"))
+plot!(MeanTrajectory(result, "MET"))
+
+plot(MeanTrajectory(result, "BPP"))
+plot!(MeanTrajectory(result, "TD"))
