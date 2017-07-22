@@ -1,12 +1,12 @@
 x0 = 1_000
 model_size = [10, 100, 500]
 
-t = 10.0
+t = 5.0
 n = 1
 u = 5357
 m = 1
 
-algorithms = [SSA, FRM, NRM, ODM, SAL]
+algorithms = [SSA, FRM, NRM, ODM] # τ-leap methods may have issues
 
 for algorithm in algorithms
     @printf "%+6s\n" split(uppercase(string(algorithm)),".")[2]
