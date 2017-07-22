@@ -44,6 +44,7 @@ end
   grid       --> false
   xguide     --> "population size"
   yguide     --> "frequency"
+  label      --> id
   seriestype --> :histogram
 
   x

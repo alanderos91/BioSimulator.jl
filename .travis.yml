@@ -2,6 +2,7 @@ language: julia
 
 os:
   - linux
+  - osx
 
 julia:
   - 0.5
@@ -9,7 +10,14 @@ julia:
 notifications:
   email: false
 
+script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - julia -e 'Pkg.clone(pwd())'
+  - julia -e 'Pkg.test("BioSimulator", coverage=true)'
+
 after_success:
+  - julia -e 'cd(Pkg.dir("BioSimulator")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'cd(Pkg.dir("BioSimulator")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
   - julia -e 'ENV["PYTHON"]=""; Pkg.add("PyPlot"); using PyPlot'
   - julia -e 'Pkg.add("Documenter"); Pkg.add("JSON")'
   - julia -e 'cd(Pkg.dir("BioSimulator")); include(joinpath("docs", "make.jl"))'
