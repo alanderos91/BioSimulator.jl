@@ -2,9 +2,9 @@
 
 *A stochastic simulation framework in Julia.*
 
-| **Documentation**                                                               | **Build Status**                                                                                |
-|:-------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------:|
-| [![][docs-stable-img]][docs-stable-url] [![][docs-latest-img]][docs-latest-url] | [![][travis-img]][travis-url] <!---[![][appveyor-img]][appveyor-url]---> <!---[![][codecov-img]][codecov-url]---> |
+| **Documentation** | **Build Status** | **Code Coverage** |
+|:-----------------:|:--------------- :|
+| [![Stable][docs-stable-img]][docs-stable-url] [![Latest][docs-latest-img]][docs-latest-url] | [![Travis][travis-img]][travis-url] [![Appveyor][appveyor-img]][appveyor-url] | [![Coverage Status][coveralls-img]][coveralls-url] [![codecov.io][codecov-img]][codecov-url] |
 
 ## Installation
 
@@ -25,8 +25,6 @@ This package is tested against Julia `0.5` on Linux, OS X, and Windows.
 
 ## Contributing
 
-TODO
-
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
 [docs-latest-url]: https://alanderos91.github.io/BioSimulator.jl/latest/
 
@@ -36,12 +34,13 @@ TODO
 [travis-img]: https://travis-ci.org/alanderos91/BioSimulator.jl.svg?branch=master
 [travis-url]: https://travis-ci.org/alanderos91/BioSimulator.jl
 
-[//]: # (setup appveyor)
-[appveyor-img]: https://ci.appveyor.com/api/projects/status/xe0ghtyas12wv555/branch/master?svg=true
-[appveyor-url]: https://ci.appveyor.com/project/alanderos91/biosimulator-jl/branch/master
+[appveyor-img]: https://ci.appveyor.com/api/projects/status/xnug0ey8xpx8we48?svg=true
+[appveyor-url]: https://ci.appveyor.com/project/alanderos91/biosimulator-jl
 
 [issues-url]: https://github.com/alanderos91/BioSimulator.jl/issues
 
-[//]: # (setup codecov)
-[codecov-img]: https://codecov.io/gh/alaneros91/BioSimulator.jl/branch/master/graph/badge.svg
+[coveralls-img]: https://coveralls.io/repos/github/alanderos91/BioSimulator.jl/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/alanderos91/BioSimulator.jl?branch=master
+
+[codecov-img]: https://codecov.io/gh/alanderos91/BioSimulator.jl/branch/master/graph/badge.svg
 [codecov-url]: https://codecov.io/gh/alanderos91/BioSimulator.jl
