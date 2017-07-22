@@ -2,8 +2,8 @@
 
 *A stochastic simulation framework in Julia.*
 
-| **Documentation** | **Build Status** | **Code Coverage** |
-|:-----------------:|:--------------- :|:-----------------:|
+| **Documentation**                                                                           | **Build Status**                                                              | **Code Coverage**                                                                            |
+|---------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
 | [![Stable][docs-stable-img]][docs-stable-url] [![Latest][docs-latest-img]][docs-latest-url] | [![Travis][travis-img]][travis-url] [![Appveyor][appveyor-img]][appveyor-url] | [![Coverage Status][coveralls-img]][coveralls-url] [![codecov.io][codecov-img]][codecov-url] |
 
 ## Installation
