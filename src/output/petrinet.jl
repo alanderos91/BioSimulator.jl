@@ -24,7 +24,7 @@ function petri_net(model :: Network)
 
   # construct edges and extract stoichiometries
   # species numbered 1 thru s
-  # reactions numbered s+1 thru s + r
+  # reactions numbered s+1 thru s+r
   for (k, reaction) in enumerate(values(reactions))
     j = k + s
     reactants = reaction.reactants
@@ -55,7 +55,7 @@ function petri_net(model :: Network)
 
   reaction_nodes = collect(s+1:s+r)
   reaction_labels = map(string, keys(reactions))
-  reaction_styles = Dict( i => "draw, rounded corners, fill=red!10" for i in reaction_nodes)
+  reaction_styles = Dict( i => "draw, rounded corners, thick, fill=red!10" for i in reaction_nodes)
 
   node_labels = [ species_labels; reaction_labels ]
   edge_labels = Dict( e => string(v) for (e, v) in stoc_set )
@@ -77,15 +77,16 @@ function draw(x :: PetriNet)
   species_styles  = x.species_styles
   reaction_styles = x.reaction_styles
   edge_labels     = x.edge_labels
-
+  
   labels = map(x -> replace(x, "_", "\$\\cdot\$"), labels)
-
+  
   TikzGraphs.plot(graph,
-    labels,
-    node_styles = merge(species_styles, reaction_styles),
-    edge_labels = edge_labels,
-    edge_style = "-stealth, relative=true, out=45"
-  )
+                  labels = labels,
+                  node_style  = "align=center, anchor=center, scale=1.2, level sep=1cm",
+                  node_styles = merge(species_styles, reaction_styles),
+                  edge_style  = "very thick",
+                  edge_labels = edge_labels,
+                  )
 end
 
 visualize(x :: Network) = draw(petri_net(x))
