@@ -1,6 +1,7 @@
 module BioSimulator
 
 using Distributions
+using DataStructures
 using Reexport
 using Interact
 using Reactive
@@ -13,6 +14,7 @@ using LightGraphs: DiGraph, add_edge!
 
 import Base: (<=),
              (>=),
+             show,
              getindex,
              setindex!,
              isempty,

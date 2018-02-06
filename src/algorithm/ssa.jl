@@ -9,7 +9,7 @@ Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and spe
 - `end_time`: The termination time, supplied by a user.
 - `t`: The current simulation time.
 """
-type SSA <: ExactMethod
+mutable struct SSA <: ExactMethod
   # parameters
   end_time :: Float64
 

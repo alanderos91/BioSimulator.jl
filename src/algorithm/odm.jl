@@ -9,7 +9,7 @@ Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting rea
 - `end_time`: The termination time, supplied by a user.
 - `t`: The current simulation time.
 """
-type ODM <: ExactMethod
+mutable struct ODM <: ExactMethod
   # parameters
   end_time :: Float64
 

@@ -16,7 +16,7 @@ Step Anticipation-τ Leaping. An algorithm method that improves upon the accurac
 - `events`: The number of Poisson arrivals within a τ-leap interval.
 """
 
-type SAL <: TauLeapMethod
+mutable struct SAL <: TauLeapMethod
   # parameters
   end_time :: Float64
   ϵ :: Float64

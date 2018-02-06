@@ -1,6 +1,3 @@
-import Base.Collections: PriorityQueue, peek
-import Base.Order: ForwardOrdering
-
 """
 ```
 NRM
@@ -13,18 +10,18 @@ Gibson and Bruck's Next Reaction Method, statistically equivalent to `SSA`. It p
 - `t`: The current simulation time.
 - `pq`: A priority queue that sorts reaction according to the their next firing times.
 """
-type NRM <: ExactMethod
+mutable struct NRM <: ExactMethod
   # parameters
   end_time :: Float64
 
   # state variables
   t        :: Float64
-  pq       :: PriorityQueue{Int,Float64,ForwardOrdering}
+  pq       :: PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}
 
   # statistics
 
   function NRM(end_time::AbstractFloat)
-    new(end_time, 0.0, PriorityQueue(Int, Float64))
+    new(end_time, 0.0, PriorityQueue{Int, Float64}())
   end
 end
 

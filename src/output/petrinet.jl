@@ -1,4 +1,4 @@
-immutable PetriNet
+struct PetriNet
   g :: DiGraph
 
   species_nodes  :: Vector{Int}

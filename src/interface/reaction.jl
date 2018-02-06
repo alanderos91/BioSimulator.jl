@@ -1,5 +1,3 @@
-import Base.show
-
 """
 ```
 Reaction(name, rate, formula)
@@ -14,7 +12,7 @@ The `formula` should use `Species` from a `Network`. Multiple reactants are sepa
 - Reaction("death", 0.5, "X --> 0") # no products
 - Reaction("immigration", 0.5, "0 --> X") # no reactants
 """
-type Reaction
+struct Reaction
   id   :: String
   rate :: Float64
 

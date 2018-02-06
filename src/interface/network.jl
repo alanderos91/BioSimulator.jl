@@ -1,5 +1,3 @@
-import Base.show
-
 """
 ```
 Network(id)
@@ -31,7 +29,7 @@ See also: `Species`, `Reaction`, `simulate`, `visualize`
 ### Arguments
 - `id`: An string identifier for the `Network`.
 """
-type Network
+struct Network
   id :: String
 
   species_list   :: Dict{Symbol,Species}

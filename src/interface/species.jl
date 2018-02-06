@@ -7,7 +7,7 @@ Species(id, [value=0])
 
 Define a `Species` with a `name` and initial population `value`.
 """
-type Species
+struct Species
   id         :: String
   population :: Int
 

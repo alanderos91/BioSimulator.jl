@@ -3,13 +3,15 @@
 FRM
 ```
 
-Gillespie's First Reaction Method. It is statistically equivalent to `SSA`, but more computationally expensive: it computes the time to the next reaction as the minimum waiting time relative to the next firing times of each reaction.
+Gillespie's First Reaction Method.
+
+Statistically equivalent to `SSA`, but more computationally expensive: it computes the time to the next reaction as the minimum waiting time relative to the next firing times of each reaction.
 
 ### Internals
 - `end_time`: The termination time, supplied by a user.
 - `t`: The current simulation time.
 """
-type FRM <: ExactMethod
+mutable struct FRM <: ExactMethod
   # parameters
   end_time :: Float64
 

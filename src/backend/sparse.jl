@@ -12,7 +12,7 @@ A `SparseReactionSystem` represents the underlying reactions in a system of inte
 `propensities`: A `PropensityVector` that caches each reaction propensity as well as their running sum.
 `dependencies`: An adjacency matrix that represents how a given reaction's propensity depends on the other reactions.
 """
-immutable SparseReactionSystem <: AbstractReactionSystem
+struct SparseReactionSystem <: AbstractReactionSystem
   stoichiometry :: SparseMatrixCSC{Int, Int}
   coefficients  :: SparseMatrixCSC{Int, Int}
   scaled_rates  :: Vector{Float64}
@@ -87,7 +87,7 @@ end
   for i in nzrange(U, j)
     value = value * Xt[rv[i]]
     for k in 2:nz[i]
-      value = value * ( Xt[rv[i]] - (k - 1) )
+      value = value * (Xt[rv[i]] - (k - 1))
     end
   end
 

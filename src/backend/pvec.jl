@@ -10,15 +10,15 @@ An m-vector that caches reaction propensities and maintains their running sum.
 `intensity`: The running sum of cached propensities.
 `error_bound`: A number that quantifies the error resulting from updating sums with Kahan summation. Once this value exceeds a threshold, the running sum is explicitly recalculated.
 """
-type PropensityVector{T <: AbstractFloat} <: AbstractVector{T}
+mutable struct PropensityVector{T <: AbstractFloat} <: AbstractVector{T}
   cache       :: Vector{T}
   intensity   :: T
   error_bound :: T
 
-  PropensityVector(m::Integer) = new(zeros(T, m), zero(T), zero(T))
+  PropensityVector{T}(m::Integer) where T = new(zeros(T, m), zero(T), zero(T))
 end
 
-typealias PVec{T} PropensityVector{T}
+PVec{T} = PropensityVector{T}
 
 ##### PVec interface #####
 intensity(x::PVec) = x.intensity
@@ -54,4 +54,4 @@ Base.getindex(x::PVec, i::Integer) = x.cache[i]
 
 Base.setindex!(x::PVec, xi, i::Integer) = (x.cache[i] = xi)
 
-Base.linearindexing(x::PVec) = Base.LinearFast()
+Base.IndexStyle(x::PVec) = Base.IndexStyle(x.cache)

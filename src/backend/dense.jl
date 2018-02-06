@@ -12,7 +12,7 @@ A `DenseReactionSystem` represents the underlying reactions in a system of inter
 `propensities`: A `PropensityVector` that caches each reaction propensity as well as their running sum.
 `dependencies`: An adjacency matrix that represents how a given reaction's propensity depends on the other reactions.
 """
-immutable DenseReactionSystem <: AbstractReactionSystem
+struct DenseReactionSystem <: AbstractReactionSystem
   stoichiometry :: Matrix{Int}
   coefficients  :: Matrix{Int}
   scaled_rates  :: Vector{Float64}
@@ -78,7 +78,7 @@ end
     if U[i, j] > 0
       value = value * Xt[i]
       for k in 2:U[i, j]
-        value = value * ( Xt[i] - ( k - 1) )
+        value = value * (Xt[i] - (k - 1) )
       end
     end
   end
