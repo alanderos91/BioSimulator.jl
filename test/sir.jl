@@ -15,5 +15,5 @@ m = 1
 for algorithm in algorithms
   srand(u)
     print("   - $(split(uppercase(string(algorithm)),".")[2]): ")
-  @time run_test(model, algorithm, t, n, m), DataType
+  @time run_test(model, algorithm, t, n, m)
 end
