@@ -134,3 +134,45 @@ m <= Species("R", r)
 m <= Reaction("infection", β / (s + i + r), "S + I --> I + I")
 m <= Reaction("recovery", γ, "I --> R")
 end
+
+"""
+### Parameters
+* `N` - number of Brusselators
+* `V` - system volume
+* `k1` - deterministic buffer rate
+* `k2` - deterministic transition/decay rate
+* `k3` - deterministic conversion rate
+* `k4` - deterministic autocatalytic rate
+"""
+function brusselator(;N=1, V=100.0, k1=1.0, k2=1.0, k3=1.0, k4=1.0)
+    model = Network("Brusselator Cascade")
+
+    # ===== Stochastic Rates =====
+    # To model a constant buffer X0 we add a zero-order reaction (like immigration)
+    # The stochastic rates have to take into account the system volume
+
+    γ1 = k1 * V        # buffer rate
+    γ2 = k2            # transition/decay rate
+    γ3 = k3            # conversion rate
+    γ4 = k4 / (V * V)  # autocatalytic rate
+
+    for i = 1:N
+        # species definitions
+        model <= Species("X$(i)", 0)
+        model <= Species("Y$(i)", 0)
+
+        # autocatalytic reactions
+        model <= Reaction("conversion$(i)",    γ3, "X$(i) --> Y$(i)")
+        model <= Reaction("autocatalysis$(i)", γ4, "X$(i) + X$(i) + Y$(i) --> X$(i) + X$(i) + X$(i)")
+    end
+
+    for i = 2:N
+        # cascades
+        model <= Reaction("cascade$(i-1)", γ2, "X$(i-1) --> X$(i)")
+    end
+
+    model <= Reaction("buffer", γ1, "0 --> X1")
+    model <= Reaction("decay",  γ2, "X$(N) --> 0")
+
+    return model
+end
