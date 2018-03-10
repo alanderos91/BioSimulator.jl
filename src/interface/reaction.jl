@@ -16,8 +16,8 @@ struct Reaction
   id   :: String
   rate :: Float64
 
-  reactants :: Dict{Symbol,Int}
-  products  :: Dict{Symbol,Int}
+  reactants :: OrderedDict{Symbol,Int}
+  products  :: OrderedDict{Symbol,Int}
 
   function Reaction(name, rate, formula)
     reactants, products = parse_reaction(formula)
@@ -65,8 +65,8 @@ end
 parse_reaction(formula::String) = parse_reaction(parse(formula))
 
 function parse_reaction(ex::Expr)
-  reactants = Dict{Symbol,Int}()
-  products  = Dict{Symbol,Int}()
+  reactants = OrderedDict{Symbol,Int}()
+  products  = OrderedDict{Symbol,Int}()
 
   if ex.head == :-->
     exr = ex.args[1]
