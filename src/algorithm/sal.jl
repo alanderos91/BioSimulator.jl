@@ -30,17 +30,21 @@ mutable struct SAL <: TauLeapMethod
   events         :: Vector{Int}
 
   # statistics
+  stats :: Dict{Symbol,Int}
 
-  # metadata tags
-  tags :: Vector{Symbol}
-
-  function SAL(end_time::AbstractFloat, ϵ::AbstractFloat, δ::AbstractFloat, α::AbstractFloat)
+  function SAL(end_time::AbstractFloat, ϵ, δ, α)
     new(end_time, ϵ, δ, α,
-    0.0, Float64[], Float64[], Int[])
+      0.0, Float64[], Float64[], Int[],
+      Dict{Symbol,Int}(
+        :negative_excursions => 0,
+        :contractions => 0,
+        :leaping_steps => 0,
+        :gillespie_steps => 0
+    ))
   end
 end
 
-SAL(end_time; epsilon=0.125, delta=100.0, alpha=0.75, na...) = SAL(end_time, epsilon, delta, alpha)
+SAL(end_time; ϵ::Float64=0.125, δ::Float64=100.0, α::Float64=0.75, na...) = SAL(end_time, ϵ, δ, α)
 
 set_time!(algorithm::SAL, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
@@ -74,6 +78,7 @@ function step!(algorithm::SAL, Xt, r)
   if intensity(a) > 0
 
     if iscritical
+      algorithm.stats[:gillespie_steps] += 1
       τ = rand(Exponential(1 / intensity(a)))
       set_time!(algorithm, τ)
 
@@ -83,6 +88,7 @@ function step!(algorithm::SAL, Xt, r)
         update_propensities!(a, r, Xt, μ)
       end
     else
+      algorithm.stats[:leaping_steps] += 1
       τ = sal_update!(algorithm, Xt, r)
       update_all_propensities!(a, r, Xt)
       set_time!(algorithm, τ)
@@ -90,10 +96,7 @@ function step!(algorithm::SAL, Xt, r)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    println("t = ", get_time(algorithm))
-    println("a = ", a)
-    println("Xt = ", Xt)
-    error("intensity = ", intensity(a))
+    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
   return nothing
@@ -113,9 +116,16 @@ function sal_update!(algorithm, Xt, r)
 
   generate_events!(events, r, τ, drdt)
 
-  while is_badleap(Xt, r, events)
+  isbadleap = is_badleap(Xt, r, events)
+  if isbadleap
+    algorithm.stats[:negative_excursions] += 1
+  end
+
+  while isbadleap
+    algorithm.stats[:contractions] += 1
     contract!(events, α)
     τ = τ * α
+    isbadleap = is_badleap(Xt, r, events)
   end
 
   fire_reactions!(Xt, r, events)

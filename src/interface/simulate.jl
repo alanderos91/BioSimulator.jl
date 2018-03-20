@@ -44,7 +44,8 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
   output = SimData(
     id2ind,
     linspace(0.0, time, epochs + 1),
-    SharedArray{eltype(x0)}(c, epochs + 1, trials)
+    SharedArray{eltype(x0)}(c, epochs + 1, trials),
+    alg.stats
   )
 
   init!(alg, xt, rxn)

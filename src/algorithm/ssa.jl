@@ -17,11 +17,14 @@ mutable struct SSA <: ExactMethod
   t      :: Float64
 
   # statistics
-
+  stats :: Dict{Symbol,Int}
   # metadata
 
   function SSA(end_time::AbstractFloat)
-    new(end_time, 0.0)
+    new(end_time, 0.0,
+      Dict{Symbol,Int}(
+        :gillespie_steps => 0
+    ))
   end
 end
 
@@ -48,12 +51,11 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    println("t = ", get_time(algorithm))
-    println("a = ", a)
-    println("Xt = ", Xt)
-    error("intensity = ", intensity(a))
+    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
+  algorithm.stats[:gillespie_steps] += 1
+  
   return nothing
 end
 
