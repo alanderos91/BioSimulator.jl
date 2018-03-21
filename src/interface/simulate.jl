@@ -1,3 +1,4 @@
+using DistributedArrays
 """
 ```
 simulate{T}(model, [algorithm::Type{T}=SSA];
@@ -22,11 +23,12 @@ The simulation routine will run until the termination `time` and record the syst
 - `kwargs`: Additional keyword arguments specific to each algorithm.
 
 """
-function simulate{T}(model::Network, algorithm::Type{T}=SSA;
+function simulate(model::Network, algorithm::Type{T}=SSA;
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
-  kwargs...)
+  otype::Type{D}=Array,
+  kwargs...) where {T,D}
 
   # extract model information
   c = n_species(model)
@@ -44,19 +46,41 @@ function simulate{T}(model::Network, algorithm::Type{T}=SSA;
   output = SimData(
     id2ind,
     linspace(0.0, time, epochs + 1),
-    SharedArray{eltype(x0)}(c, epochs + 1, trials),
+    #SharedArray{eltype(x0)}(c, epochs + 1, trials),
+    D{eltype(x0)}(c, epochs + 1, trials),
     alg.stats
   )
 
   init!(alg, xt, rxn)
 
   # simulation
-  @sync for pid in procs(output.data)
-    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
-  end
+  # @sync for pid in procs(output.data)
+  #   @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
+  # end
+  simulate_wrapper!(output, xt, x0, alg, rxn)
 
   return output
 end
+
+# function make_datastructs(::Type{Val{false}}, species, reactions, c, d)
+#   # state vector 
+#   x0, id, id2ind = make_species_vector(species)
+
+#   # reactions
+#   rxn = DenseReactionSystem(reactions, id2ind, c, d)
+
+#   return x0, rxn, id, id2ind
+# end
+
+# function make_datastructs(::Type{Val{true}}, species, reactions, c, d)
+#   # state vector
+#   x0, id, id2ind = make_species_vector(species)
+
+#   # reactions
+#   rxn = SparseReactionSystem(reactions, id2ind, c, d)
+
+#   return x0, rxn, id, id2ind
+# end
 
 function make_datastructs(species, reactions, c, d)
   # state vector
@@ -94,7 +118,7 @@ function simulate!(
 end
 
 # this retrieves trials assigned to process
-function partition(output :: SimData)
+function partition(output :: SimData{SharedArray{Int64,3}})
   _, q = get_data(output)
   idx  = indexpids(q)
   if idx == 0
@@ -137,4 +161,23 @@ end
   reactions :: AbstractReactionSystem
 )
   simulate_chunk!(output, Xt, X0, algorithm, reactions, partition(output))
+end
+
+function simulate_wrapper!(output :: SimData{SharedArray{T,N}}, xt, x0, alg, rxn) where {T,N}
+  @sync for pid in procs(output.data)
+    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
+  end
+end
+
+# function simulate_wrapper!(output :: SimData{Array{T,N}}, xt, x0, alg, rxn) where {T,N}
+#   simulate_chunk!(output, xt, x0, alg, rxn, 1:size(output.data, 3))
+# end
+
+function simulate_wrapper!(output :: SimData{Array{T,N}}, xt, x0, alg, rxn) where {T,N}
+  data = output.data
+  for i in 1:Threads.nthreads()
+    len = div(size(data, 3), Threads.nthreads())
+    domain = ((i-1)*len+1):i*len
+    simulate_chunk!(output, xt, x0, alg, rxn, domain)
+  end
 end
