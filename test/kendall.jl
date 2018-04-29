@@ -2,7 +2,7 @@ using BioSimulator
 using Base.Test
 
 function kendall_mean(i, t, α, μ, ν)
-  x = exp((α - μ) * t)
+  x = exp.((α - μ) * t)
   return i * x + ν / (α - μ) * (x - 1)
 end
 

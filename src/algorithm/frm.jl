@@ -3,13 +3,15 @@
 FRM
 ```
 
-Gillespie's First Reaction Method. It is statistically equivalent to `SSA`, but more computationally expensive: it computes the time to the next reaction as the minimum waiting time relative to the next firing times of each reaction.
+Gillespie's First Reaction Method.
+
+Statistically equivalent to `SSA`, but more computationally expensive: it computes the time to the next reaction as the minimum waiting time relative to the next firing times of each reaction.
 
 ### Internals
 - `end_time`: The termination time, supplied by a user.
 - `t`: The current simulation time.
 """
-type FRM <: ExactMethod
+mutable struct FRM <: ExactMethod
   # parameters
   end_time :: Float64
 
@@ -17,9 +19,13 @@ type FRM <: ExactMethod
   t :: Float64
 
   # statistics
+  stats :: Dict{Symbol,Int}
 
   function FRM(end_time::AbstractFloat)
-    new(end_time, 0.0)
+    new(end_time, 0.0,
+      Dict{Symbol,Int}(
+        :gillespie_steps => 0
+    ))
   end
 end
 
@@ -42,12 +48,11 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    println("t = ", get_time(algorithm))
-    println("a = ", a)
-    println("Xt = ", Xt)
-    error("intensity = ", intensity(a))
+    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
+  algorithm.stats[:gillespie_steps] += 1
+  
   return nothing
 end
 

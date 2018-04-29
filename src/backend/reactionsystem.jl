@@ -1,12 +1,3 @@
-##### AbstractReactionSystem #####
-#=
-  stoichiometry :: T
-  coefficients  :: T
-  scaled_rates  :: Vector{Float64}
-  propensities  :: PVec{Float64}
-  dependencies  :: Vector{Vector{Int}}
-=#
-
 """
 ```
 AbstractReactionSystem
@@ -20,7 +11,7 @@ An `AbstractReactionSystem` represents the underlying reactions in a system of i
 `propensities`: A `PropensityVector` that caches each reaction propensity as well as their running sum.
 `dependencies`: An adjacency matrix that represents how a given reaction's propensity depends on the other reactions.
 """
-abstract AbstractReactionSystem
+abstract type AbstractReactionSystem end
 
 stoichiometry(r::AbstractReactionSystem) = r.stoichiometry
 coefficients(r::AbstractReactionSystem)  = r.coefficients

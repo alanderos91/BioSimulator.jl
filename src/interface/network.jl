@@ -1,5 +1,3 @@
-import Base.show
-
 """
 ```
 Network(id)
@@ -31,15 +29,15 @@ See also: `Species`, `Reaction`, `simulate`, `visualize`
 ### Arguments
 - `id`: An string identifier for the `Network`.
 """
-type Network
+struct Network
   id :: String
 
-  species_list   :: Dict{Symbol,Species}
-  reaction_list  :: Dict{Symbol,Reaction}
+  species_list   :: OrderedDict{Symbol,Species}
+  reaction_list  :: OrderedDict{Symbol,Reaction}
 
   function Network(id)
-    s = Dict{Symbol,Species}()
-    r = Dict{Symbol,Reaction}()
+    s = OrderedDict{Symbol,Species}()
+    r = OrderedDict{Symbol,Reaction}()
 
     return new(string(id), s, r)
   end

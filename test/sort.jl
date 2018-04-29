@@ -1,5 +1,5 @@
-import BioSimulator: stoichiometry, coefficients, scaled_rates, propensities, dependencies
-m = autoreg()
+import BioSimulator: stoichiometry, coefficients, scaled_rates, propensities, dependencies, _sort!
+m = brusselator(N=10)
 
 c = n_species(m)
 d = n_reactions(m)
@@ -10,38 +10,26 @@ reactions = reaction_list(m)
 X0, id, id2ind = BioSimulator.make_species_vector(species)
 
 # dense
-r1 = BioSimulator.DenseReactionSystem(reactions, id2ind, c, d)
+system = BioSimulator.SparseReactionSystem(reactions, id2ind, c, d)
 
-# test 1
-r2 = r1
+ix       = sortperm(shuffle!(collect(1:d)))
+indexmap = Dict(i => findfirst(ix, i) for i in eachindex(ix))
 
-@test stoichiometry(r1) == stoichiometry(r2)
-@test coefficients(r1) == coefficients(r2)
-@test scaled_rates(r1) == scaled_rates(r2)
-@test dependencies(r1) == dependencies(r2)
+V = deepcopy(stoichiometry(system))
+U = deepcopy(coefficients(system))
+k = deepcopy(scaled_rates(system))
+g = deepcopy(dependencies(system))
 
-# test 2
-r2 = deepcopy(r1)
+stoichiometry_map = Dict(indexmap[i] => V[:,i] for i in eachindex(ix))
+coefficients_map  = Dict(indexmap[i] => U[:,i] for i in eachindex(ix))
+scaled_rates_map  = Dict(indexmap[i] => k[i] for i in eachindex(ix))
+dependencies_map  = Dict(indexmap[i] => g[i] for i in eachindex(ix))
 
-reaction_events = [1, 2, 3, 4, 5, 6, 7, 8]
-ix = sortperm(reaction_events)
-BioSimulator._sort!(r2, ix)
+_sort!(system, ix)
 
-@test stoichiometry(r1) == stoichiometry(r2)
-@test coefficients(r1) == coefficients(r2)
-@test scaled_rates(r1) == scaled_rates(r2)
-@test dependencies(r1) == dependencies(r2)
-
-# test 3
-r2 = deepcopy(r1)
-reaction_events = [8, 7, 6, 5, 4, 3, 2, 1]
-ix = sortperm(reaction_events)
-BioSimulator._sort!(r2, ix)
-
-@test stoichiometry(r1) != stoichiometry(r2)
-@test coefficients(r1) != coefficients(r2)
-@test scaled_rates(r1) != scaled_rates(r2)
-@test dependencies(r1) != dependencies(r2)
-
-# # sparse
-# r = SparseReactionSystem(reactions, id2ind, c, d)
+for i in eachindex(ix)
+    @test stoichiometry(system)[:,i] == stoichiometry_map[i]
+    @test coefficients(system)[:,i] == coefficients_map[i]
+    @test scaled_rates(system)[i] == scaled_rates_map[i]
+    @test dependencies(system)[i] == map(x -> indexmap[x], dependencies_map[i])
+end

@@ -1,4 +1,4 @@
-immutable Trajectory
+struct Trajectory
   id      :: String
   t_index :: LinSpace{Float64}
   val     :: Vector{Int}
@@ -19,7 +19,7 @@ function Base.show(io :: IO, mt :: Trajectory)
   print(io, mt.id, " ", mt.val)
 end
 
-immutable MeanTrajectory
+struct MeanTrajectory
   id       :: String
   t_index  :: LinSpace{Float64}
   mean_val :: Vector{Float64}
@@ -43,7 +43,7 @@ function Base.show(io :: IO, mt :: MeanTrajectory)
   print(io, mt.id, " ", mt.mean_val)
 end
 
-immutable Histogram
+struct Histogram
   id  :: String
   t   :: Float64
   val :: Vector{Int}

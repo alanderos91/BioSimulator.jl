@@ -1,5 +1,3 @@
-import Base.show
-
 """
 ```
 Reaction(name, rate, formula)
@@ -14,12 +12,12 @@ The `formula` should use `Species` from a `Network`. Multiple reactants are sepa
 - Reaction("death", 0.5, "X --> 0") # no products
 - Reaction("immigration", 0.5, "0 --> X") # no reactants
 """
-type Reaction
+struct Reaction
   id   :: String
   rate :: Float64
 
-  reactants :: Dict{Symbol,Int}
-  products  :: Dict{Symbol,Int}
+  reactants :: OrderedDict{Symbol,Int}
+  products  :: OrderedDict{Symbol,Int}
 
   function Reaction(name, rate, formula)
     reactants, products = parse_reaction(formula)
@@ -67,8 +65,8 @@ end
 parse_reaction(formula::String) = parse_reaction(parse(formula))
 
 function parse_reaction(ex::Expr)
-  reactants = Dict{Symbol,Int}()
-  products  = Dict{Symbol,Int}()
+  reactants = OrderedDict{Symbol,Int}()
+  products  = OrderedDict{Symbol,Int}()
 
   if ex.head == :-->
     exr = ex.args[1]

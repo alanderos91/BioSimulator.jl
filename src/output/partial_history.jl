@@ -1,7 +1,8 @@
-immutable SimData{T}
+struct SimData{T}
   id2ind  :: Dict{Symbol,Int}
-  t_index :: LinSpace{Float64}
+  t_index :: StepRangeLen{Float64,Base.TwicePrecision{Float64},Base.TwicePrecision{Float64}}
   data    :: T
+  stats   :: Dict{Symbol,Int}
 end
 
 get_data(output :: SimData) = output.t_index, output.data

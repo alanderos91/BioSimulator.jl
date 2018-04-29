@@ -1,4 +1,4 @@
-immutable PetriNet
+struct PetriNet
   g :: DiGraph
 
   species_nodes  :: Vector{Int}
@@ -9,6 +9,7 @@ immutable PetriNet
 
   node_labels :: Vector{String}
   edge_labels :: Dict{Tuple{Int,Int},String}
+  edge_styles :: Dict{Tuple{Int,Int},String}
 end
 
 function petri_net(model :: Network)
@@ -22,6 +23,8 @@ function petri_net(model :: Network)
   edge_set = Tuple{Int,Int}[]
   stoc_set = Dict{Tuple{Int,Int},Int}()
 
+  edge_styles = Dict{Tuple{Int,Int},String}()
+
   # construct edges and extract stoichiometries
   # species numbered 1 thru s
   # reactions numbered s+1 thru s+r
@@ -34,6 +37,7 @@ function petri_net(model :: Network)
       i = id2ind[reactant]
       e = (i, j)
       push!(edge_set, e)
+      edge_styles[e] = "-stealth, draw, rounded corners=5pt, solid, xshift=-2pt"
       v > 1 && (stoc_set[e] = v)
     end
 
@@ -41,6 +45,7 @@ function petri_net(model :: Network)
       i = id2ind[product]
       e = (j, i)
       push!(edge_set, e)
+      edge_styles[e] = "-stealth, draw, rounded corners=5pt, dashed, xshift=2pt, red, swap"
       v > 1 && (stoc_set[e] = v)
     end
   end
@@ -67,26 +72,29 @@ function petri_net(model :: Network)
     species_styles,
     reaction_styles,
     node_labels,
-    edge_labels
+    edge_labels,
+    edge_styles
   )
 end
 
-function draw(x :: PetriNet)
+function draw(x :: PetriNet, options)
   graph           = x.g
   labels          = x.node_labels
   species_styles  = x.species_styles
   reaction_styles = x.reaction_styles
   edge_labels     = x.edge_labels
-  
+  edge_styles     = x.edge_styles
+
   labels = map(x -> replace(x, "_", "\$\\cdot\$"), labels)
-  
-  TikzGraphs.plot(graph,
-                  labels = labels,
-                  node_style  = "align=center, anchor=center, scale=1.2, level sep=1cm",
-                  node_styles = merge(species_styles, reaction_styles),
-                  edge_style  = "very thick",
-                  edge_labels = edge_labels,
-                  )
+
+  TikzGraphs.plot(graph, TikzGraphs.Layouts.Layered(),
+    labels,
+    node_styles = merge(species_styles, reaction_styles),
+    edge_labels = edge_labels,
+    edge_styles = edge_styles,
+    #edge_style = "out=20, relative=true",
+    options = options
+  )
 end
 
-visualize(x :: Network) = draw(petri_net(x))
+visualize(x :: Network, options = "") = draw(petri_net(x), options)

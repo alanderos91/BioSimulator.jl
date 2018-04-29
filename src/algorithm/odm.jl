@@ -9,7 +9,7 @@ Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting rea
 - `end_time`: The termination time, supplied by a user.
 - `t`: The current simulation time.
 """
-type ODM <: ExactMethod
+mutable struct ODM <: ExactMethod
   # parameters
   end_time :: Float64
 
@@ -17,9 +17,13 @@ type ODM <: ExactMethod
   t      :: Float64
 
   # statistics
+  stats :: Dict{Symbol,Int}
 
   function ODM(end_time::AbstractFloat)
-    new(end_time, 0.0)
+    new(end_time, 0.0,
+        Dict{Symbol,Int}(
+        :gillespie_steps => 0
+    ))
   end
 end
 
@@ -57,12 +61,11 @@ function step!(algorithm::ODM, Xt, r)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    println("t = ", get_time(algorithm))
-    println("a = ", a)
-    println("Xt = ", Xt)
-    error("intensity = ", intensity(a))
+    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
-
+  
+  algorithm.stats[:gillespie_steps] += 1
+  
   return nothing
 end
 
@@ -98,27 +101,27 @@ function presimulate!(
 end
 
 @inbounds function _sort!(r, ix)
-  V  = stoichiometry(r)
-  U  = coefficients(r)
-  k  = scaled_rates(r)
-  dg = dependencies(r)
+  V = stoichiometry(r)[:, ix]
+  U = coefficients(r)[:, ix]
+  k = scaled_rates(r)[ix]
+  g = dependencies(r)[ix]
 
-  temp1 = V[:, ix]
-  temp2 = U[:, ix]
-  temp3 = k[ix]
-  temp4 = dg[ix]
-
-  for i in eachindex(V) # this is correct
-    V[i] = temp1[i]
-    U[i] = temp2[i]
+  for i in eachindex(V)
+    r.stoichiometry[i] = V[i]
+    r.coefficients[i] = U[i]
   end
 
-  for i in eachindex(dg) # this is not correct
-    k[i]  = temp3[i]
-    dg[i] = temp4[i]
-    for j in eachindex(dg[i])
-      dg[i][j] = findfirst(ix, dg[i][j])
+  for i in eachindex(ix)
+    r.scaled_rates[i] = k[i]
+    r.dependencies[i] = g[i]
+    for j in eachindex(g[i])
+      r.dependencies[i][j] = findfirst(ix, g[i][j])
     end
+  end
+
+  if issparse(V)
+    dropzeros!(r.stoichiometry)
+    dropzeros!(r.coefficients)
   end
 
   return r

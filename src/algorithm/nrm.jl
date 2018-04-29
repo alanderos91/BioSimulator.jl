@@ -1,6 +1,3 @@
-import Base.Collections: PriorityQueue, peek
-import Base.Order: ForwardOrdering
-
 """
 ```
 NRM
@@ -13,18 +10,22 @@ Gibson and Bruck's Next Reaction Method, statistically equivalent to `SSA`. It p
 - `t`: The current simulation time.
 - `pq`: A priority queue that sorts reaction according to the their next firing times.
 """
-type NRM <: ExactMethod
+mutable struct NRM <: ExactMethod
   # parameters
   end_time :: Float64
 
   # state variables
   t        :: Float64
-  pq       :: PriorityQueue{Int,Float64,ForwardOrdering}
+  pq       :: PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}
 
   # statistics
+  stats :: Dict{Symbol,Int}
 
   function NRM(end_time::AbstractFloat)
-    new(end_time, 0.0, PriorityQueue(Int, Float64))
+    new(end_time, 0.0, PriorityQueue{Int, Float64}(),
+      Dict{Symbol,Int}(
+        :gillespie_steps => 0
+    ))
   end
 end
 
@@ -78,12 +79,11 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    println("t = ", get_time(algorithm))
-    println("a = ", a)
-    println("Xt = ", Xt)
-    error("intensity = ", intensity(a))
+    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
+  algorithm.stats[:gillespie_steps] += 1
+  
   return nothing
 end
 
