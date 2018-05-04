@@ -62,7 +62,7 @@ end
 ##### next reaction #####
 
 function compute_stepsize(a::PropensityVector)
-  rand(Exponential(1 / intensity(a)))
+  randexp() / intensity(a)
 end
 
 ##### selecting reaction #####

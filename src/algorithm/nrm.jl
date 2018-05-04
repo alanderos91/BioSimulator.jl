@@ -54,7 +54,7 @@ function reset!(algorithm::NRM, a::PVec)
   pq = algorithm.pq
 
   for j in eachindex(a)
-    pq[j] = rand(Exponential(1 / a[j]))
+    pq[j] = randexp() / a[j]
   end
 
   return nothing

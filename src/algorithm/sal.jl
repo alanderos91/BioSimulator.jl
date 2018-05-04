@@ -79,7 +79,7 @@ function step!(algorithm::SAL, Xt, r)
 
     if iscritical
       algorithm.stats[:gillespie_steps] += 1
-      τ = rand(Exponential(1 / intensity(a)))
+      τ = randexp() / intensity(a)
       set_time!(algorithm, τ)
 
       if !done(algorithm)

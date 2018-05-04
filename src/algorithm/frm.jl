@@ -61,7 +61,7 @@ end
   min_ind = 0
 
   for j in eachindex(a)
-    temp = rand(Exponential(1 / a[j]))
+    temp = randexp() / a[j]
     if temp < min_val
       min_val = temp
       min_ind = j
