@@ -12,6 +12,8 @@ using Reactive
 import TikzGraphs
 using LightGraphs: DiGraph, add_edge!
 
+import StatsFuns.RFunctions: poisrand
+
 import Base: (<=),
              (>=),
              show,
@@ -39,9 +41,10 @@ include(joinpath("algorithm","ssa.jl"))
 include(joinpath("algorithm","odm.jl"))
 include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","nrm.jl"))
+include(joinpath("algorithm","otl.jl"))
 include(joinpath("algorithm","sal.jl"))
 
-export SSA, FRM, NRM, ODM, SAL
+export SSA, FRM, NRM, ODM, OTL, SAL
 
 # Interface
 include(joinpath("interface","species.jl"))

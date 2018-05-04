@@ -6,7 +6,7 @@ n = 1
 u = 5357
 m = 1
 
-algorithms = [SSA, FRM, NRM, ODM, SAL]
+algorithms = [SSA, FRM, NRM, ODM, OTL, SAL]
 
 for algorithm in algorithms
   @printf "%+6s\n" split(uppercase(string(algorithm)),".")[2]

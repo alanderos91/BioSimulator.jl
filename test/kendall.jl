@@ -20,7 +20,7 @@ model = kendall(i, α, μ, ν)
 
 theoretical = kendall_mean(i, linspace(0.0, t, n + 1), α, μ, ν)
 
-algorithms = [SSA, FRM, NRM, ODM, SAL]
+algorithms = [SSA, FRM, NRM, ODM, OTL, SAL]
 
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
