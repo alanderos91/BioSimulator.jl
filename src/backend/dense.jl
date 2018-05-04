@@ -34,8 +34,8 @@ function DenseReactionSystem(reactions, id2ind, c, d)
 end
 
 function dense_stoichiometry(reactions, id2ind, c, d)
-  V = zeros(c, d)
-  U = zeros(c, d)
+  V = zeros(Int, c, d)
+  U = zeros(Int, c, d)
 
   V, U = compute_net_stoichiometry!(V, U, reactions, id2ind)
 
