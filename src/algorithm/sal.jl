@@ -214,7 +214,7 @@ function generate_events!(events, r, τ, drdt)
   for j in eachindex(a)
     λ = τ * a[j] + 0.5 * τ * τ * drdt[j]
 
-    events[j] = rand(Poisson(max(λ, 0)))
+    events[j] = poisrand(max(λ, 0))
   end
 
   return nothing

@@ -1,5 +1,4 @@
 julia 0.6
-Distributions
 Reexport
 Plots
 DataFrames
@@ -7,3 +6,4 @@ TikzGraphs
 LightGraphs
 Interact
 Reactive
+StatsFuns

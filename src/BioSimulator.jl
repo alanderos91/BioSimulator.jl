@@ -1,6 +1,5 @@
 module BioSimulator
 
-using Distributions
 using DataStructures
 using Reexport
 using Interact

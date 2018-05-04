@@ -112,7 +112,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     else
 
       if a[α] > zero(T)
-        pq[α] = τ + rand(Exponential(1 / a[α]))
+        pq[α] = τ + randexp() / a[α]
       else
         pq[α] = Inf
       end
