@@ -28,8 +28,6 @@ mutable struct SSA <: ExactMethod
   end
 end
 
-SSA(end_time; na...) = SSA(end_time)
-
 set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 ##### implementation #####

@@ -43,15 +43,15 @@ include(joinpath("algorithm","nrm.jl"))
 include(joinpath("algorithm","otl.jl"))
 include(joinpath("algorithm","sal.jl"))
 
-export SSA, FRM, NRM, ODM, OTL, SAL
-
 # Interface
+include(joinpath("interface","build_algorithm.jl"))
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))
 include(joinpath("interface","network.jl"))
 include(joinpath("interface","gui.jl"))
 include(joinpath("backend","util.jl"))
 
+export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnticipation
 export Species, Reaction, Network,
              n_species, n_reactions, species_list, reaction_list
 

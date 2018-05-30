@@ -29,8 +29,6 @@ mutable struct NRM <: ExactMethod
   end
 end
 
-NRM(end_time; na...) = NRM(end_time)
-
 get_reaction_times(algorithm::NRM) = algorithm.pq
 
 set_time!(algorithm::NRM, t) = (algorithm.t = t)

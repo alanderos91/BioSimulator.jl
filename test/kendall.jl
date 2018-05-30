@@ -20,7 +20,14 @@ model = kendall(i, α, μ, ν)
 
 theoretical = kendall_mean(i, linspace(0.0, t, n + 1), α, μ, ν)
 
-algorithms = [SSA, FRM, NRM, ODM, OTL, SAL]
+algorithms = [
+  Direct(),
+  FirstReaction(),
+  NextReaction(),
+  OptimizedDirect(),
+  TauLeaping(),
+  StepAnticipation()
+]
 
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
@@ -31,7 +38,7 @@ end
 
 print("    Running tests...\n\n")
 for algorithm in algorithms
-  print("   - $(split(uppercase(string(algorithm)),".")[2]): ")
+  print("   - $(algorithm): ")
 
   srand(u)
 

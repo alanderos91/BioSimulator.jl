@@ -22,63 +22,45 @@ The simulation routine will run until the termination `time` and record the syst
 - `kwargs`: Additional keyword arguments specific to each algorithm.
 
 """
-function simulate(model::Network, algorithm::Type{T}=SSA, otype::Type{D}=Array;
+function simulate(model::Network, algname::T, otype::Type{D}=Array;
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
   kwargs...) where {T,D}
 
+  # build algorithm
+  algorithm = build_algorithm(algname, time; kwargs...)
+
   # extract model information
   c = n_species(model)
   d = n_reactions(model)
 
-  species = species_list(model)
+  species   = species_list(model)
   reactions = reaction_list(model)
 
   # create simulation data structures
   x0, rxn, id, id2ind = make_datastructs(species, reactions, c, d)
 
   # initialize
-  xt     = copy(x0)
-  alg    = algorithm(time; kwargs...)
+  xt = copy(x0)
   output = SimData(
     id2ind,
     linspace(0.0, time, epochs + 1),
     #SharedArray{eltype(x0)}(c, epochs + 1, trials),
     D{eltype(x0)}(c, epochs + 1, trials),
-    alg.stats
+    algorithm.stats
   )
 
-  init!(alg, xt, rxn)
+  init!(algorithm, xt, rxn)
 
   # simulation
   # @sync for pid in procs(output.data)
   #   @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
   # end
-  simulate_wrapper!(output, xt, x0, alg, rxn)
+  simulate_wrapper!(output, xt, x0, algorithm, rxn)
 
   return output
 end
-
-# function make_datastructs(::Type{Val{false}}, species, reactions, c, d)
-#   # state vector 
-#   x0, id, id2ind = make_species_vector(species)
-
-#   # reactions
-#   rxn = DenseReactionSystem(reactions, id2ind, c, d)
-
-#   return x0, rxn, id, id2ind
-# end
-
-# function make_datastructs(::Type{Val{true}}, species, reactions, c, d)
-#   # state vector
-#   x0, id, id2ind = make_species_vector(species)
-
-#   # reactions
-#   rxn = SparseReactionSystem(reactions, id2ind, c, d)
-
-#   return x0, rxn, id, id2ind
-# end
 
 function make_datastructs(species, reactions, c, d)
   # state vector

@@ -37,8 +37,6 @@ mutable struct OTL <: TauLeapMethod
   end
 end
 
-OTL(end_time; ϵ::Float64 = 0.125, δ::Float64 = 100.0, β::Float64 = 0.75, na...) = OTL(end_time, ϵ, δ, β)
-
 set_time!(algorithm::OTL, τ) = (algorithm.t = algorithm.t + τ)
 
 function init!(x :: OTL, Xt, r)
@@ -78,11 +76,10 @@ function step!(algorithm :: OTL, Xt, r)
     else
       # τ-leap update
       algorithm.stats[:leaping_steps] += 1
-      expected_change!(algorithm.ξ, a.cache, r)
       propensity_derivatives!(algorithm.b, Xt, r)
 
       # compute leap size and check for end of interval
-      τ = tauleap_DG2001(algorithm.ξ, algorithm.b, algorithm.τ, a.intensity, algorithm.ϵ)
+      τ = tauleap_DGLP2003(stoichiometry(r), algorithm.b, a.cache, a.intensity, algorithm.ϵ)
       τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
       # compute jumps
@@ -104,10 +101,8 @@ function step!(algorithm :: OTL, Xt, r)
     
       fire_reactions!(Xt, r, algorithm.events)
 
-      # state dependent updates; these could be fused together
+      # state dependent updates
       update_all_propensities!(a, r, Xt)
-      # expected_change!(algorithm.ξ, a.cache, r)
-      # propensity_derivatives!(algorithm.b, Xt, r)
 
       set_time!(algorithm, τ)
     end
@@ -131,7 +126,7 @@ end
 function propensity_derivatives!(b, x, r)
   for j in 1:size(b, 2)
     for k in eachindex(x)
-      b[k, j] = compute_mass_action_deriv(x, r, j, k)
+      @inbounds b[k, j] = compute_mass_action_deriv(x, r, j, k)
     end
   end
   return b
@@ -150,4 +145,50 @@ function tauleap_DG2001(ξ, b, τ, a, ϵ)
     τ[j] = ϵ * a / abs(τ[j])
   end
   return min(Inf, minimum(τ))
+end
+
+"""
+  Gillespie and Petzold 2003, Eq 6
+"""
+function tauleap_DGLP2003(ν, b, a, a0, ϵ)
+  T = eltype(a0)
+  
+  A1 = ϵ * a0
+  A2 = A1^2
+  τ = typemax(T)
+
+  for j in eachindex(a)
+    μ, σ² = zero(T), zero(T)
+    for k in eachindex(a)
+      f = f_calculation(ν, b, j)
+
+      @inbounds @fastmath μ  = μ + f * a[k]
+      @inbounds @fastmath σ² = σ² + f^2 * a[k]
+    end
+    τ′ = min(A1 / abs(μ), A2 / σ²)
+    τ  = min(τ, τ′)
+  end
+  return τ
+end
+
+function f_calculation(ν :: DenseMatrix{Int}, b, j)
+  f = zero(eltype(b))
+
+  @simd for i in 1:size(b, 1)
+    @inbounds @fastmath f = f + b[i, j] * ν[i, j]
+  end
+
+  return f
+end
+
+function f_calculation(ν :: SparseMatrixCSC{Int,Int}, b, j)
+  f = zero(eltype(b))
+  rv = rowvals(ν)
+  nz = nonzeros(ν)
+
+  for i in nzrange(ν, j)
+    @inbounds @fastmath f = f + b[rv[i], j] * nz[i]
+  end
+
+  return f
 end

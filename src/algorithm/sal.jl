@@ -10,7 +10,7 @@ Step Anticipation-τ Leaping. An algorithm method that improves upon the accurac
 - `t`: The current simulation time.
 - `ϵ`: A parameter controlling the size of leaps. Higher values allow for larger leaps, but may compromise the accuracy of results.
 - `δ`: A τ-leaping parameter used to switch between `SSA` and `SAL`. For example, if `intensity < δ` the algorithm carries out an ordinary SSA step to avoid negative species populations.
-- `α`: A parameter used to contract a τ-leap in the event of negative populations. Aggresive contraction (lower values) will bias sample paths.
+- `β`: A parameter used to contract a τ-leap in the event of negative populations. Aggresive contraction (lower values) will bias sample paths.
 - `dxdt`: Rates of change for each species.
 - `drdt`: Rates of change for each reaction propensity.
 - `events`: The number of Poisson arrivals within a τ-leap interval.
@@ -21,7 +21,7 @@ mutable struct SAL <: TauLeapMethod
   end_time :: Float64
   ϵ :: Float64
   δ :: Float64
-  α :: Float64
+  β :: Float64
 
   # state variables
   t              :: Float64
@@ -32,8 +32,8 @@ mutable struct SAL <: TauLeapMethod
   # statistics
   stats :: Dict{Symbol,Int}
 
-  function SAL(end_time::AbstractFloat, ϵ, δ, α)
-    new(end_time, ϵ, δ, α,
+  function SAL(end_time::AbstractFloat, ϵ, δ, β)
+    new(end_time, ϵ, δ, β,
       0.0, Float64[], Float64[], Int[],
       Dict{Symbol,Int}(
         :negative_excursions => 0,
@@ -44,14 +44,9 @@ mutable struct SAL <: TauLeapMethod
   end
 end
 
-SAL(end_time; ϵ::Float64=0.125, δ::Float64=100.0, α::Float64=0.75, na...) = SAL(end_time, ϵ, δ, α)
-
 set_time!(algorithm::SAL, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 ##### accessors #####
-epsilon(x::SAL) = x.ϵ
-delta(x::SAL)   = x.δ
-alpha(x::SAL)   = x.α
 get_derivatives(x::SAL) = x.dxdt, x.drdt
 
 function init!(x::SAL, Xt, r)
@@ -73,7 +68,7 @@ end
 
 function step!(algorithm::SAL, Xt, r)
   a = propensities(r)
-  iscritical = (intensity(a) < delta(algorithm))
+  iscritical = (intensity(a) < algorithm.δ)
 
   if intensity(a) > 0
 
@@ -104,8 +99,8 @@ end
 
 function sal_update!(algorithm, Xt, r)
   dxdt, drdt = get_derivatives(algorithm)
-  ϵ = epsilon(algorithm)
-  α = alpha(algorithm)
+  ϵ = algorithm.ϵ
+  β = algorithm.β
   events = algorithm.events
 
   mean_derivatives!(dxdt, r)
@@ -123,8 +118,8 @@ function sal_update!(algorithm, Xt, r)
 
   while isbadleap
     algorithm.stats[:contractions] += 1
-    contract!(events, α)
-    τ = τ * α
+    contract!(events, β)
+    τ = τ * β
     isbadleap = is_badleap(Xt, r, events)
   end
 
@@ -252,11 +247,11 @@ function is_badleap(Xt, r::SparseReactionSystem, events)
   return false
 end
 
-function contract!(events, α)
+function contract!(events, β)
   for i in eachindex(events)
     k = 0
     for j in 1:events[i]
-      k = rand() < α ? k + 1 : k
+      k = rand() < β ? k + 1 : k
     end
     events[i] = k
   end

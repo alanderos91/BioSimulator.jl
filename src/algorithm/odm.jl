@@ -27,8 +27,6 @@ mutable struct ODM <: ExactMethod
   end
 end
 
-ODM(end_time; na...) = ODM(end_time)
-
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 
 function init!(algorithm::ODM, Xt, r)

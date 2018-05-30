@@ -29,8 +29,6 @@ mutable struct FRM <: ExactMethod
   end
 end
 
-FRM(end_time; na...) = FRM(end_time)
-
 set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
