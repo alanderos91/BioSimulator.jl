@@ -55,16 +55,18 @@ export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnt
 export Species, Reaction, Network,
              n_species, n_reactions, species_list, reaction_list
 
-export generate_gui, plot_interface
+# export generate_gui, plot_interface
 
 # Output
-include(joinpath("output","partial_history.jl"))
+# include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
-include(joinpath("output","stats.jl"))
-include(joinpath("output","plot.jl"))
+# include(joinpath("output","stats.jl"))
+# include(joinpath("output","plot.jl"))
+include(joinpath("output","sample_path.jl"))
+include(joinpath("output","regular_path.jl"))
 
-export get_data, get_dataframe, visualize
-export Trajectory, MeanTrajectory, Histogram, PhaseTrajectory
+# export get_data, get_dataframe, visualize
+# export Trajectory, MeanTrajectory, Histogram, PhaseTrajectory
 
 include(joinpath("interface","simulate.jl"))
 

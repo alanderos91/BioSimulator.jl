@@ -22,11 +22,11 @@ The simulation routine will run until the termination `time` and record the syst
 - `kwargs`: Additional keyword arguments specific to each algorithm.
 
 """
-function simulate(model::Network, algname::T, otype::Type{D}=Array;
+function simulate(model::Network, algname::T, output_type=Val{:fixed};
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
-  kwargs...) where {T,D}
+  kwargs...) where {T}
 
   # build algorithm
   algorithm = build_algorithm(algname, time; kwargs...)
@@ -41,25 +41,31 @@ function simulate(model::Network, algname::T, otype::Type{D}=Array;
   # create simulation data structures
   x0, rxn, id, id2ind = make_datastructs(species, reactions, c, d)
 
+  # get output type
+  output = build_output(output_type, c, epochs, trials, time)
+
   # initialize
   xt = copy(x0)
-  output = SimData(
-    id2ind,
-    linspace(0.0, time, epochs + 1),
-    #SharedArray{eltype(x0)}(c, epochs + 1, trials),
-    D{eltype(x0)}(c, epochs + 1, trials),
-    algorithm.stats
-  )
-
   init!(algorithm, xt, rxn)
 
-  # simulation
-  # @sync for pid in procs(output.data)
-  #   @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
-  # end
+  # delegate trials
   simulate_wrapper!(output, xt, x0, algorithm, rxn)
 
   return output
+end
+
+function build_output(::Type{Val{:fixed}}, nspecies, epochs, ntrials, tfinal)
+  n = epochs + 1
+  tdata = collect(linspace(0.0, tfinal, n))
+  output = RegularEnsemble(ntrials, nspecies, epochs)
+  for i in eachindex(output)
+    @inbounds copy!(output[i].tdata, tdata)
+  end
+  return output
+end
+
+function build_output(::Type{Val{:full}}, nspecies, epochs, ntrials, tfinal)
+  return Ensemble(ntrials)
 end
 
 function make_datastructs(species, reactions, c, d)
@@ -76,88 +82,46 @@ function make_datastructs(species, reactions, c, d)
   return x0, rxn, id, id2ind
 end
 
-# generate a single trajectory
-function simulate!(
-    output    :: SimData,
-    Xt        :: Vector{Int},
-    algorithm :: Algorithm,
-    reactions :: AbstractReactionSystem,
-    trial     :: Integer
-  )
-  epoch = 1
-  while !done(algorithm)
-    t     = get_time(algorithm)
-    epoch = update!(output, Xt, t, epoch, trial)
-
-    step!(algorithm, Xt, reactions)
+function simulate_wrapper!(output, xt, x0, alg, rxn)
+  N = Threads.nthreads()
+  for i in 1:N
+    len = div(length(output), N)
+    domain = ((i-1)*len+1):i*len
+    simulate_chunk!(output, xt, x0, alg, rxn, domain)
   end
-  t = get_time(algorithm)
-  update!(output, Xt, t, epoch, trial)
-
-  return output
 end
 
-# this retrieves trials assigned to process
-function partition(output :: SimData{SharedArray{Int64,3}})
-  _, q = get_data(output)
-  idx  = indexpids(q)
-  if idx == 0
-    # This worker is not assigned a piece
-    return 1:0, 1:0
-  end
-  nchunks = length(procs(q))
-  splits  = [round(Int, s) for s in linspace(0,size(q,3),nchunks+1)]
-  splits[idx]+1:splits[idx+1]
-end
-
-# iterate over trials assigned to process
-function simulate_chunk!(
-  output    :: SimData,
-  Xt        :: Vector{Int},
-  X0        :: Vector{Int},
-  algorithm :: Algorithm,
-  reactions :: AbstractReactionSystem,
-  trial_set :: UnitRange
-)
+function simulate_chunk!(output, Xt, X0, algorithm, reactions, trial_set)
   a = propensities(reactions)
-
   for trial in trial_set
     copy!(Xt, X0)
     update_all_propensities!(a, reactions, Xt)
     reset!(algorithm, a)
 
-    simulate!(output, Xt, algorithm, reactions, trial)
+    xw = output[trial]
+
+    simulate!(xw, Xt, algorithm, reactions)
   end
 
   return output
 end
 
-# the wrapper
-@inline function simulate_shared_chunk!(
-  output    :: SimData,
-  Xt        :: Vector{Int},
-  X0        :: Vector{Int},
-  algorithm :: Algorithm,
-  reactions :: AbstractReactionSystem
-)
-  simulate_chunk!(output, Xt, X0, algorithm, reactions, partition(output))
+function simulate!(xw :: RegularPath, Xt, algorithm, reactions)
+  epoch = 1
+  while !done(algorithm)
+    epoch = update!(xw, algorithm.t, Xt, epoch)
+    step!(algorithm, Xt, reactions)
+  end
+  update!(xw, algorithm.t, Xt, epoch)
+
+  return xw
 end
 
-function simulate_wrapper!(output :: SimData{SharedArray{T,N}}, xt, x0, alg, rxn) where {T,N}
-  @sync for pid in procs(output.data)
-    @async remotecall_fetch(simulate_shared_chunk!, pid, output, xt, x0, alg, rxn)
+function simulate!(xw :: SamplePath, Xt, algorithm, reactions)
+  while !done(algorithm)
+    update!(xw, algorithm.t, Xt)
+    step!(algorithm, Xt, reactions)
   end
-end
 
-# function simulate_wrapper!(output :: SimData{Array{T,N}}, xt, x0, alg, rxn) where {T,N}
-#   simulate_chunk!(output, xt, x0, alg, rxn, 1:size(output.data, 3))
-# end
-
-function simulate_wrapper!(output :: SimData{Array{T,N}}, xt, x0, alg, rxn) where {T,N}
-  data = output.data
-  for i in 1:Threads.nthreads()
-    len = div(size(data, 3), Threads.nthreads())
-    domain = ((i-1)*len+1):i*len
-    simulate_chunk!(output, xt, x0, alg, rxn, domain)
-  end
+  return xw
 end
