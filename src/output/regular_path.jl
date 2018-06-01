@@ -1,6 +1,6 @@
 struct RegularPath{T1,T2}
   tdata :: Vector{T1}
-  xdata :: Vector{Vector{T2}}
+  xdata :: Matrix{T2}
 end
 
 RegularEnsemble{T1,T2} = Vector{RegularPath{T1,T2}}
@@ -10,7 +10,7 @@ RegularEnsemble{T1,T2} = Vector{RegularPath{T1,T2}}
 @inline function RegularPath{T1,T2}(nspecies::Int, epochs::Int) where {T1,T2}
   n = epochs + 1
   tdata = zeros(T1, n)
-  xdata = [zeros(T2, nspecies) for i in 1:n]
+  xdata = zeros(T2, nspecies, n)
 
   return RegularPath(tdata, xdata)
 end
@@ -26,7 +26,9 @@ function update!(xw :: RegularPath, t, x, epoch)
   max_epoch = length(tdata)
 
   while (epoch <= max_epoch) && (t >= tdata[epoch])
-    @inbounds copy!(xdata[epoch], x)
+    for i in eachindex(x)
+      @inbounds xdata[i, epoch] = x[i]
+    end
     epoch = epoch + 1
   end
 
