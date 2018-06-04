@@ -1,17 +1,16 @@
 module BioSimulator
 
-using DataStructures
-using Reexport
-using Interact
-using Reactive
+__precompile__()
 
-@reexport using Plots
-@reexport using DataFrames
+using DataStructures
+using RecipesBase
 
 import TikzGraphs
 using LightGraphs: DiGraph, add_edge!
 
 import StatsFuns.RFunctions: poisrand
+
+import DataFrames: DataFrame
 
 import Base: (<=),
              (>=),
@@ -52,21 +51,19 @@ include(joinpath("interface","gui.jl"))
 include(joinpath("backend","util.jl"))
 
 export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnticipation
-export Species, Reaction, Network,
-             n_species, n_reactions, species_list, reaction_list
+export Species, Reaction, Network, n_species, n_reactions, species_list, reaction_list
 
 # export generate_gui, plot_interface
 
 # Output
-# include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
-# include(joinpath("output","stats.jl"))
-# include(joinpath("output","plot.jl"))
 include(joinpath("output","sample_path.jl"))
 include(joinpath("output","regular_path.jl"))
+include(joinpath("output","average_path.jl"))
+include(joinpath("output","histogram.jl"))
+include(joinpath("output","summary.jl"))
 
-# export get_data, get_dataframe, visualize
-# export Trajectory, MeanTrajectory, Histogram, PhaseTrajectory
+export visualize
 
 include(joinpath("interface","simulate.jl"))
 

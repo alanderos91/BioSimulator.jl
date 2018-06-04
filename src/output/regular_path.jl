@@ -34,3 +34,15 @@ function update!(xw :: RegularPath, t, x, epoch)
 
   return epoch
 end
+
+@recipe function f(xw :: RegularPath)
+  tdata  = xw.tdata
+  xdata  = xw.xdata'
+
+  legend     --> true
+  grid       --> false
+  xlims      --> (tdata[1], tdata[end])
+  seriestype --> :steppre
+
+  tdata, xdata
+end

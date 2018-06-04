@@ -1,6 +1,6 @@
 struct SamplePath{T1,T2}
-  tdata :: Vector{T1}
-  xdata :: Vector{Vector{T2}}
+  tdata  :: Vector{T1}
+  xdata  :: Vector{Vector{T2}}
 end
 
 Ensemble{T1,T2} = Vector{SamplePath{T1,T2}}
@@ -28,4 +28,17 @@ end
 
 function update!(xw :: SamplePath, t, x)
   @inbounds push!(xw, t, x)
+end
+
+@recipe function f(xw :: SamplePath)
+  tdata  = xw.tdata
+  xdata  = xw.xdata
+  Xdata  = hcat(xdata...)'
+
+  legend     --> true
+  grid       --> false
+  xlims      --> (tdata[1], tdata[end])
+  seriestype --> :steppre
+
+  tdata, Xdata
 end
