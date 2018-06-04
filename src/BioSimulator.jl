@@ -53,8 +53,6 @@ include(joinpath("backend","util.jl"))
 export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnticipation
 export Species, Reaction, Network, n_species, n_reactions, species_list, reaction_list
 
-# export generate_gui, plot_interface
-
 # Output
 include(joinpath("output","petrinet.jl"))
 include(joinpath("output","sample_path.jl"))
