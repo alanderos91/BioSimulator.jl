@@ -17,10 +17,12 @@ mutable struct ODM <: ExactMethod
   t      :: Float64
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function ODM(end_time::AbstractFloat)
+  function ODM(end_time::AbstractFloat, stats_tracked)
     new(end_time, 0.0,
+        stats_tracked,
         Dict{Symbol,Int}(
         :gillespie_steps => 0
     ))
@@ -61,8 +63,10 @@ function step!(algorithm::ODM, Xt, r)
   else
     throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
-  
-  algorithm.stats[:gillespie_steps] += 1
+
+  if algorithm.stats_tracked
+    algorithm.stats[:gillespie_steps] += 1
+  end
   
   return nothing
 end

@@ -23,11 +23,13 @@ mutable struct OTL <: TauLeapMethod
   events :: Vector{Int}
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function OTL(end_time, ϵ, δ, β)
+  function OTL(end_time, ϵ, δ, β, stats_tracked)
     new(end_time, ϵ, δ, β,
     0.0, Float64[], Matrix{Float64}(0,0), Float64[], Int[],
+    stats_tracked,
     Dict{Symbol,Int}(
       :negative_excursions => 0,
       :contractions => 0,
@@ -61,10 +63,16 @@ function step!(algorithm :: OTL, Xt, r)
   a = propensities(r)
   iscritical = (intensity(a) < algorithm.δ)
 
+  # compute leap size and check for end of interval
+  τ = tauleap_DGLP2003(stoichiometry(r), algorithm.b, a.cache, a.intensity, algorithm.ϵ)
+  τ = min(τ, end_time(algorithm) - get_time(algorithm))
+
   if intensity(a) > 0
-    if iscritical
+    if τ < algorithm.δ / intensity(a)
       # Gillespie update
-      algorithm.stats[:gillespie_steps] += 1
+      if algorithm.stats_tracked
+        algorithm.stats[:gillespie_steps] += 1
+      end
       τ = randexp() / intensity(a)
       set_time!(algorithm, τ)
 
@@ -75,12 +83,9 @@ function step!(algorithm :: OTL, Xt, r)
       end
     else
       # τ-leap update
-      algorithm.stats[:leaping_steps] += 1
-      propensity_derivatives!(algorithm.b, Xt, r)
-
-      # compute leap size and check for end of interval
-      τ = tauleap_DGLP2003(stoichiometry(r), algorithm.b, a.cache, a.intensity, algorithm.ϵ)
-      τ = min(τ, end_time(algorithm) - get_time(algorithm))
+      if algorithm.stats_tracked
+        algorithm.stats[:leaping_steps] += 1
+      end
 
       # compute jumps
       for j in eachindex(algorithm.events)
@@ -88,12 +93,14 @@ function step!(algorithm :: OTL, Xt, r)
       end
 
       isbadleap = is_badleap(Xt, r, algorithm.events)
-      if isbadleap
+      if isbadleap && algorithm.stats_tracked
         algorithm.stats[:negative_excursions] += 1
       end
     
       while isbadleap
-        algorithm.stats[:contractions] += 1
+        if algorithm.stats_tracked
+          algorithm.stats[:contractions] += 1
+        end
         contract!(algorithm.events, algorithm.β)
         τ = τ * algorithm.β
         isbadleap = is_badleap(Xt, r, algorithm.events)
@@ -103,6 +110,7 @@ function step!(algorithm :: OTL, Xt, r)
 
       # state dependent updates
       update_all_propensities!(a, r, Xt)
+      propensity_derivatives!(algorithm.b, Xt, r)
 
       set_time!(algorithm, τ)
     end

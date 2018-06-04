@@ -22,14 +22,15 @@ The simulation routine will run until the termination `time` and record the syst
 - `kwargs`: Additional keyword arguments specific to each algorithm.
 
 """
-function simulate(model::Network, algname::T, output_type=Val{:fixed};
+function simulate(model::Network, algname::T, output_type::Type{Val{O}}=Val{:fixed};
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
-  kwargs...) where {T}
+  track_stats::Bool=false,
+  kwargs...) where {T,O}
 
   # build algorithm
-  algorithm = build_algorithm(algname, time; kwargs...)
+  algorithm = build_algorithm(algname, time, track_stats; kwargs...)
 
   # extract model information
   c = n_species(model)
@@ -51,7 +52,9 @@ function simulate(model::Network, algname::T, output_type=Val{:fixed};
   # delegate trials
   simulate_wrapper!(output, xt, x0, algorithm, rxn)
 
-  return output
+  result = SimulationSummary(model, algname, algorithm, time, epochs, trials, id2ind, output; kwargs...)
+
+  return result
 end
 
 function build_output(::Type{Val{:fixed}}, nspecies, epochs, ntrials, tfinal)

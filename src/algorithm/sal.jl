@@ -30,11 +30,13 @@ mutable struct SAL <: TauLeapMethod
   events         :: Vector{Int}
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function SAL(end_time::AbstractFloat, ϵ, δ, β)
+  function SAL(end_time::AbstractFloat, ϵ, δ, β, stats_tracked)
     new(end_time, ϵ, δ, β,
       0.0, Float64[], Float64[], Int[],
+      stats_tracked,
       Dict{Symbol,Int}(
         :negative_excursions => 0,
         :contractions => 0,
@@ -67,13 +69,25 @@ function reset!(x::SAL, a::PVec)
 end
 
 function step!(algorithm::SAL, Xt, r)
+  # unpack propensities
   a = propensities(r)
-  iscritical = (intensity(a) < algorithm.δ)
+
+  # unpack SAL variables
+  ϵ = algorithm.ϵ
+  β = algorithm.β
+  δ = algorithm.δ
+  dxdt, drdt = get_derivatives(algorithm)
+  events = algorithm.events
 
   if intensity(a) > 0
+    τ = tau_leap(r, drdt, ϵ)
+    τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
-    if iscritical
-      algorithm.stats[:gillespie_steps] += 1
+    # if τ is too small, do a Gillespie update
+    if τ < δ / intensity(a)
+      if algorithm.stats_tracked
+        algorithm.stats[:gillespie_steps] += 1
+      end
       τ = randexp() / intensity(a)
       set_time!(algorithm, τ)
 
@@ -82,12 +96,19 @@ function step!(algorithm::SAL, Xt, r)
         fire_reaction!(Xt, r, μ)
         update_propensities!(a, r, Xt, μ)
       end
+    # otherwise, proceed with SAL
     else
-      algorithm.stats[:leaping_steps] += 1
-      τ = sal_update!(algorithm, Xt, r)
+      if algorithm.stats_tracked
+        algorithm.stats[:leaping_steps] += 1
+      end
+      τ = sal_update!(algorithm, Xt, r, τ)
       update_all_propensities!(a, r, Xt)
       set_time!(algorithm, τ)
     end
+
+    # update SAL variables
+    mean_derivatives!(dxdt, r)
+    time_derivatives!(drdt, Xt, r, dxdt)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
@@ -97,27 +118,23 @@ function step!(algorithm::SAL, Xt, r)
   return nothing
 end
 
-function sal_update!(algorithm, Xt, r)
-  dxdt, drdt = get_derivatives(algorithm)
-  ϵ = algorithm.ϵ
+function sal_update!(algorithm, Xt, r, τ)
   β = algorithm.β
+  _, drdt = get_derivatives(algorithm)
   events = algorithm.events
-
-  mean_derivatives!(dxdt, r)
-  time_derivatives!(drdt, Xt, r, dxdt)
-
-  τ = tau_leap(r, drdt, ϵ)
-  τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
   generate_events!(events, r, τ, drdt)
 
   isbadleap = is_badleap(Xt, r, events)
-  if isbadleap
+  
+  if isbadleap && algorithm.stats_tracked
     algorithm.stats[:negative_excursions] += 1
   end
 
   while isbadleap
-    algorithm.stats[:contractions] += 1
+    if algorithm.stats_tracked
+      algorithm.stats[:contractions] += 1
+    end
     contract!(events, β)
     τ = τ * β
     isbadleap = is_badleap(Xt, r, events)
