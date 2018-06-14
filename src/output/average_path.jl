@@ -28,7 +28,7 @@ end
   xlims      --> (tdata[1], tdata[end])
   ylims      --> (0.0, Inf)
   seriestype --> :steppre
-  ribbon     --> xstd
+  yerrorbar  --> xstd
 
   tdata, xmean
 end
