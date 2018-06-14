@@ -50,22 +50,47 @@ function Base.show(io :: IO, result :: SimulationSummary)
   end
 end
 
-get_regular_path(xw :: RegularPath{T1,T2}, t, epochs) where {T1,T2} = xw
+get_regular_path(xw :: RegularPath{T1,T2}, tfinal, epochs) where {T1,T2} = xw
 
-function get_regular_path(xw::SamplePath{T1,T2}, t, epochs) where {T1,T2}
+function get_regular_path(xw::SamplePath{T1,T2}, tfinal, epochs) where {T1,T2}
   max_epoch = epochs + 1
-  tdata = collect(linspace(0.0, t, max_epoch))
-  xdata = xw.xdata
+
+  x0 = xw.xdata[1]
+
+  tdata = collect(linspace(0.0, tfinal, max_epoch))
+  xdata = zeros(T2, length(xw.xdata[1]), max_epoch)
   epoch = 1
 
-  while (epoch <= max_epoch) && (t >= tdata[epoch])
+  # copy initial conditions
+  for i in eachindex(x0)
+    @inbounds xdata[i, epoch] = x0[i]
+  end
+
+  epoch = epoch + 1
+
+  # copy remaining data from the sample path
+  for j in eachindex(xw.tdata)
+    @inbounds t = xw.tdata[j]
+    @inbounds x = xw.xdata[j]
+
+    while (epoch <= max_epoch) && (t >= tdata[epoch])
+      for i in eachindex(x)
+        @inbounds xdata[i, epoch] = x[i]
+      end
+      epoch = epoch + 1
+    end
+  end
+
+  # fill in the regular path
+  while epoch <= max_epoch
+    x = xw.xdata[end]
     for i in eachindex(x)
       @inbounds xdata[i, epoch] = x[i]
     end
     epoch = epoch + 1
   end
   
-  return SamplePath(tdata, xdata)
+  return RegularPath(tdata, xdata)
 end
 
 @recipe function f(result :: SimulationSummary{T};
