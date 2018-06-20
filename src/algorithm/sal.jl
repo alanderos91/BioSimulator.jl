@@ -1,21 +1,3 @@
-"""
-```
-SAL
-```
-
-Step Anticipation-τ Leaping. An algorithm method that improves upon the accuracy of τ-leaping techniques by incorporating a first-order Taylor expansion.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-- `ϵ`: A parameter controlling the size of leaps. Higher values allow for larger leaps, but may compromise the accuracy of results.
-- `δ`: A τ-leaping parameter used to switch between `SSA` and `SAL`. For example, if `intensity < δ` the algorithm carries out an ordinary SSA step to avoid negative species populations.
-- `β`: A parameter used to contract a τ-leap in the event of negative populations. Aggresive contraction (lower values) will bias sample paths.
-- `dxdt`: Rates of change for each species.
-- `drdt`: Rates of change for each reaction propensity.
-- `events`: The number of Poisson arrivals within a τ-leap interval.
-"""
-
 mutable struct SAL <: TauLeapMethod
   # parameters
   end_time :: Float64

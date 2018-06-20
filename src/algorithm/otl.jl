@@ -1,11 +1,3 @@
-"""
-```
-OTL
-```
-
-Ordinary τ-leaping
-
-"""
 mutable struct OTL <: TauLeapMethod
   # parameters
   end_time :: Float64

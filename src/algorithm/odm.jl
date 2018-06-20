@@ -1,14 +1,3 @@
-"""
-```
-ODM
-```
-
-Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF when selecting the next reaction to fire.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-"""
 mutable struct ODM <: ExactMethod
   # parameters
   end_time :: Float64

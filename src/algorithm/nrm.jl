@@ -1,15 +1,3 @@
-"""
-```
-NRM
-```
-
-Gibson and Bruck's Next Reaction Method, statistically equivalent to `SSA`. It provides better computational efficiency on networks with loosely connected reactions.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-- `pq`: A priority queue that sorts reaction according to the their next firing times.
-"""
 mutable struct NRM <: ExactMethod
   # parameters
   end_time :: Float64

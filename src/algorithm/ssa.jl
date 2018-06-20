@@ -1,14 +1,3 @@
-"""
-```
-SSA
-```
-
-Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and species by computing the time to the next reaction and searching on the CMF.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-"""
 mutable struct SSA <: ExactMethod
   # parameters
   end_time :: Float64
