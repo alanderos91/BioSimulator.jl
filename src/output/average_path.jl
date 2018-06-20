@@ -27,7 +27,7 @@ end
   grid       --> false
   xlims      --> (tdata[1], tdata[end])
   ylims      --> (0.0, Inf)
-  seriestype --> :steppre
+  seriestype --> :scatter
   yerrorbar  --> xstd
 
   tdata, xmean
