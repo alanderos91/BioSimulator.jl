@@ -91,7 +91,7 @@ struct TauLeaping end
 
 function build_algorithm(::TauLeaping, end_time, track_stats;
     epsilon::Float64 = 0.03, delta::Float64 = 2.0, beta::Float64 = 0.75, kwargs...)
-  OTL(end_time, ϵ, δ, β, track_stats)
+  OTL(end_time, epsilon, delta, beta, track_stats)
 end
 
 """
@@ -117,5 +117,5 @@ struct StepAnticipation end
 
 function build_algorithm(::StepAnticipation, end_time, track_stats;
   epsilon::Float64 = 0.03, delta::Float64 = 2.0, beta::Float64 = 0.75, kwargs...)
-  SAL(end_time, ϵ, δ, β, track_stats)
+  SAL(end_time, epsilon, delta, beta, track_stats)
 end
