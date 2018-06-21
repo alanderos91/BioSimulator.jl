@@ -1,33 +1,31 @@
 """
 ```
-simulate{T}(model, [algorithm::Type{T}=SSA];
-  time   :: AbstractFloat=1.0,
-  epochs :: Integer=1,
-  trials :: Integer=1,
-  algvars...)
+simulate(model::Network, algname::T, [output_type::Type{Val{S}} = Val{:fixed}]; time::Float64=1.0, epochs::Int=1, trials::Int=1, track_stats::Bool=false, kwargs...) where {T,S}
 ```
 
-Simulate a `Network` using the given `algorithm`.
-
-The simulation routine will run until the termination `time` and record the system state at evenly spaced `epochs`. This repeats for the given number of `trials`.
+Simulate a `model` with `algname`. The simulation routine will run until the termination `time` for the given number of `trials`.
 
 ### Arguments
+
 - `model`: The `Network` to simulate.
-- `algorithm`: The algorithm used to carry out simulation. One of `SSA`, `FRM`, `NRM`, `ODM`, or `SAL`.
+- `algname`: The name of the algorithm to carry out the simulation. One of `Direct()`, `FirstReaction()`, `NextReaction()`, `OptimizedDirect()`, `TauLeaping()`, or `StepAnticipation()`.
+- `output_type = Val{:fixed}`: The type of output to record. The `Val{:full}` option records every simulation step, whereas the `Val{:fixed}` option records a fixed number of `epochs`.
 
 ### Optional Arguments
-- `time`: The amount of time to simulate the model, in units of the model.
-- `epochs`: The number of times to sample the vector of counts.
-- `trials`: The number of independent realizations to generate.
-- `kwargs`: Additional keyword arguments specific to each algorithm.
+
+- `time = 1.0`: The amount of time to simulate the model, in units of the model.
+- `epochs = 1`: The number of times to sample the vector of counts.
+- `trials = 1`: The number of independent realizations to generate.
+- `track_stats = false`: An option to toggle tracking algorithm statistics (e.g. number of steps).
+- `kwargs`: Additional keyword arguments specific to each algorithm. Reference a specific `algname` for details.
 
 """
-function simulate(model::Network, algname::T, output_type::Type{Val{O}}=Val{:fixed};
+function simulate(model::Network, algname::T, output_type::Type{Val{S}}=Val{:fixed};
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
   track_stats::Bool=false,
-  kwargs...) where {T,O}
+  kwargs...) where {T,S}
 
   # build algorithm
   algorithm = build_algorithm(algname, time, track_stats; kwargs...)
