@@ -85,10 +85,15 @@ end
 
 function simulate_wrapper!(output, xt, x0, alg, rxn)
   N = Threads.nthreads()
-  for i in 1:N
-    len = div(length(output), N)
-    domain = ((i-1)*len+1):i*len
-    simulate_chunk!(output, xt, x0, alg, rxn, domain)
+
+  if N == 1
+    simulate_chunk!(output, xt, x0, alg, rxn, 1:length(output))
+  else
+    Threads.@threads for i in 1:N
+      len = div(length(output), N)
+      domain = ((i-1)*len+1):i*len
+      simulate_chunk!(output, deepcopy(xt), x0, deepcopy(alg), deepcopy(rxn), domain)
+    end
   end
 end
 
