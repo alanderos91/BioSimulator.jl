@@ -29,7 +29,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
 
     if !done(algorithm)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(a, r, Xt, μ)
+      update_propensities!(r, Xt, μ)
     end
 
   elseif intensity(a) == 0

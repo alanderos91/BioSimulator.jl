@@ -37,9 +37,13 @@ function init!(algorithm::NRM, Xt, r)
   end
 end
 
-function reset!(algorithm::NRM, a::PVec)
-  algorithm.t = 0.0
+function reset!(algorithm::NRM, Xt, r)
+  update_all_propensities!(r, Xt)
+  
+  a = propensities(r)
   pq = algorithm.pq
+  
+  algorithm.t = 0.0
 
   for j in eachindex(a)
     pq[j] = randexp() / a[j]
@@ -89,7 +93,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
   for α in dependents
     oldval = a[α]
     old_t  = pq[α]
-    update_propensity!(a, r, Xt, α)
+    update_propensity!(r, Xt, α)
 
     if α != μ && oldval != zero(T)
 
@@ -110,7 +114,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     end
   end
 
-  !isstable(a) && update_all_propensities!(a, r, Xt)
+  !isstable(a) && update_all_propensities!(r, Xt)
 
   return nothing
 end

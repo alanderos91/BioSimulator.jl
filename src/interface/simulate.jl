@@ -101,8 +101,7 @@ function simulate_chunk!(output, Xt, X0, algorithm, reactions, trial_set)
   a = propensities(reactions)
   for trial in trial_set
     copy!(Xt, X0)
-    update_all_propensities!(a, reactions, Xt)
-    reset!(algorithm, a)
+    reset!(algorithm, Xt, reactions)
 
     xw = output[trial]
 

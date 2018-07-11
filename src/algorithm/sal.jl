@@ -44,8 +44,14 @@ function init!(x::SAL, Xt, r)
   return nothing
 end
 
-function reset!(x::SAL, a::PVec)
-  setfield!(x, :t, 0.0)
+function reset!(algorithm::SAL, Xt, r)
+  dxdt = algorithm.dxdt
+  drdt = algorithm.drdt
+  algorithm.t = zero(algorithm.t)
+
+  update_all_propensities!(r, Xt)
+  mean_derivatives!(dxdt, r)
+  time_derivatives!(drdt, Xt, r, dxdt)
 
   return nothing
 end
@@ -76,7 +82,7 @@ function step!(algorithm::SAL, Xt, r)
       if !done(algorithm)
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
-        update_propensities!(a, r, Xt, μ)
+        update_propensities!(r, Xt, μ)
       end
     # otherwise, proceed with SAL
     else
@@ -84,7 +90,7 @@ function step!(algorithm::SAL, Xt, r)
         algorithm.stats[:leaping_steps] += 1
       end
       τ = sal_update!(algorithm, Xt, r, τ)
-      update_all_propensities!(a, r, Xt)
+      update_all_propensities!(r, Xt)
       set_time!(algorithm, τ)
     end
 

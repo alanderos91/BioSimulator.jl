@@ -9,18 +9,29 @@ mutable struct OTL <: TauLeapMethod
   t :: Float64
 
   # cache
-  ξ :: Vector{Float64}
+  # ξ :: Vector{Float64}
   b :: Matrix{Float64}
-  τ :: Vector{Float64}
+  # τ :: Vector{Float64}
   events :: Vector{Int}
 
   # statistics
   stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
+  # function OTL(end_time, ϵ, δ, β, stats_tracked)
+  #   new(end_time, ϵ, δ, β,
+  #   0.0, Float64[], Matrix{Float64}(0,0), Float64[], Int[],
+  #   stats_tracked,
+  #   Dict{Symbol,Int}(
+  #     :negative_excursions => 0,
+  #     :contractions => 0,
+  #     :leaping_steps => 0,
+  #     :gillespie_steps => 0
+  #   ))
+  # end
   function OTL(end_time, ϵ, δ, β, stats_tracked)
     new(end_time, ϵ, δ, β,
-    0.0, Float64[], Matrix{Float64}(0,0), Float64[], Int[],
+    0.0, Matrix{Float64}(0,0), Int[],
     stats_tracked,
     Dict{Symbol,Int}(
       :negative_excursions => 0,
@@ -37,16 +48,19 @@ function init!(x :: OTL, Xt, r)
   c = length(Xt)
   d = size(stoichiometry(r), 2)
 
-  x.ξ = zeros(c)    # store expected change
+  # x.ξ = zeros(c)    # store expected change
   x.b = zeros(c, d) # store partial derivatives
-  x.τ = zeros(d)    # compute leap size
+  # x.τ = zeros(d)    # compute leap size
   x.events = zeros(Int, d)
 
   return nothing
 end
 
-function reset!(x :: OTL, a :: PVec)
-  x.t = zero(x.t)
+function reset!(algorithm::OTL, Xt, r)
+  update_all_propensities!(r, Xt)
+  propensity_derivatives!(algorithm.b, Xt, r)
+  a = propensities(r)
+  algorithm.t = zero(algorithm.t)
 
   return nothing
 end
@@ -71,7 +85,7 @@ function step!(algorithm :: OTL, Xt, r)
       if !done(algorithm)
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
-        update_propensities!(a, r, Xt, μ)
+        update_propensities!(r, Xt, μ)
       end
     else
       # τ-leap update
@@ -101,7 +115,7 @@ function step!(algorithm :: OTL, Xt, r)
       fire_reactions!(Xt, r, algorithm.events)
 
       # state dependent updates
-      update_all_propensities!(a, r, Xt)
+      update_all_propensities!(r, Xt)
       propensity_derivatives!(algorithm.b, Xt, r)
 
       set_time!(algorithm, τ)

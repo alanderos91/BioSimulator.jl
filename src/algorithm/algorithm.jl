@@ -38,7 +38,9 @@ It subtypes the `Algorithm` type and provides:
 abstract type ExactMethod <: Algorithm end
 
 ##### setup inside iteration loop #####
-function reset!(algorithm::ExactMethod, a::PVec)
+function reset!(algorithm::ExactMethod, Xt, r)
+    a = propensities(r)
+    update_all_propensities!(r, Xt)
     algorithm.t = 0.0
     return nothing
 end
@@ -55,10 +57,10 @@ It subtypes the `Algorithm` type and provides:
 abstract type TauLeapMethod <: Algorithm end
 
 ##### accessors #####
-events(x::TauLeapMethod) = x.events
+events(algorithm::TauLeapMethod) = x.events
 
 ##### setup inside iteration loop #####
-function reset!(algorithm::TauLeapMethod, a::PVec)
+function reset!(algorithm::TauLeapMethod, Xt, r)
     algorithm.t = 0.0
     return nothing
 end
