@@ -12,8 +12,17 @@ n = 1000
 u = 5357
 m = 1
 
+algorithms = [
+  Direct(),
+  FirstReaction(),
+  NextReaction(),
+  OptimizedDirect(),
+  TauLeaping(),
+  StepAnticipation()
+]
+
 for algorithm in algorithms
   srand(u)
-    print("   - $(split(uppercase(string(algorithm)),".")[2]): ")
+    print("   - $(algorithm): ")
   @time run_test(model, algorithm, t, n, m)
 end

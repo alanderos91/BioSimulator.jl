@@ -1,27 +1,9 @@
-"""
-```
-SAL
-```
-
-Step Anticipation-τ Leaping. An algorithm method that improves upon the accuracy of τ-leaping techniques by incorporating a first-order Taylor expansion.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-- `ϵ`: A parameter controlling the size of leaps. Higher values allow for larger leaps, but may compromise the accuracy of results.
-- `δ`: A τ-leaping parameter used to switch between `SSA` and `SAL`. For example, if `intensity < δ` the algorithm carries out an ordinary SSA step to avoid negative species populations.
-- `α`: A parameter used to contract a τ-leap in the event of negative populations. Aggresive contraction (lower values) will bias sample paths.
-- `dxdt`: Rates of change for each species.
-- `drdt`: Rates of change for each reaction propensity.
-- `events`: The number of Poisson arrivals within a τ-leap interval.
-"""
-
 mutable struct SAL <: TauLeapMethod
   # parameters
   end_time :: Float64
   ϵ :: Float64
   δ :: Float64
-  α :: Float64
+  β :: Float64
 
   # state variables
   t              :: Float64
@@ -30,11 +12,13 @@ mutable struct SAL <: TauLeapMethod
   events         :: Vector{Int}
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function SAL(end_time::AbstractFloat, ϵ, δ, α)
-    new(end_time, ϵ, δ, α,
+  function SAL(end_time::AbstractFloat, ϵ, δ, β, stats_tracked)
+    new(end_time, ϵ, δ, β,
       0.0, Float64[], Float64[], Int[],
+      stats_tracked,
       Dict{Symbol,Int}(
         :negative_excursions => 0,
         :contractions => 0,
@@ -44,14 +28,9 @@ mutable struct SAL <: TauLeapMethod
   end
 end
 
-SAL(end_time; ϵ::Float64=0.125, δ::Float64=100.0, α::Float64=0.75, na...) = SAL(end_time, ϵ, δ, α)
-
 set_time!(algorithm::SAL, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
 ##### accessors #####
-epsilon(x::SAL) = x.ϵ
-delta(x::SAL)   = x.δ
-alpha(x::SAL)   = x.α
 get_derivatives(x::SAL) = x.dxdt, x.drdt
 
 function init!(x::SAL, Xt, r)
@@ -65,34 +44,59 @@ function init!(x::SAL, Xt, r)
   return nothing
 end
 
-function reset!(x::SAL, a::PVec)
-  setfield!(x, :t, 0.0)
+function reset!(algorithm::SAL, Xt, r)
+  dxdt = algorithm.dxdt
+  drdt = algorithm.drdt
+  algorithm.t = zero(algorithm.t)
+
+  update_all_propensities!(r, Xt)
+  mean_derivatives!(dxdt, r)
+  time_derivatives!(drdt, Xt, r, dxdt)
 
   return nothing
 end
 
 function step!(algorithm::SAL, Xt, r)
+  # unpack propensities
   a = propensities(r)
-  iscritical = (intensity(a) < delta(algorithm))
+
+  # unpack SAL variables
+  ϵ = algorithm.ϵ
+  β = algorithm.β
+  δ = algorithm.δ
+  dxdt, drdt = get_derivatives(algorithm)
+  events = algorithm.events
 
   if intensity(a) > 0
+    τ = tau_leap(r, drdt, ϵ)
+    τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
-    if iscritical
-      algorithm.stats[:gillespie_steps] += 1
-      τ = rand(Exponential(1 / intensity(a)))
+    # if τ is too small, do a Gillespie update
+    if τ < δ / intensity(a)
+      if algorithm.stats_tracked
+        algorithm.stats[:gillespie_steps] += 1
+      end
+      τ = randexp() / intensity(a)
       set_time!(algorithm, τ)
 
       if !done(algorithm)
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
-        update_propensities!(a, r, Xt, μ)
+        update_propensities!(r, Xt, μ)
       end
+    # otherwise, proceed with SAL
     else
-      algorithm.stats[:leaping_steps] += 1
-      τ = sal_update!(algorithm, Xt, r)
-      update_all_propensities!(a, r, Xt)
+      if algorithm.stats_tracked
+        algorithm.stats[:leaping_steps] += 1
+      end
+      τ = sal_update!(algorithm, Xt, r, τ)
+      update_all_propensities!(r, Xt)
       set_time!(algorithm, τ)
     end
+
+    # update SAL variables
+    mean_derivatives!(dxdt, r)
+    time_derivatives!(drdt, Xt, r, dxdt)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
@@ -102,29 +106,25 @@ function step!(algorithm::SAL, Xt, r)
   return nothing
 end
 
-function sal_update!(algorithm, Xt, r)
-  dxdt, drdt = get_derivatives(algorithm)
-  ϵ = epsilon(algorithm)
-  α = alpha(algorithm)
+function sal_update!(algorithm, Xt, r, τ)
+  β = algorithm.β
+  _, drdt = get_derivatives(algorithm)
   events = algorithm.events
-
-  mean_derivatives!(dxdt, r)
-  time_derivatives!(drdt, Xt, r, dxdt)
-
-  τ = tau_leap(r, drdt, ϵ)
-  τ = min(τ, end_time(algorithm) - get_time(algorithm))
 
   generate_events!(events, r, τ, drdt)
 
   isbadleap = is_badleap(Xt, r, events)
-  if isbadleap
+  
+  if isbadleap && algorithm.stats_tracked
     algorithm.stats[:negative_excursions] += 1
   end
 
   while isbadleap
-    algorithm.stats[:contractions] += 1
-    contract!(events, α)
-    τ = τ * α
+    if algorithm.stats_tracked
+      algorithm.stats[:contractions] += 1
+    end
+    contract!(events, β)
+    τ = τ * β
     isbadleap = is_badleap(Xt, r, events)
   end
 
@@ -214,7 +214,7 @@ function generate_events!(events, r, τ, drdt)
   for j in eachindex(a)
     λ = τ * a[j] + 0.5 * τ * τ * drdt[j]
 
-    events[j] = rand(Poisson(max(λ, 0)))
+    events[j] = poisrand(max(λ, 0))
   end
 
   return nothing
@@ -252,11 +252,11 @@ function is_badleap(Xt, r::SparseReactionSystem, events)
   return false
 end
 
-function contract!(events, α)
+function contract!(events, β)
   for i in eachindex(events)
     k = 0
     for j in 1:events[i]
-      k = rand() < α ? k + 1 : k
+      k = rand() < β ? k + 1 : k
     end
     events[i] = k
   end

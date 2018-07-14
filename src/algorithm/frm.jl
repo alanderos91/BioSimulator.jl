@@ -1,16 +1,3 @@
-"""
-```
-FRM
-```
-
-Gillespie's First Reaction Method.
-
-Statistically equivalent to `SSA`, but more computationally expensive: it computes the time to the next reaction as the minimum waiting time relative to the next firing times of each reaction.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-"""
 mutable struct FRM <: ExactMethod
   # parameters
   end_time :: Float64
@@ -19,17 +6,17 @@ mutable struct FRM <: ExactMethod
   t :: Float64
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function FRM(end_time::AbstractFloat)
+  function FRM(end_time::AbstractFloat, stats_tracked)
     new(end_time, 0.0,
+      stats_tracked,
       Dict{Symbol,Int}(
         :gillespie_steps => 0
     ))
   end
 end
-
-FRM(end_time; na...) = FRM(end_time)
 
 set_time!(algorithm::FRM, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
@@ -42,7 +29,7 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
 
     if !done(algorithm)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(a, r, Xt, μ)
+      update_propensities!(r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -51,7 +38,9 @@ function step!(algorithm::FRM, Xt::Vector, r::AbstractReactionSystem)
     throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
-  algorithm.stats[:gillespie_steps] += 1
+  if algorithm.stats_tracked
+    algorithm.stats[:gillespie_steps] += 1
+  end
   
   return nothing
 end
@@ -61,7 +50,7 @@ end
   min_ind = 0
 
   for j in eachindex(a)
-    temp = rand(Exponential(1 / a[j]))
+    temp = randexp() / a[j]
     if temp < min_val
       min_val = temp
       min_ind = j
