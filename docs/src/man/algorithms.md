@@ -5,9 +5,10 @@ CurrentModule = BioSimulator
 ```
 
 ```@docs
-SSA
-FRM
-NRM
-ODM
-SAL
+Direct
+FirstReaction
+NextReaction
+OptimizedDirect
+TauLeaping
+StepAnticipation
 ```

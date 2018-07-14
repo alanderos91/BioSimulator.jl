@@ -13,16 +13,13 @@ makedocs(
     "Modeling"   => "man/modeling.md",
     "Algorithms" => "man/algorithms.md",
     "Examples"   => "man/examples.md",
-    "Benchmarks" => "man/benchmarks.md",
-    "Developers" => "man/developers.md",
-    "References" => "man/references.md"
   ]
 )
 
 deploydocs(
   repo   = "github.com/alanderos91/BioSimulator.jl.git",
   target = "build",
-  julia  = "0.5",
+  julia  = "0.6",
   deps   = nothing,
   make   = nothing
 )

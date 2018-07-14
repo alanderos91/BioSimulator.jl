@@ -3,7 +3,8 @@
 ## Birth-Death-Immigration Process
 
 ```@setup kendall
-  using BioSimulator
+  using BioSimulator, Plots
+  gr(fmt = :png, dpi = 300)
 ```
 
 *Kendall's process* is a birth-death-immigration process describing the dynamics of a population using a continuous-time Markov chain. Individuals in the population behave as particles that reproduce at a rate $\alpha$, decay at a rate $\mu$, and immigrate into the population at a rate $\nu$.
@@ -18,29 +19,28 @@
   model <= Reaction("immigration", 0.5, "0 --> X")
 
   fig = visualize(model)
-  using TikzPictures; save(SVG("kendallfig"), fig) # hide
+  using TikzPictures; save(SVG("kendall_petri"), fig) # hide
 ```
-![](kendallfig.svg)
+![](kendall_petri.svg)
 
 ```@example kendall
-  result = simulate(model, algorithm=SSA, time=4.0, epochs=40, trials=1000)
+  result = simulate(model, Direct(), time = 4.0, epochs = 40, trials = 1000)
 
-  plot(
-    plot(MeanTrajectory(result, "X")),
-    plot(Histogram(result, "X", 4.0)),
-    layout = 2,
-    size = (600,300)
+  plot(layout = grid(1, 2),
+    plot(result, plot_type = :meantrajectory, legend = nothing)
+    plot(result, plot_type = :histogram)
   )
 
-  savefig("kendall.svg"); nothing # hide
+  savefig("kendall_mean.png"); nothing # hide
 ```
-![](kendall.svg)
+![](kendall.png)
 
 ## Enzyme Kinetics
 
 ```@setup mmek
   using BioSimulator
 ```
+
 Michaelis-Menten enzyme kinetics is a stepwise process combining first- and second order reactions to describe the conversion of a substrate into a product. An enzyme $E$ binds to a substrate $S$ to form a complex $SE$. Conversion does not happen immediately, so $SE$ may revert to its two components or result in a product $P$ and enzyme $E$.
 
 ```@example mmek
@@ -56,33 +56,25 @@ Michaelis-Menten enzyme kinetics is a stepwise process combining first- and seco
   model <= Reaction("Conversion", 0.1, "SE --> P + E")
 
   fig = visualize(model)
-  using TikzPictures; save(SVG("mmekfig"), fig) # hide
+  using TikzPictures; save(SVG("mmek_petri"), fig) # hide
 ```
-![](mmekfig.svg)
+![](mmek_petri.svg)
 
 ```@example mmek
-  result = simulate(model, algorithm=SSA, time=50.0, epochs=100, trials=1000)
+  result = simulate(model, Direct(), time = 50.0, epochs = 100, trials = 1000)
 
-  plot(MeanTrajectory(result, "S"),  color="blue")
-  plot!(MeanTrajectory(result, "E"),  color="green")
-  plot!(MeanTrajectory(result, "SE"), color="orange")
-  plot!(MeanTrajectory(result, "P"),  color="red")
+  plot(result, plot_type = :meantrajectory)
 
-  savefig("mmek1.svg"); nothing # hide
+  savefig("mmek1.png"); nothing # hide
 ```
-![](mmek1.svg)
+![](mmek1.png)
 
 ```@example mmek
-  plot(
-    plot(Histogram(result, "S",  50.0), label="S",  color="blue"),
-    plot(Histogram(result, "E",  50.0), label="E",  color="green"),
-    plot(Histogram(result, "SE", 50.0), label="SE", color="orange"),
-    plot(Histogram(result, "P",  50.0), label="P",  color="red")
-  )
+  plot(result, plot_type = :histogram)
 
-  savefig("mmek2.svg"); nothing # hide
+  savefig("mmek2.png"); nothing # hide
 ```
-![](mmek2.svg)
+![](mmek2.png)
 
 ## Auto-Regulatory Gene Network
 
@@ -117,30 +109,26 @@ The influence of noise at the cellular level is difficult to capture in determin
   model = autoreg()
 
   fig = visualize(model)
-  using TikzPictures; save(SVG("genefig"), fig) # hide
+  using TikzPictures; save(SVG("gene_petri"), fig) # hide
 ```
-![](genefig.svg)
+![](gene_petri.svg)
 
 ```@example gene
-  result = simulate(model, algorithm=SSA, time=1000.0, epochs=500, trials=100)
+  result = simulate(model, Direct(), Val{:full},
+      time = 1000.0, epochs = 500, trials = 100)
 
-  plot(MeanTrajectory(result, "P"), color="blue")
-  plot!(MeanTrajectory(result, "P2"), color="red")
+  plot(result, plot_type = :meantrajectory, species = ["P", "P2"])
 
-  savefig("gene1.svg"); nothing # hide
+  savefig("gene1.png"); nothing # hide
 ```
-![](gene1.svg)
+![](gene1.png)
 
 ```@example gene
-  plot(
-    plot(Histogram(result, "P",  1000.0), color="blue"),
-    plot(Histogram(result, "P2", 1000.0), color="red"),
-    size = (600,300)
-  )
+  plot(result, plot_type = :histogram, species = ["P", "P2"])
 
-  savefig("gene2.svg"); nothing # hide
+  savefig("gene2.png"); nothing # hide
 ```
-![](gene2.svg)
+![](gene2.png)
 
 ## Brusselator Cascade
 
@@ -155,7 +143,7 @@ The Brusselator is a theoretical model used to study autocatalytic reactions. Th
   > $X \to E,$
 where $A$, $B$, and $D$ are chemical species assumed to be constant in concentration; only $X$ and $Y$ vary over time.. The species $A$ and $B$ act as inputs to the synthesis and conversion of $X$, whereas $D$ and $E$ are byproducts with no impact on the system. The $Y$ species acts as a catalyst to the synthesis of $X$ so that $X$ is autocatalytic. Note that the last reaction can be thought of as the decay of $X$.
 
-One can study the role of stochasticity in chemical reaction cascades by coupling Brusselators[[16](man/references.html#16)]. A cascade with $N$ steps is modeled as
+One can study the role of stochasticity in chemical reaction cascades by coupling Brusselators. A cascade with $N$ steps is modeled as
   > $A \to X_{1}$
   > $2 X_{n} + Y_{n} \to 3 X_{n}; n = 1,\ldots,N$
   > $X_{n} + B \to Y_{n} + D; n = 1,\ldots,N$
@@ -208,14 +196,10 @@ This example walks through an implementation of the Brusselator cascade, includi
 
 The phase portrait of the system comparing $X_{1}$ and $Y_{1}$ against $X_{N}$ and $Y_{N}$ shows that noise at the first step is propagated to the final step in the cascade over time.
 ```@example brusselator_cascade
-  result = simulate(model, time=10_000.0, epochs=10_000)
+  result = simulate(model, Direct(), time = 1_000.0, epochs = 1_000)
 
-  plot(
-    plot(PhaseTrajectory(result, "X1", "Y1", 1)),
-    plot(PhaseTrajectory(result, "X$(N)", "Y$(N)", 1)),
-    size=(800,350)
-  )
+  plot(result, plot_type = :trajectory, species = ["X1", "X20"])
 
-  savefig("brusselator.svg"); nothing # hide
+  savefig("brusselator.png"); nothing # hide
 ```
-![](brusselator.svg)
+![](brusselator.png)
