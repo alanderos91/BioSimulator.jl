@@ -47,7 +47,6 @@ include(joinpath("interface","build_algorithm.jl"))
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))
 include(joinpath("interface","network.jl"))
-include(joinpath("interface","gui.jl"))
 include(joinpath("backend","util.jl"))
 
 export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnticipation
