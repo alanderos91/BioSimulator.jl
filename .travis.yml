@@ -18,6 +18,6 @@ script:
 after_success:
   - julia -e 'cd(Pkg.dir("BioSimulator")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
   - julia -e 'cd(Pkg.dir("BioSimulator")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  - julia -e 'ENV["PYTHON"]=""; Pkg.add("PyPlot"); using PyPlot'
+  - julia -e 'Pkg.add("Plots"); Pkg.add("GR")'
   - julia -e 'Pkg.add("Documenter"); Pkg.add("JSON")'
   - julia -e 'cd(Pkg.dir("BioSimulator")); include(joinpath("docs", "make.jl"))'

@@ -11,23 +11,6 @@ Add a `Species` or `Reaction` using `<=`:
 m <= Species("X", 100) # Adds a Species
 m <= Reaction("birth", 2.0, "X --> X + X")
 ```
-
-Simulate a `Network` by calling `simulate`:
-
-```
-simulate(m, SSA, time=1000.0, epochs=1000, trials=100)
-```
-
-Visualize a `Network` as a Petri net:
-
-```
-visualize(m)
-```
-
-See also: `Species`, `Reaction`, `simulate`, `visualize`
-
-### Arguments
-- `id`: An string identifier for the `Network`.
 """
 struct Network
   id :: String
