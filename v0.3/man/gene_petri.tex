@@ -1,0 +1,46 @@
+\documentclass[tikz]{standalone}
+\usepackage{fontspec}
+\setmainfont{Latin Modern Math}
+\usetikzlibrary{graphs}
+\usetikzlibrary{graphdrawing}
+
+\usegdlibrary{layered}
+\begin{document}
+\begin{tikzpicture}[]
+\graph [layered layout, ] {
+1/"gene" [,draw, rounded corners, fill=blue!10, font=\large],
+2/"P2$\cdot$gene" [,draw, rounded corners, fill=blue!10, font=\large],
+3/"RNA" [,draw, rounded corners, fill=blue!10, font=\large],
+4/"P" [,draw, rounded corners, fill=blue!10, font=\large],
+5/"P2" [,draw, rounded corners, fill=blue!10, font=\large],
+6/"repression binding" [,draw, rounded corners, thick, fill=red!10, font=\large],
+7/"reverse repression binding" [,draw, rounded corners, thick, fill=red!10, font=\large],
+8/"transcription" [,draw, rounded corners, thick, fill=red!10, font=\large],
+9/"translation" [,draw, rounded corners, thick, fill=red!10, font=\large],
+10/"dimerization" [,draw, rounded corners, thick, fill=red!10, font=\large],
+11/"dissociation" [,draw, rounded corners, thick, fill=red!10, font=\large],
+12/"RNA degradation" [,draw, rounded corners, thick, fill=red!10, font=\large],
+13/"protein degradation" [,draw, rounded corners, thick, fill=red!10, font=\large],
+;
+1 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 6;
+1 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 8;
+2 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 7;
+3 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 9;
+3 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 12;
+4 -> [,edge label={2},-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 10;
+4 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 13;
+5 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 6;
+5 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2,] 11;
+6 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 2;
+7 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 1;
+7 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 5;
+8 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 1;
+8 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 3;
+9 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 3;
+9 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 4;
+10 -> [,-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 5;
+11 -> [,edge label={2},-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap,] 4;
+};
+
+\end{tikzpicture}
+\end{document}
