@@ -41,9 +41,7 @@ model <= Reaction("immigration", 0.5, "0 --> X")
 # Petri net; the "scale = 2" argument is optional and can be omitted
 # it is used to pass additional options for the underlying Tikz document
 fig = visualize(model, "scale = 2")
-
-# save using TikzPictures.jl
-using TikzPictures; save(SVG("kendall_petri"), fig) # hide
+nothing #hide
 ```
 ![](kendall_petri.svg)
 
@@ -90,7 +88,7 @@ model <= Reaction("Conversion", 0.1, "SE --> P + E")
 
 # Petri net
 fig = visualize(model)
-using TikzPictures; save(SVG("mmek_petri"), fig) # hide
+nothing #hide
 ```
 ![](mmek_petri.svg)
 
@@ -177,7 +175,7 @@ model = autoreg()
 
 # Petri net
 fig = visualize(model)
-using TikzPictures; save(SVG("gene_petri"), fig) # hide
+nothing # hide
 ```
 ![](gene_petri.svg)
 

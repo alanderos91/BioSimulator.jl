@@ -1,5 +1,9 @@
 using Documenter, BioSimulator
 
+# setup GR backend for Travis CI
+ENV["GKSwstype"] = "100"
+ENV["PLOTS_TEST"] = "true"
+
 makedocs(
   doctest  = false,
   format   = :html,
