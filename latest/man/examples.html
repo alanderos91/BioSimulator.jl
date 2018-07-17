@@ -1,113 +1,174 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · BioSimulator.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/highlightjs/default.css" rel="stylesheet" type="text/css"/><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>BioSimulator.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" action="../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../index.html">Home</a></li><li><a class="toctext" href="overview.html">Overview</a></li><li><a class="toctext" href="modeling.html">Modeling</a></li><li><a class="toctext" href="algorithms.html">Algorithms</a></li><li class="current"><a class="toctext" href="examples.html">Examples</a><ul class="internal"><li><a class="toctext" href="#Birth-Death-Immigration-Process-1">Birth-Death-Immigration Process</a></li><li><a class="toctext" href="#Enzyme-Kinetics-1">Enzyme Kinetics</a></li><li><a class="toctext" href="#Auto-Regulatory-Gene-Network-1">Auto-Regulatory Gene Network</a></li><li><a class="toctext" href="#Brusselator-Cascade-1">Brusselator Cascade</a></li></ul></li><li><a class="toctext" href="benchmarks.html">Benchmarks</a></li><li><a class="toctext" href="developers.html">Developers</a></li><li><a class="toctext" href="references.html">References</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="examples.html">Examples</a></li></ul><a class="edit-page" href="https://github.com/alanderos91/BioSimulator.jl/tree/df553a4743827854b125b1d5746be603d5416a9d/docs/src/man/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><h2><a class="nav-anchor" id="Birth-Death-Immigration-Process-1" href="#Birth-Death-Immigration-Process-1">Birth-Death-Immigration Process</a></h2><div></div><p><em>Kendall&#39;s process</em> is a birth-death-immigration process describing the dynamics of a population using a continuous-time Markov chain. Individuals in the population behave as particles that reproduce at a rate <span>$\alpha$</span>, decay at a rate <span>$\mu$</span>, and immigrate into the population at a rate <span>$\nu$</span>.</p><pre><code class="language-">  model = Network(&quot;Kendall&#39;s Process&quot;)
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Examples · BioSimulator.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>BioSimulator.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../index.html">Home</a></li><li><a class="toctext" href="overview.html">Overview</a></li><li><a class="toctext" href="algorithms.html">Algorithms</a></li><li class="current"><a class="toctext" href="examples.html">Examples</a><ul class="internal"><li><a class="toctext" href="#Birth-Death-Immigration-Process-1">Birth-Death-Immigration Process</a></li><li><a class="toctext" href="#Enzyme-Kinetics-1">Enzyme Kinetics</a></li><li><a class="toctext" href="#Auto-Regulatory-Gene-Network-1">Auto-Regulatory Gene Network</a></li><li><a class="toctext" href="#Brusselator-Cascade-1">Brusselator Cascade</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li><a href="examples.html">Examples</a></li></ul><a class="edit-page" href="https://github.com/alanderos91/BioSimulator.jl/blob/master/docs/src/man/examples.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Examples</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Examples-1" href="#Examples-1">Examples</a></h1><p>The following examples illustrate BioSimulator.jl&#39;s interface and features. Each code block assumes BioSimulator.jl and Plots.jl are loaded; that is, <code>using BioSimulator, Plots</code>.</p><div></div><div></div><div></div><div></div><h2><a class="nav-anchor" id="Birth-Death-Immigration-Process-1" href="#Birth-Death-Immigration-Process-1">Birth-Death-Immigration Process</a></h2><p><em>Kendall&#39;s process</em> is a birth-death-immigration process describing the dynamics of a population using a continuous-time Markov chain. Individuals in the population behave as particles that reproduce at a rate <span>$\alpha$</span>, decay at a rate <span>$\mu$</span>, and immigrate into the population at a rate <span>$\nu$</span>.</p><h3><a class="nav-anchor" id="Model-Definition-1" href="#Model-Definition-1">Model Definition</a></h3><pre><code class="language-"># initialize
+model = Network(&quot;Kendall&#39;s Process&quot;)
 
-  model &lt;= Species(&quot;X&quot;, 5)
+# species definitions
+model &lt;= Species(&quot;X&quot;, 5)
 
-  model &lt;= Reaction(&quot;birth&quot;, 2.0, &quot;X --&gt; X + X&quot;)
-  model &lt;= Reaction(&quot;death&quot;, 1.0, &quot;X --&gt; 0&quot;)
-  model &lt;= Reaction(&quot;immigration&quot;, 0.5, &quot;0 --&gt; X&quot;)
+# reaction definitions
+model &lt;= Reaction(&quot;birth&quot;, 2.0, &quot;X --&gt; X + X&quot;)
+model &lt;= Reaction(&quot;death&quot;, 1.0, &quot;X --&gt; 0&quot;)
+model &lt;= Reaction(&quot;immigration&quot;, 0.5, &quot;0 --&gt; X&quot;)
 
-  fig = visualize(model)
-  using TikzPictures; save(SVG(&quot;kendallfig&quot;), fig) # hide</code></pre><p><img src="kendallfig.svg" alt/></p><div><pre><code class="language-julia">  result = simulate(model, algorithm=SSA, time=4.0, epochs=40, trials=1000)
+# Petri net; the &quot;scale = 2&quot; argument is optional and can be omitted
+# it is used to pass additional options for the underlying Tikz document
+fig = visualize(model, &quot;scale = 2&quot;)
 
-  plot(
-    plot(MeanTrajectory(result, &quot;X&quot;)),
-    plot(Histogram(result, &quot;X&quot;, 4.0)),
-    layout = 2,
-    size = (600,300)
-  )</code></pre><pre><code class="language-none">WARNING: No working GUI backend found for matplotlib</code></pre></div><p><img src="kendall.svg" alt/></p><h2><a class="nav-anchor" id="Enzyme-Kinetics-1" href="#Enzyme-Kinetics-1">Enzyme Kinetics</a></h2><div></div><p>Michaelis-Menten enzyme kinetics is a stepwise process combining first- and second order reactions to describe the conversion of a substrate into a product. An enzyme <span>$E$</span> binds to a substrate <span>$S$</span> to form a complex <span>$SE$</span>. Conversion does not happen immediately, so <span>$SE$</span> may revert to its two components or result in a product <span>$P$</span> and enzyme <span>$E$</span>.</p><pre><code class="language-">  model = Network(&quot;enzyme kinetics&quot;)
+# save using TikzPictures.jl
+using TikzPictures; save(SVG(&quot;kendall_petri&quot;), fig) # hide</code></pre><p><img src="kendall_petri.svg" alt/></p><h3><a class="nav-anchor" id="Sample-Output-1" href="#Sample-Output-1">Sample Output</a></h3><div><pre><code class="language-julia"># simulate 1000 realizations with Gillespie algorithm over [0, 4]
+# state is saved over 40 equal-length intervals (fixed-interval output)
+result = simulate(model, Direct(), time = 4.0, epochs = 40, trials = 1000)
 
-  model &lt;= Species(&quot;S&quot;, 301)
-  model &lt;= Species(&quot;E&quot;, 100)
-  model &lt;= Species(&quot;SE&quot;,  0)
-  model &lt;= Species(&quot;P&quot;,   0)
+# first panel - mean trajectory
+panel1 = plot(result, plot_type = :meantrajectory)
 
-  model &lt;= Reaction(&quot;Binding&quot;, 0.00166, &quot;S + E --&gt; SE&quot;)
-  model &lt;= Reaction(&quot;Dissociation&quot;, 0.0001, &quot;SE --&gt; S + E&quot;)
-  model &lt;= Reaction(&quot;Conversion&quot;, 0.1, &quot;SE --&gt; P + E&quot;)
+# second panel - distribution at t = 4.0
+panel2 = plot(result, plot_type = :histogram)
 
-  fig = visualize(model)
-  using TikzPictures; save(SVG(&quot;mmekfig&quot;), fig) # hide</code></pre><p><img src="mmekfig.svg" alt/></p><div><pre><code class="language-julia">  result = simulate(model, algorithm=SSA, time=50.0, epochs=100, trials=1000)
+# combine both panels into a single figure; omit the legend
+plot(panel1, panel2, layout = grid(2, 1), legend = nothing)</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
 
-  plot(MeanTrajectory(result, &quot;S&quot;),  color=&quot;blue&quot;)
-  plot!(MeanTrajectory(result, &quot;E&quot;),  color=&quot;green&quot;)
-  plot!(MeanTrajectory(result, &quot;SE&quot;), color=&quot;orange&quot;)
-  plot!(MeanTrajectory(result, &quot;P&quot;),  color=&quot;red&quot;)</code></pre></div><p><img src="mmek1.svg" alt/></p><div><pre><code class="language-julia">  plot(
-    plot(Histogram(result, &quot;S&quot;,  50.0), label=&quot;S&quot;,  color=&quot;blue&quot;),
-    plot(Histogram(result, &quot;E&quot;,  50.0), label=&quot;E&quot;,  color=&quot;green&quot;),
-    plot(Histogram(result, &quot;SE&quot;, 50.0), label=&quot;SE&quot;, color=&quot;orange&quot;),
-    plot(Histogram(result, &quot;P&quot;,  50.0), label=&quot;P&quot;,  color=&quot;red&quot;)
-  )</code></pre></div><p><img src="mmek2.svg" alt/></p><h2><a class="nav-anchor" id="Auto-Regulatory-Gene-Network-1" href="#Auto-Regulatory-Gene-Network-1">Auto-Regulatory Gene Network</a></h2><div></div><p>The influence of noise at the cellular level is difficult to capture in deterministic models. Stochastic simulation is appropriate for the study of regulatory mechanisms in genetics, where key species may be present in low numbers.</p><pre><code class="language-">  function autoreg(;k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)
-    model = Network(&quot;auto-regulation&quot;)
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="kendall.png" alt/></p><h2><a class="nav-anchor" id="Enzyme-Kinetics-1" href="#Enzyme-Kinetics-1">Enzyme Kinetics</a></h2><p>Michaelis-Menten enzyme kinetics is a stepwise process combining first- and second order reactions to describe the conversion of a substrate into a product. An enzyme <span>$E$</span> binds to a substrate <span>$S$</span> to form a complex <span>$SE$</span>. Conversion does not happen immediately, so <span>$SE$</span> may revert to its two components or result in a product <span>$P$</span> and enzyme <span>$E$</span>.</p><h3><a class="nav-anchor" id="Model-Definition-2" href="#Model-Definition-2">Model Definition</a></h3><pre><code class="language-"># initialize
+model = Network(&quot;enzyme kinetics&quot;)
 
-    model &lt;= Species(&quot;gene&quot;,   10)
-    model &lt;= Species(&quot;P2_gene&quot;, 0)
-    model &lt;= Species(&quot;RNA&quot;,     0)
-    model &lt;= Species(&quot;P&quot;,       0)
-    model &lt;= Species(&quot;P2&quot;,      0)
+# species definitions
+model &lt;= Species(&quot;S&quot;, 301)
+model &lt;= Species(&quot;E&quot;, 100)
+model &lt;= Species(&quot;SE&quot;,  0)
+model &lt;= Species(&quot;P&quot;,   0)
 
-    model &lt;= Reaction(&quot;repression binding&quot;, k1, &quot;gene + P2 --&gt; P2_gene&quot;)
-    model &lt;= Reaction(&quot;reverse repression binding&quot;, k1r, &quot;P2_gene --&gt; gene + P2&quot;)
-    model &lt;= Reaction(&quot;transcription&quot;, k2, &quot;gene --&gt; gene + RNA&quot;)
-    model &lt;= Reaction(&quot;translation&quot;, k3, &quot;RNA --&gt; RNA + P&quot;)
-    model &lt;= Reaction(&quot;dimerization&quot;, k4, &quot;P + P --&gt; P2&quot;)
-    model &lt;= Reaction(&quot;dissociation&quot;, k4r, &quot;P2 --&gt; P + P&quot;)
-    model &lt;= Reaction(&quot;RNA degradation&quot;, k5, &quot;RNA --&gt; 0&quot;)
-    model &lt;= Reaction(&quot;protein degradation&quot;, k6, &quot;P --&gt; 0&quot;)
+# reaction definitions
+model &lt;= Reaction(&quot;Binding&quot;, 0.00166, &quot;S + E --&gt; SE&quot;)
+model &lt;= Reaction(&quot;Dissociation&quot;, 0.0001, &quot;SE --&gt; S + E&quot;)
+model &lt;= Reaction(&quot;Conversion&quot;, 0.1, &quot;SE --&gt; P + E&quot;)
 
-    return model
-  end
+# Petri net
+fig = visualize(model)
+using TikzPictures; save(SVG(&quot;mmek_petri&quot;), fig) # hide</code></pre><p><img src="mmek_petri.svg" alt/></p><h3><a class="nav-anchor" id="Sample-Output-2" href="#Sample-Output-2">Sample Output</a></h3><p>Here we plot the mean trajectory of all 4 species over <span>$[0, 50]$</span> and include their distributions at <span>$t = 50$</span>. Like the previous example, we&#39;ll put each figure into separate panels. To match colors between two panels, we&#39;ll extract the colors from the default palette and set the colors explicitly. By default, every species will appear in a plot. We can select which species should appear using the <code>species = list</code> option, where <code>list</code> is an array of species names. In addition, this option can be used to order the species; here we make use of this feature to impose the order <span>$S$</span>, <span>$E$</span>, <span>$SE$</span>, and then <span>$P$</span>. This makes it so that the first color in our palette corresponds to <span>$S$</span>, the second to <span>$E$</span>, and so on.</p><div><pre><code class="language-julia">result = simulate(model, Direct(), time = 50.0, epochs = 100, trials = 1000)
 
-  model = autoreg()
+# grab colors from default palette
+mycolors = palette(:default)
 
-  fig = visualize(model)
-  using TikzPictures; save(SVG(&quot;genefig&quot;), fig) # hide</code></pre><p><img src="genefig.svg" alt/></p><div><pre><code class="language-julia">  result = simulate(model, algorithm=SSA, time=1000.0, epochs=500, trials=100)
+# set the order and apply colors
+plot(result, plot_type = :meantrajectory, species = [&quot;S&quot;, &quot;E&quot;, &quot;SE&quot;, &quot;P&quot;], palette = mycolors[1:4])</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
 
-  plot(MeanTrajectory(result, &quot;P&quot;), color=&quot;blue&quot;)
-  plot!(MeanTrajectory(result, &quot;P2&quot;), color=&quot;red&quot;)</code></pre></div><p><img src="gene1.svg" alt/></p><div><pre><code class="language-julia">  plot(
-    plot(Histogram(result, &quot;P&quot;,  1000.0), color=&quot;blue&quot;),
-    plot(Histogram(result, &quot;P2&quot;, 1000.0), color=&quot;red&quot;),
-    size = (600,300)
-  )</code></pre></div><p><img src="gene2.svg" alt/></p><h2><a class="nav-anchor" id="Brusselator-Cascade-1" href="#Brusselator-Cascade-1">Brusselator Cascade</a></h2><div></div><p>The Brusselator is a theoretical model used to study autocatalytic reactions. The reactions in the model are</p><blockquote><div>\[A \to X\]</div><div>\[2X + Y \to 3X\]</div><div>\[X + B \to Y + D\]</div><div>\[X \to E,\]</div></blockquote><p>where <span>$A$</span>, <span>$B$</span>, and <span>$D$</span> are chemical species assumed to be constant in concentration; only <span>$X$</span> and <span>$Y$</span> vary over time.. The species <span>$A$</span> and <span>$B$</span> act as inputs to the synthesis and conversion of <span>$X$</span>, whereas <span>$D$</span> and <span>$E$</span> are byproducts with no impact on the system. The <span>$Y$</span> species acts as a catalyst to the synthesis of <span>$X$</span> so that <span>$X$</span> is autocatalytic. Note that the last reaction can be thought of as the decay of <span>$X$</span>.</p><p>One can study the role of stochasticity in chemical reaction cascades by coupling Brusselators[<a href="man/man/references.html#16">16</a>]. A cascade with <span>$N$</span> steps is modeled as</p><blockquote><div>\[A \to X_{1}\]</div><div>\[2 X_{n} + Y_{n} \to 3 X_{n}; n = 1,\ldots,N\]</div><div>\[X_{n} + B \to Y_{n} + D; n = 1,\ldots,N\]</div><div>\[X_{n} \to X_{n+1}; n = 1,\ldots,N-1\]</div><div>\[X_{N} \to E,\]</div></blockquote><p>where the <span>$X_{n} \to X_{n+1}$</span> reactions effectively couple each Brusselator. The fixed point of the system is given by the concentrations of <span>$A$</span> and <span>$B$</span>: <span>$([X_{n}], [Y_{n}]) = ([A], [A] / [B])$</span> for each <span>$n = 1,\ldots,N$</span>, which is stable for <span>$[B] &lt; [A]^{2} + 1$</span> and unstable for <span>$[B] &gt; [A]^{2} + 1$</span>. A limit cycle exists in the unstable case which propagates noise down the steps in the cascade. A deterministic model predicts asymptotic stability at the end of the cascade, but small fluctuations from the fixed point are amplified in the stochastic setting.</p><p>This example walks through an implementation of the Brusselator cascade, including conversion of deterministic rates to stochastic rates.</p><div><pre><code class="language-julia">  model = Network(&quot;Brusselator&quot;)
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="mmek1.png" alt/></p><p>We split the second panel into 4 subfigures in order to assign colors explicitly.</p><div><pre><code class="language-julia">p1 = plot(result, plot_type = :histogram, species = [&quot;S&quot;],  color = mycolors[1])
+p2 = plot(result, plot_type = :histogram, species = [&quot;E&quot;],  color = mycolors[2])
+p3 = plot(result, plot_type = :histogram, species = [&quot;SE&quot;], color = mycolors[3])
+p4 = plot(result, plot_type = :histogram, species = [&quot;P&quot;],  color = mycolors[4])
 
-  N = 20    # number of Brusselators
-  V = 100.0 # system volume
+# combine the subfigures, omit the default title and legend
+plot(p1, p2, p3, p4, layout = grid(2, 2), legend = nothing, title = &quot;&quot;)</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
 
-  # ===== Deterministic Rates =====
-  k1 = 1.0  # buffer rate
-  k2 = 1.0  # transition/decay rate
-  k3 = 1.0  # conversion rate
-  k4 = 1.0  # autocatalytic rate
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="mmek2.png" alt/></p><p>Alternatively, if color is not an issue, we can use:</p><div><pre><code class="language-julia">plot(result, plot_type = :histogram, layout = grid(2, 2), title = &quot;&quot;)</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
 
-  # ===== Stochastic Rates =====
-  # To model a constant buffer X0 we add a zero-order reaction (like immigration)
-  # The stochastic rates have to take into account the system volume
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="mmek3.png" alt/></p><h2><a class="nav-anchor" id="Auto-Regulatory-Gene-Network-1" href="#Auto-Regulatory-Gene-Network-1">Auto-Regulatory Gene Network</a></h2><p>The influence of noise at the cellular level is difficult to capture in deterministic models. Stochastic simulation is appropriate for the study of regulatory mechanisms in genetics, where key species may be present in low numbers.</p><h3><a class="nav-anchor" id="Model-Definition-3" href="#Model-Definition-3">Model Definition</a></h3><p>We can wrap the model definition into a function, called <code>autoreg</code>, that can be called to build the model with different sets of parameters.</p><pre><code class="language-">function autoreg(;k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)
+  # initialize
+  model = Network(&quot;auto-regulation&quot;)
 
-  γ1 = k1                    # buffer rate
-  γ2 = k2 / V                # transition/decay rate
-  γ3 = k3 / V                # conversion rate
-  γ4 = 2 * k4 / (V * V * V)  # autocatalytic rate
+  # species definitions
+  model &lt;= Species(&quot;gene&quot;,   10)
+  model &lt;= Species(&quot;P2_gene&quot;, 0)
+  model &lt;= Species(&quot;RNA&quot;,     0)
+  model &lt;= Species(&quot;P&quot;,       0)
+  model &lt;= Species(&quot;P2&quot;,      0)
 
-  for i = 1:N
-      # species definitions
-      model &lt;= Species(&quot;X$(i)&quot;, 0)
-      model &lt;= Species(&quot;Y$(i)&quot;, 0)
+  # reaction definitions
+  model &lt;= Reaction(&quot;repression binding&quot;, k1, &quot;gene + P2 --&gt; P2_gene&quot;)
+  model &lt;= Reaction(&quot;reverse repression binding&quot;, k1r, &quot;P2_gene --&gt; gene + P2&quot;)
+  model &lt;= Reaction(&quot;transcription&quot;, k2, &quot;gene --&gt; gene + RNA&quot;)
+  model &lt;= Reaction(&quot;translation&quot;, k3, &quot;RNA --&gt; RNA + P&quot;)
+  model &lt;= Reaction(&quot;dimerization&quot;, k4, &quot;P + P --&gt; P2&quot;)
+  model &lt;= Reaction(&quot;dissociation&quot;, k4r, &quot;P2 --&gt; P + P&quot;)
+  model &lt;= Reaction(&quot;RNA degradation&quot;, k5, &quot;RNA --&gt; 0&quot;)
+  model &lt;= Reaction(&quot;protein degradation&quot;, k6, &quot;P --&gt; 0&quot;)
 
-      # autocatalytic reactions
-      model &lt;= Reaction(&quot;conversion$(i)&quot;,    γ3, &quot;X$(i) --&gt; Y$(i)&quot;)
-      model &lt;= Reaction(&quot;autocatalysis$(i)&quot;, γ4, &quot;X$(i) + X$(i) + Y$(i) --&gt; X$(i) + X$(i) + X$(i)&quot;)
-  end
+  return model
+end
 
-  for i = 2:N
-      # cascades
-      model &lt;= Reaction(&quot;cascade$(i)&quot;, γ2, &quot;X$(i-1) --&gt; X$(i)&quot;)
-  end
+# build with the default parameter values
+model = autoreg()
 
-  model &lt;= Reaction(&quot;buffer&quot;, γ1, &quot;0 --&gt; X1&quot;)
-  model &lt;= Reaction(&quot;decay&quot;,  γ2, &quot;X$(N) --&gt; 0&quot;)</code></pre></div><p>The phase portrait of the system comparing <span>$X_{1}$</span> and <span>$Y_{1}$</span> against <span>$X_{N}$</span> and <span>$Y_{N}$</span> shows that noise at the first step is propagated to the final step in the cascade over time.</p><div><pre><code class="language-julia">  result = simulate(model, time=10_000.0, epochs=10_000)
+# Petri net
+fig = visualize(model)
+using TikzPictures; save(SVG(&quot;gene_petri&quot;), fig) # hide</code></pre><p><img src="gene_petri.svg" alt/></p><h3><a class="nav-anchor" id="Sample-Output-3" href="#Sample-Output-3">Sample Output</a></h3><p>By default, BioSimulator.jl uses fixed-interval output. We can request that the state vector be saved after every step using the <code>Val{:full}</code> option immediately after specifying the algorithm. This option is compatible with mean trajectories; simply specify <code>epochs = n</code> where <code>n</code> is the number of epochs to use in estimating the required means.</p><div><pre><code class="language-julia"># simulate with the full output option
+result = simulate(model, Direct(), Val{:full}, time = 100.0, trials = 100)
 
-  plot(
-    plot(PhaseTrajectory(result, &quot;X1&quot;, &quot;Y1&quot;, 1)),
-    plot(PhaseTrajectory(result, &quot;X$(N)&quot;, &quot;Y$(N)&quot;, 1)),
-    size=(800,350)
-  )</code></pre></div><p><img src="brusselator.svg" alt/></p><footer><hr/><a class="previous" href="algorithms.html"><span class="direction">Previous</span><span class="title">Algorithms</span></a><a class="next" href="benchmarks.html"><span class="direction">Next</span><span class="title">Benchmarks</span></a></footer></article></body></html>
+# plot the mean trajectory using 25 epochs
+plot(result, plot_type = :meantrajectory, species = [&quot;P&quot;, &quot;P2&quot;], epochs = 25)</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="gene1.png" alt/></p><p>The distributions at <span>$t = 4$</span> for <span>$P$</span> and <span>$P2$</span>:</p><div><pre><code class="language-julia">plot(result, plot_type = :histogram, species = [&quot;P&quot;, &quot;P2&quot;], layout = (2, 1))</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="gene2.png" alt/></p><h2><a class="nav-anchor" id="Brusselator-Cascade-1" href="#Brusselator-Cascade-1">Brusselator Cascade</a></h2><p>The Brusselator is a theoretical model used to study autocatalytic reactions. The reactions in the model are</p><blockquote><div>\[A \to X\]</div><div>\[2X + Y \to 3X\]</div><div>\[X + B \to Y + D\]</div><div>\[X \to E,\]</div></blockquote><p>where <span>$A$</span>, <span>$B$</span>, and <span>$D$</span> are chemical species assumed to be constant in concentration; only <span>$X$</span> and <span>$Y$</span> vary over time.. The species <span>$A$</span> and <span>$B$</span> act as inputs to the synthesis and conversion of <span>$X$</span>, whereas <span>$D$</span> and <span>$E$</span> are byproducts with no impact on the system. The <span>$Y$</span> species acts as a catalyst to the synthesis of <span>$X$</span> so that <span>$X$</span> is autocatalytic. Note that the last reaction can be thought of as the decay of <span>$X$</span>.</p><p>One can study the role of stochasticity in chemical reaction cascades by coupling Brusselators. A cascade with <span>$N$</span> steps is modeled as</p><blockquote><div>\[A \to X_{1}\]</div><div>\[2 X_{n} + Y_{n} \to 3 X_{n}; n = 1,\ldots,N\]</div><div>\[X_{n} + B \to Y_{n} + D; n = 1,\ldots,N\]</div><div>\[X_{n} \to X_{n+1}; n = 1,\ldots,N-1\]</div><div>\[X_{N} \to E,\]</div></blockquote><p>where the <span>$X_{n} \to X_{n+1}$</span> reactions effectively couple each Brusselator. The fixed point of the system is given by the concentrations of <span>$A$</span> and <span>$B$</span>: <span>$([X_{n}], [Y_{n}]) = ([A], [A] / [B])$</span> for each <span>$n = 1,\ldots,N$</span>, which is stable for <span>$[B] &lt; [A]^{2} + 1$</span> and unstable for <span>$[B] &gt; [A]^{2} + 1$</span>. A limit cycle exists in the unstable case which propagates noise down the steps in the cascade. A deterministic model predicts asymptotic stability at the end of the cascade, but small fluctuations from the fixed point are amplified in the stochastic setting.</p><p>This example walks through an implementation of the Brusselator cascade, including conversion of deterministic rates to stochastic rates.</p><h3><a class="nav-anchor" id="Model-Definition-4" href="#Model-Definition-4">Model Definition</a></h3><div><pre><code class="language-julia">model = Network(&quot;Brusselator&quot;)
+
+N = 20    # number of Brusselators
+V = 100.0 # system volume
+
+# ===== &quot;Deterministic&quot; Rates =====
+k1 = 1.0  # buffer rate
+k2 = 1.0  # transition/decay rate
+k3 = 1.0  # conversion rate
+k4 = 1.0  # autocatalytic rate
+
+# ===== &quot;Stochastic&quot; Rates =====
+# To model a constant buffer X0 we add a zero-order reaction (like immigration)
+# The stochastic rates have to take into account the system volume
+
+γ1 = k1                    # buffer rate
+γ2 = k2 / V                # transition/decay rate
+γ3 = k3 / V                # conversion rate
+γ4 = 2 * k4 / (V * V * V)  # autocatalytic rate
+
+for i = 1:N
+  # species definitions
+  model &lt;= Species(&quot;X$(i)&quot;, 0)
+  model &lt;= Species(&quot;Y$(i)&quot;, 0)
+
+  # autocatalytic reactions
+  model &lt;= Reaction(&quot;conversion$(i)&quot;,    γ3, &quot;X$(i) --&gt; Y$(i)&quot;)
+  model &lt;= Reaction(&quot;autocatalysis$(i)&quot;, γ4, &quot;X$(i) + X$(i) + Y$(i) --&gt; X$(i) + X$(i) + X$(i)&quot;)
+end
+
+for i = 2:N
+  # cascades
+  model &lt;= Reaction(&quot;cascade$(i)&quot;, γ2, &quot;X$(i-1) --&gt; X$(i)&quot;)
+end
+
+model &lt;= Reaction(&quot;buffer&quot;, γ1, &quot;0 --&gt; X1&quot;)
+model &lt;= Reaction(&quot;decay&quot;,  γ2, &quot;X$(N) --&gt; 0&quot;)</code></pre></div><h3><a class="nav-anchor" id="Sample-Output-4" href="#Sample-Output-4">Sample Output</a></h3><p>Here we plot the sample paths for <span>$X$</span> and <span>$Y$</span> at the first and twentieth stages in the cascade; the species are labeled <span>$X_{1}$</span>, <span>$Y_{1}$</span>, <span>$X_{20}$</span>, and <span>$Y_{20}$</span>.</p><div><pre><code class="language-julia">result = simulate(model, Direct(), Val{:full}, time = 10_000.0)
+
+p1 = plot(result, plot_type = :trajectory, species = [&quot;X1&quot;, &quot;Y1&quot;], title = &quot;brusselator 1&quot;)
+
+p2 = plot(result, plot_type = :trajectory, species = [&quot;X20&quot;, &quot;Y20&quot;], title = &quot;brusselator 20&quot;)
+
+plot(p1, p2, layout = grid(2, 1), legend = :best)</code></pre><pre><code class="language-none">/home/travis/.julia/v0.6/GR/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+Did you start &#39;gksqt&#39;?
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre></div><p><img src="brusselator.png" alt/></p><footer><hr/><a class="previous" href="algorithms.html"><span class="direction">Previous</span><span class="title">Algorithms</span></a></footer></article></body></html>
