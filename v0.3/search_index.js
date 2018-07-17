@@ -301,7 +301,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Model Definition",
     "category": "section",
-    "text": "# initialize\nmodel = Network(\"Kendall\'s Process\")\n\n# species definitions\nmodel <= Species(\"X\", 5)\n\n# reaction definitions\nmodel <= Reaction(\"birth\", 2.0, \"X --> X + X\")\nmodel <= Reaction(\"death\", 1.0, \"X --> 0\")\nmodel <= Reaction(\"immigration\", 0.5, \"0 --> X\")\n\n# Petri net; the \"scale = 2\" argument is optional and can be omitted\n# it is used to pass additional options for the underlying Tikz document\nfig = visualize(model, \"scale = 2\")\n\n# save using TikzPictures.jl\nusing TikzPictures; save(SVG(\"kendall_petri\"), fig) # hide(Image: )"
+    "text": "# initialize\nmodel = Network(\"Kendall\'s Process\")\n\n# species definitions\nmodel <= Species(\"X\", 5)\n\n# reaction definitions\nmodel <= Reaction(\"birth\", 2.0, \"X --> X + X\")\nmodel <= Reaction(\"death\", 1.0, \"X --> 0\")\nmodel <= Reaction(\"immigration\", 0.5, \"0 --> X\")\n\n# Petri net; the \"scale = 2\" argument is optional and can be omitted\n# it is used to pass additional options for the underlying Tikz document\nfig = visualize(model, \"scale = 2\")\nnothing #hide(Image: )"
 },
 
 {
@@ -325,7 +325,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Model Definition",
     "category": "section",
-    "text": "# initialize\nmodel = Network(\"enzyme kinetics\")\n\n# species definitions\nmodel <= Species(\"S\", 301)\nmodel <= Species(\"E\", 100)\nmodel <= Species(\"SE\",  0)\nmodel <= Species(\"P\",   0)\n\n# reaction definitions\nmodel <= Reaction(\"Binding\", 0.00166, \"S + E --> SE\")\nmodel <= Reaction(\"Dissociation\", 0.0001, \"SE --> S + E\")\nmodel <= Reaction(\"Conversion\", 0.1, \"SE --> P + E\")\n\n# Petri net\nfig = visualize(model)\nusing TikzPictures; save(SVG(\"mmek_petri\"), fig) # hide(Image: )"
+    "text": "# initialize\nmodel = Network(\"enzyme kinetics\")\n\n# species definitions\nmodel <= Species(\"S\", 301)\nmodel <= Species(\"E\", 100)\nmodel <= Species(\"SE\",  0)\nmodel <= Species(\"P\",   0)\n\n# reaction definitions\nmodel <= Reaction(\"Binding\", 0.00166, \"S + E --> SE\")\nmodel <= Reaction(\"Dissociation\", 0.0001, \"SE --> S + E\")\nmodel <= Reaction(\"Conversion\", 0.1, \"SE --> P + E\")\n\n# Petri net\nfig = visualize(model)\nnothing #hide(Image: )"
 },
 
 {
@@ -349,7 +349,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Examples",
     "title": "Model Definition",
     "category": "section",
-    "text": "We can wrap the model definition into a function, called autoreg, that can be called to build the model with different sets of parameters.function autoreg(;k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)\n  # initialize\n  model = Network(\"auto-regulation\")\n\n  # species definitions\n  model <= Species(\"gene\",   10)\n  model <= Species(\"P2_gene\", 0)\n  model <= Species(\"RNA\",     0)\n  model <= Species(\"P\",       0)\n  model <= Species(\"P2\",      0)\n\n  # reaction definitions\n  model <= Reaction(\"repression binding\", k1, \"gene + P2 --> P2_gene\")\n  model <= Reaction(\"reverse repression binding\", k1r, \"P2_gene --> gene + P2\")\n  model <= Reaction(\"transcription\", k2, \"gene --> gene + RNA\")\n  model <= Reaction(\"translation\", k3, \"RNA --> RNA + P\")\n  model <= Reaction(\"dimerization\", k4, \"P + P --> P2\")\n  model <= Reaction(\"dissociation\", k4r, \"P2 --> P + P\")\n  model <= Reaction(\"RNA degradation\", k5, \"RNA --> 0\")\n  model <= Reaction(\"protein degradation\", k6, \"P --> 0\")\n\n  return model\nend\n\n# build with the default parameter values\nmodel = autoreg()\n\n# Petri net\nfig = visualize(model)\nusing TikzPictures; save(SVG(\"gene_petri\"), fig) # hide(Image: )"
+    "text": "We can wrap the model definition into a function, called autoreg, that can be called to build the model with different sets of parameters.function autoreg(;k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)\n  # initialize\n  model = Network(\"auto-regulation\")\n\n  # species definitions\n  model <= Species(\"gene\",   10)\n  model <= Species(\"P2_gene\", 0)\n  model <= Species(\"RNA\",     0)\n  model <= Species(\"P\",       0)\n  model <= Species(\"P2\",      0)\n\n  # reaction definitions\n  model <= Reaction(\"repression binding\", k1, \"gene + P2 --> P2_gene\")\n  model <= Reaction(\"reverse repression binding\", k1r, \"P2_gene --> gene + P2\")\n  model <= Reaction(\"transcription\", k2, \"gene --> gene + RNA\")\n  model <= Reaction(\"translation\", k3, \"RNA --> RNA + P\")\n  model <= Reaction(\"dimerization\", k4, \"P + P --> P2\")\n  model <= Reaction(\"dissociation\", k4r, \"P2 --> P + P\")\n  model <= Reaction(\"RNA degradation\", k5, \"RNA --> 0\")\n  model <= Reaction(\"protein degradation\", k6, \"P --> 0\")\n\n  return model\nend\n\n# build with the default parameter values\nmodel = autoreg()\n\n# Petri net\nfig = visualize(model)\nnothing # hide(Image: )"
 },
 
 {
