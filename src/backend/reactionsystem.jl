@@ -19,25 +19,27 @@ propensities(r::AbstractReactionSystem)  = r.propensities
 scaled_rates(r::AbstractReactionSystem)  = r.scaled_rates
 dependencies(r::AbstractReactionSystem)  = r.dependencies
 
-@inbounds function update_propensity!{T}(
-  a  :: PVec{T},
+@inbounds function update_propensity!(
   r  :: AbstractReactionSystem,
   Xt :: Vector{Int},
   j  :: Integer)
 
-  aⱼ = compute_mass_action(Xt, r, j)
-  update_errorbound!(a, aⱼ, j)
-  update_intensity!(a,  aⱼ, j)
-  a[j] = aⱼ
+  a = propensities(r)
+
+  a_j = compute_mass_action(Xt, r, j)
+  update_errorbound!(a, a_j, j)
+  update_intensity!(a,  a_j, j)
+  a[j] = a_j
 
   return nothing
 end
 
-@inbounds function update_all_propensities!{T}(
-  a  :: PVec{T},
+@inbounds function update_all_propensities!(
   r  :: AbstractReactionSystem,
   Xt :: Vector{Int})
 
+  a = propensities(r)
+  T = eltype(a)
   total_sum = zero(T)
 
   for j in eachindex(a)
@@ -51,32 +53,34 @@ end
   return nothing
 end
 
-@inbounds function update_dependent_propensities!{T}(
-  a  :: PVec{T},
+@inbounds function update_dependent_propensities!(
   r  :: AbstractReactionSystem,
   Xt :: Vector{Int},
   μ  :: Integer)
+
+  a = propensities(r)
 
   dg = dependencies(r)
   dependents = dg[μ]
 
   for j in dependents
-    update_propensity!(a, r, Xt, j)
+    update_propensity!(r, Xt, j)
   end
 
   return nothing
 end
 
 @inline function update_propensities!(
-  a  :: PVec,
   r  :: AbstractReactionSystem,
   Xt :: Vector{Int},
   μ  :: Integer)
 
+  a = propensities(r)
+  
   if isstable(a)
-    update_dependent_propensities!(a, r, Xt, μ)
+    update_dependent_propensities!(r, Xt, μ)
   else
-    update_all_propensities!(a, r, Xt)
+    update_all_propensities!(r, Xt)
   end
 
   return nothing

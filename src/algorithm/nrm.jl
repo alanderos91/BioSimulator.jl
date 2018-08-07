@@ -1,15 +1,3 @@
-"""
-```
-NRM
-```
-
-Gibson and Bruck's Next Reaction Method, statistically equivalent to `SSA`. It provides better computational efficiency on networks with loosely connected reactions.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-- `pq`: A priority queue that sorts reaction according to the their next firing times.
-"""
 mutable struct NRM <: ExactMethod
   # parameters
   end_time :: Float64
@@ -19,17 +7,17 @@ mutable struct NRM <: ExactMethod
   pq       :: PriorityQueue{Int,Float64,Base.Order.ForwardOrdering}
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function NRM(end_time::AbstractFloat)
+  function NRM(end_time::AbstractFloat, stats_tracked)
     new(end_time, 0.0, PriorityQueue{Int, Float64}(),
+      stats_tracked,
       Dict{Symbol,Int}(
         :gillespie_steps => 0
     ))
   end
 end
-
-NRM(end_time; na...) = NRM(end_time)
 
 get_reaction_times(algorithm::NRM) = algorithm.pq
 
@@ -49,12 +37,16 @@ function init!(algorithm::NRM, Xt, r)
   end
 end
 
-function reset!(algorithm::NRM, a::PVec)
-  algorithm.t = 0.0
+function reset!(algorithm::NRM, Xt, r)
+  update_all_propensities!(r, Xt)
+  
+  a = propensities(r)
   pq = algorithm.pq
+  
+  algorithm.t = 0.0
 
   for j in eachindex(a)
-    pq[j] = rand(Exponential(1 / a[j]))
+    pq[j] = randexp() / a[j]
   end
 
   return nothing
@@ -82,7 +74,9 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
     throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
-  algorithm.stats[:gillespie_steps] += 1
+  if algorithm.stats_tracked
+    algorithm.stats[:gillespie_steps] += 1
+  end
   
   return nothing
 end
@@ -99,7 +93,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
   for α in dependents
     oldval = a[α]
     old_t  = pq[α]
-    update_propensity!(a, r, Xt, α)
+    update_propensity!(r, Xt, α)
 
     if α != μ && oldval != zero(T)
 
@@ -112,7 +106,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     else
 
       if a[α] > zero(T)
-        pq[α] = τ + rand(Exponential(1 / a[α]))
+        pq[α] = τ + randexp() / a[α]
       else
         pq[α] = Inf
       end
@@ -120,7 +114,7 @@ function update_reaction_times!(algorithm::NRM, Xt, r, μ, τ)
     end
   end
 
-  !isstable(a) && update_all_propensities!(a, r, Xt)
+  !isstable(a) && update_all_propensities!(r, Xt)
 
   return nothing
 end

@@ -20,6 +20,8 @@ end
 
 PVec{T} = PropensityVector{T}
 
+Base.eltype(x::PVec{T}) where T = T
+
 ##### PVec interface #####
 intensity(x::PVec) = x.intensity
 isstable{T}(x::PVec{T})  = (x.error_bound <= eps(T) * x.intensity)

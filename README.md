@@ -11,7 +11,7 @@
 `BioSimulator` is not yet registered and must be installed with `Pkg.clone`:
 
 ```julia
-Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git")
+Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git", "BioSimulator")
 ```
 
 ## Documentation
@@ -20,8 +20,6 @@ Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git")
 - [**LATEST**][docs-latest-url] &mdash; *in-development version of the documentation.*
 
 ## Project Status
-
-This package is tested against Julia `0.5` on Linux, OS X, and Windows.
 
 ## Contributing
 

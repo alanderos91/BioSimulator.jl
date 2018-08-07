@@ -1,9 +1,7 @@
 julia 0.6
-Distributions
-Reexport
-Plots
+RecipesBase
 DataFrames
 TikzGraphs
 LightGraphs
-Interact
-Reactive
+StatsFuns
+DataStructures

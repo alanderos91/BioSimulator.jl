@@ -37,7 +37,7 @@ function petri_net(model :: Network)
       i = id2ind[reactant]
       e = (i, j)
       push!(edge_set, e)
-      edge_styles[e] = "-stealth, draw, rounded corners=5pt, solid, xshift=-2pt"
+      edge_styles[e] = "-stealth, draw, rounded corners=5pt, line width=0.5mm, solid, xshift=-2"
       v > 1 && (stoc_set[e] = v)
     end
 
@@ -45,7 +45,7 @@ function petri_net(model :: Network)
       i = id2ind[product]
       e = (j, i)
       push!(edge_set, e)
-      edge_styles[e] = "-stealth, draw, rounded corners=5pt, dashed, xshift=2pt, red, swap"
+      edge_styles[e] = "-stealth, draw, rounded corners=5pt, line width=0.5mm, dashed, xshift=2, red, swap"
       v > 1 && (stoc_set[e] = v)
     end
   end
@@ -56,11 +56,11 @@ function petri_net(model :: Network)
 
   species_nodes  = collect(1:s)
   species_labels = map(string, keys(species))
-  species_styles = Dict( i => "draw, rounded corners, fill=blue!10" for i in species_nodes )
+  species_styles = Dict( i => "draw, rounded corners, fill=blue!10, font=\\large" for i in species_nodes )
 
   reaction_nodes = collect(s+1:s+r)
   reaction_labels = map(string, keys(reactions))
-  reaction_styles = Dict( i => "draw, rounded corners, thick, fill=red!10" for i in reaction_nodes)
+  reaction_styles = Dict( i => "draw, rounded corners, thick, fill=red!10, font=\\large" for i in reaction_nodes)
 
   node_labels = [ species_labels; reaction_labels ]
   edge_labels = Dict( e => string(v) for (e, v) in stoc_set )

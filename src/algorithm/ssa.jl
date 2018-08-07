@@ -1,14 +1,3 @@
-"""
-```
-SSA
-```
-
-Gillespie's Direct Method (SSA). Simulates a system of coupled reactions and species by computing the time to the next reaction and searching on the CMF.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-"""
 mutable struct SSA <: ExactMethod
   # parameters
   end_time :: Float64
@@ -17,18 +6,18 @@ mutable struct SSA <: ExactMethod
   t      :: Float64
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
   # metadata
 
-  function SSA(end_time::AbstractFloat)
+  function SSA(end_time::AbstractFloat, stats_tracked)
     new(end_time, 0.0,
+    stats_tracked,
       Dict{Symbol,Int}(
         :gillespie_steps => 0
     ))
   end
 end
-
-SSA(end_time; na...) = SSA(end_time)
 
 set_time!(algorithm::SSA, τ::AbstractFloat) = (algorithm.t = algorithm.t + τ)
 
@@ -45,7 +34,7 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(a, r, Xt, μ)
+      update_propensities!(r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -54,7 +43,9 @@ function step!(algorithm::SSA, Xt::Vector, r::AbstractReactionSystem)
     throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
-  algorithm.stats[:gillespie_steps] += 1
+  if algorithm.stats_tracked
+    algorithm.stats[:gillespie_steps] += 1
+  end
   
   return nothing
 end
@@ -62,7 +53,7 @@ end
 ##### next reaction #####
 
 function compute_stepsize(a::PropensityVector)
-  rand(Exponential(1 / intensity(a)))
+  randexp() / intensity(a)
 end
 
 ##### selecting reaction #####

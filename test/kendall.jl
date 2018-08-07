@@ -20,7 +20,14 @@ model = kendall(i, α, μ, ν)
 
 theoretical = kendall_mean(i, linspace(0.0, t, n + 1), α, μ, ν)
 
-algorithms = [SSA, FRM, NRM, ODM, SAL]
+algorithms = [
+  Direct(),
+  FirstReaction(),
+  NextReaction(),
+  OptimizedDirect(),
+  TauLeaping(),
+  StepAnticipation()
+]
 
 # Run SSA and SAL once to compile
 print("    Precompiling..."); @time begin
@@ -31,14 +38,16 @@ end
 
 print("    Running tests...\n\n")
 for algorithm in algorithms
-  print("   - $(split(uppercase(string(algorithm)),".")[2]): ")
+  print("   - $(algorithm): ")
 
   srand(u)
 
   @time result = run_test(model, algorithm, t, n, m)
 
   # count the number of relative errors that lie outside the interval [0.98, 1.02]
-  observed = reshape(mean(result.data, 3), n + 1)
+  avg = BioSimulator.AveragePath(result.simulation_data)
+  
+  observed = reshape(avg.xmean, n+1, 1)
   relative = observed ./ theoretical
   badness = count(x -> !isapprox(x, 1.0, rtol=0.4), relative)
 

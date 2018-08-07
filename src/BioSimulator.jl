@@ -1,16 +1,16 @@
 module BioSimulator
 
-using Distributions
-using DataStructures
-using Reexport
-using Interact
-using Reactive
+__precompile__()
 
-@reexport using Plots
-@reexport using DataFrames
+using DataStructures
+using RecipesBase
 
 import TikzGraphs
 using LightGraphs: DiGraph, add_edge!
+
+import StatsFuns.RFunctions: poisrand
+
+import DataFrames: DataFrame
 
 import Base: (<=),
              (>=),
@@ -39,30 +39,28 @@ include(joinpath("algorithm","ssa.jl"))
 include(joinpath("algorithm","odm.jl"))
 include(joinpath("algorithm","frm.jl"))
 include(joinpath("algorithm","nrm.jl"))
+include(joinpath("algorithm","otl.jl"))
 include(joinpath("algorithm","sal.jl"))
 
-export SSA, FRM, NRM, ODM, SAL
-
 # Interface
+include(joinpath("interface","build_algorithm.jl"))
 include(joinpath("interface","species.jl"))
 include(joinpath("interface","reaction.jl"))
 include(joinpath("interface","network.jl"))
-include(joinpath("interface","gui.jl"))
 include(joinpath("backend","util.jl"))
 
-export Species, Reaction, Network,
-             n_species, n_reactions, species_list, reaction_list
-
-export generate_gui, plot_interface
+export Direct, FirstReaction, NextReaction, OptimizedDirect, TauLeaping, StepAnticipation
+export Species, Reaction, Network, n_species, n_reactions, species_list, reaction_list
 
 # Output
-include(joinpath("output","partial_history.jl"))
 include(joinpath("output","petrinet.jl"))
-include(joinpath("output","stats.jl"))
-include(joinpath("output","plot.jl"))
+include(joinpath("output","sample_path.jl"))
+include(joinpath("output","regular_path.jl"))
+include(joinpath("output","average_path.jl"))
+include(joinpath("output","histogram.jl"))
+include(joinpath("output","summary.jl"))
 
-export get_data, get_dataframe, visualize
-export Trajectory, MeanTrajectory, Histogram, PhaseTrajectory
+export visualize
 
 include(joinpath("interface","simulate.jl"))
 

@@ -34,8 +34,8 @@ function SparseReactionSystem(reactions, id2ind, c, d)
 end
 
 function sparse_stoichiometry(reactions, id2ind, c, d)
-  V = spzeros(c, d)
-  U = spzeros(c, d)
+  V = spzeros(Int, c, d)
+  U = spzeros(Int, c, d)
 
   V, U = compute_net_stoichiometry!(V, U, reactions, id2ind)
 

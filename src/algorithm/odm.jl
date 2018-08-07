@@ -1,14 +1,3 @@
-"""
-```
-ODM
-```
-
-Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF when selecting the next reaction to fire.
-
-### Internals
-- `end_time`: The termination time, supplied by a user.
-- `t`: The current simulation time.
-"""
 mutable struct ODM <: ExactMethod
   # parameters
   end_time :: Float64
@@ -17,17 +6,17 @@ mutable struct ODM <: ExactMethod
   t      :: Float64
 
   # statistics
+  stats_tracked :: Bool
   stats :: Dict{Symbol,Int}
 
-  function ODM(end_time::AbstractFloat)
+  function ODM(end_time::AbstractFloat, stats_tracked)
     new(end_time, 0.0,
+        stats_tracked,
         Dict{Symbol,Int}(
         :gillespie_steps => 0
     ))
   end
 end
-
-ODM(end_time; na...) = ODM(end_time)
 
 set_time!(algorithm::ODM, τ) = (algorithm.t = algorithm.t + τ)
 
@@ -55,7 +44,7 @@ function step!(algorithm::ODM, Xt, r)
     if !done(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
-      update_propensities!(a, r, Xt, μ)
+      update_propensities!(r, Xt, μ)
     end
 
   elseif intensity(a) == 0
@@ -63,8 +52,10 @@ function step!(algorithm::ODM, Xt, r)
   else
     throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
-  
-  algorithm.stats[:gillespie_steps] += 1
+
+  if algorithm.stats_tracked
+    algorithm.stats[:gillespie_steps] += 1
+  end
   
   return nothing
 end
@@ -79,7 +70,7 @@ function presimulate!(
   a = propensities(r)
   t = zero(typeof(end_time))
 
-  update_all_propensities!(a, r, Xt)
+  update_all_propensities!(r, Xt)
 
   while t < end_time
     if intensity(a) > 0
@@ -89,7 +80,7 @@ function presimulate!(
       if t < end_time
         μ = select_reaction(a)
         fire_reaction!(Xt, r, μ)
-        update_propensities!(a, r, Xt, μ)
+        update_propensities!(r, Xt, μ)
         reaction_events[μ] = reaction_events[μ] + 1
       end
     else

@@ -6,10 +6,17 @@ n = 1
 u = 5357
 m = 1
 
-algorithms = [SSA, FRM, NRM, ODM, SAL]
+algorithms = [
+  Direct(),
+  FirstReaction(),
+  NextReaction(),
+  OptimizedDirect(),
+  TauLeaping(),
+  StepAnticipation()
+]
 
 for algorithm in algorithms
-  @printf "%+6s\n" split(uppercase(string(algorithm)),".")[2]
+  @printf "%+6s\n" algorithm
   for M in model_size
       model = independent(M, x0)
       srand(u)
