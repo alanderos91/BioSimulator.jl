@@ -9,7 +9,7 @@ Simulate a `model` with `algname`. The simulation routine will run until the ter
 
 - `model`: The `Network` to simulate.
 - `algname`: The name of the algorithm to carry out the simulation. One of `Direct()`, `FirstReaction()`, `NextReaction()`, `OptimizedDirect()`, `TauLeaping()`, or `StepAnticipation()`.
-- `output_type = Val{:fixed}`: The type of output to record. The `Val{:full}` option records every simulation step, whereas the `Val{:fixed}` option records a fixed number of `epochs`.
+- `output_type = Val(:fixed)`: The type of output to record. The `Val(:full)` option records every simulation step, whereas the `Val{:fixed}` option records a fixed number of `epochs`.
 
 ### Optional Arguments
 
@@ -20,7 +20,7 @@ Simulate a `model` with `algname`. The simulation routine will run until the ter
 - `kwargs`: Additional keyword arguments specific to each algorithm. Reference a specific `algname` for details.
 
 """
-function simulate(model::Network, algname::T, output_type::Type{Val{S}}=Val{:fixed};
+function simulate(model::Network, algname::T, output_type::Val{S}=Val(:fixed);
   time::Float64=1.0,
   epochs::Int=1,
   trials::Int=1,
@@ -55,7 +55,7 @@ function simulate(model::Network, algname::T, output_type::Type{Val{S}}=Val{:fix
   return result
 end
 
-function build_output(::Type{Val{:fixed}}, nspecies, epochs, ntrials, tfinal)
+function build_output(::Val{:fixed}, nspecies, epochs, ntrials, tfinal)
   n = epochs + 1
   tdata = collect(linspace(0.0, tfinal, n))
   output = RegularEnsemble(ntrials, nspecies, epochs)
@@ -65,7 +65,7 @@ function build_output(::Type{Val{:fixed}}, nspecies, epochs, ntrials, tfinal)
   return output
 end
 
-function build_output(::Type{Val{:full}}, nspecies, epochs, ntrials, tfinal)
+function build_output(::Val{:full}, nspecies, epochs, ntrials, tfinal)
   return Ensemble(ntrials)
 end
 
