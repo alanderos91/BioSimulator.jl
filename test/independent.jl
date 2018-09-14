@@ -19,7 +19,7 @@ for algorithm in algorithms
   @printf "%+6s\n" algorithm
   for M in model_size
       model = independent(M, x0)
-      srand(u)
+      seed!(u)
       @printf "%+6s: %3d" "M" M
       @time run_test(model, algorithm, t, n, m)
   end

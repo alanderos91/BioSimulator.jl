@@ -22,7 +22,7 @@ algorithms = [
 ]
 
 for algorithm in algorithms
-  srand(u)
+  seed!(u)
     print("   - $(algorithm): ")
   @time run_test(model, algorithm, t, n, m)
 end
