@@ -40,7 +40,7 @@ print("    Running tests...\n\n")
 for algorithm in algorithms
   print("   - $(algorithm): ")
 
-  srand(u)
+  seed!(u)
 
   @time result = run_test(model, algorithm, t, n, m)
 

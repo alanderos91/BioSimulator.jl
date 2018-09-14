@@ -1,15 +1,19 @@
 using BioSimulator
-using Base.Test
+using Test
+using Random
+using Statistics
 
 import BioSimulator: Algorithm
+import Random: seed!
+import Printf: @printf
 
-function run_test{T}(
+function run_test(
   model :: Network,
   alg   :: T,
   t     :: Real,
   n     :: Integer,
   m     :: Integer;
-  kwargs...)
+  kwargs...) where T
   result = simulate(model, alg, time=t, epochs=n, trials=m, kwargs...)
 end
 
