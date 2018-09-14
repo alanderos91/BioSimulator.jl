@@ -68,7 +68,7 @@ function make_species_vector(dict::AbstractDict{Symbol,Species})
   i = 1
   for (key, s) in dict
     X0[i] = s.population
-    id[i] = s.id
+    id[i] = Symbol(s.id)
     id2ind[key] = i
     i = i + 1
   end
