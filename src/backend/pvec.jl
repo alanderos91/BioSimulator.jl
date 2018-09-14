@@ -24,13 +24,13 @@ Base.eltype(x::PVec{T}) where T = T
 
 ##### PVec interface #####
 intensity(x::PVec) = x.intensity
-isstable{T}(x::PVec{T})  = (x.error_bound <= eps(T) * x.intensity)
+isstable(x::PVec{T}) where T  = (x.error_bound <= eps(T) * x.intensity)
 
-@fastmath function update_errorbound!{T}(x::PVec{T}, xi::T, i::Integer)
+@fastmath function update_errorbound!(x::PVec{T}, xi::T, i::Integer) where T
   x.error_bound = x.error_bound + eps(T) * (x.intensity + x[i] + xi)
 end
 
-@fastmath function update_intensity!{T}(x::PVec{T}, xi::T, i::Integer)
+@fastmath function update_intensity!(x::PVec{T}, xi::T, i::Integer) where T
   # if x.intensity - x[i] + xi < 0
   #   error("""
   #   Intensity update failed!
