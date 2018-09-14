@@ -88,14 +88,14 @@ A simple prokaryotic auto-regulation network. RNA is transcribed from a particul
 - `k5`: RNA degradation rate
 - `k6`: protein degradation rate
 """
-function autoreg(;k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)
+function autoreg(;x0 = [10, 0, 0, 0, 0], k1=1.0, k1r=10.0, k2=0.01, k3=10.0, k4=1.0, k4r=1.0, k5=0.1, k6=0.01)
   m = Network("auto-regulation")
 
-  m <= Species("gene",   10)
-  m <= Species("P2_gene", 0)
-  m <= Species("RNA",     0)
-  m <= Species("P",       0)
-  m <= Species("P2",      0)
+  m <= Species("gene",    x0[1])
+  m <= Species("P2_gene", x0[2])
+  m <= Species("RNA",     x0[3])
+  m <= Species("P",       x0[4])
+  m <= Species("P2",      x0[5])
 
   m <= Reaction("repression binding", k1, "gene + P2 --> P2_gene")
   m <= Reaction("reverse repression binding", k1r, "P2_gene --> gene + P2")

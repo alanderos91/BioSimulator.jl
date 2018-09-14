@@ -1,6 +1,6 @@
 """
 ```
-simulate(model::Network, algname::T, [output_type::Type{Val{S}} = Val{:fixed}]; time::Float64=1.0, epochs::Int=1, trials::Int=1, track_stats::Bool=false, kwargs...) where {T,S}
+simulate(model::Network, algname::T, [output_type::Val{S} = Val(:fixed)]; time::Float64=1.0, epochs::Int=1, trials::Int=1, track_stats::Bool=false, kwargs...) where {T,S}
 ```
 
 Simulate a `model` with `algname`. The simulation routine will run until the termination `time` for the given number of `trials`.
@@ -9,7 +9,7 @@ Simulate a `model` with `algname`. The simulation routine will run until the ter
 
 - `model`: The `Network` to simulate.
 - `algname`: The name of the algorithm to carry out the simulation. One of `Direct()`, `FirstReaction()`, `NextReaction()`, `OptimizedDirect()`, `TauLeaping()`, or `StepAnticipation()`.
-- `output_type = Val(:fixed)`: The type of output to record. The `Val(:full)` option records every simulation step, whereas the `Val{:fixed}` option records a fixed number of `epochs`.
+- `output_type = Val(:fixed)`: The type of output to record. The `Val(:full)` option records every simulation step, whereas the `Val(:fixed)` option records a fixed number of `epochs`.
 
 ### Optional Arguments
 
