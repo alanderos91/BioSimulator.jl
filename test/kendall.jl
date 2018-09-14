@@ -1,9 +1,7 @@
-using BioSimulator
-using Base.Test
-
 function kendall_mean(i, t, α, μ, ν)
-  x = exp.((α - μ) * t)
-  return i * x + ν / (α - μ) * (x - 1)
+  x = @. exp((α - μ) * t)
+  @. x = i * x + ν / (α - μ) * (x - 1)
+  return x
 end
 
 i = 5
@@ -18,7 +16,7 @@ m = 1_000 # for a real test, use 100_000
 
 model = kendall(i, α, μ, ν)
 
-theoretical = kendall_mean(i, linspace(0.0, t, n + 1), α, μ, ν)
+theoretical = kendall_mean(i, range(0.0, stop = t, length = n + 1), α, μ, ν)
 
 algorithms = [
   Direct(),

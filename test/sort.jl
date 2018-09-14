@@ -13,7 +13,7 @@ X0, id, id2ind = BioSimulator.make_species_vector(species)
 system = BioSimulator.SparseReactionSystem(reactions, id2ind, c, d)
 
 ix       = sortperm(shuffle!(collect(1:d)))
-indexmap = Dict(i => findfirst(ix, i) for i in eachindex(ix))
+indexmap = Dict(i => findfirst(isequal(i), ix) for i in eachindex(ix))
 
 V = deepcopy(stoichiometry(system))
 U = deepcopy(coefficients(system))
