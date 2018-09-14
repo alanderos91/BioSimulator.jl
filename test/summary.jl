@@ -13,7 +13,7 @@ model = autoreg(x0 = x0)
 srand(5357)
 
 # single simulation
-result = simulate(model, Direct(), Val{:full}, time = 100.0)
+result = simulate(model, Direct(), Val(:full), time = 100.0)
 mydf = DataFrame(result)
 mydf_columns = names(mydf)
 

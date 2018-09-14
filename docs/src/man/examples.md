@@ -182,12 +182,12 @@ nothing # hide
 ### Sample Output
 
 By default, BioSimulator.jl uses fixed-interval output.
-We can request that the state vector be saved after every step using the `Val{:full}` option immediately after specifying the algorithm.
+We can request that the state vector be saved after every step using the `Val(:full)` option immediately after specifying the algorithm.
 This option is compatible with mean trajectories; simply specify `epochs = n` where `n` is the number of epochs to use in estimating the required means.
 
 ```@example gene
 # simulate with the full output option
-result = simulate(model, Direct(), Val{:full}, time = 100.0, trials = 100)
+result = simulate(model, Direct(), Val(:full), time = 100.0, trials = 100)
 
 # plot the mean trajectory using 25 epochs
 plot(result, plot_type = :meantrajectory, species = ["P", "P2"], epochs = 25)
@@ -271,7 +271,7 @@ nothing # hide
 Here we plot the sample paths for $X$ and $Y$ at the first and twentieth stages in the cascade; the species are labeled $X_{1}$, $Y_{1}$, $X_{20}$, and $Y_{20}$.
 
 ```@example brusselator_cascade
-result = simulate(model, Direct(), Val{:full}, time = 10_000.0)
+result = simulate(model, Direct(), Val(:full), time = 10_000.0)
 
 p1 = plot(result, plot_type = :trajectory, species = ["X1", "Y1"], title = "brusselator 1")
 
