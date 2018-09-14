@@ -62,7 +62,7 @@ function print_participants(io, participants)
   end
 end
 
-parse_reaction(formula::String) = parse_reaction(parse(formula))
+parse_reaction(formula::String) = parse_reaction(Meta.parse(formula))
 
 function parse_reaction(ex::Expr)
   reactants = OrderedDict{Symbol,Int}()

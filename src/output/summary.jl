@@ -57,7 +57,7 @@ function get_regular_path(xw::SamplePath{T1,T2}, tfinal, epochs) where {T1,T2}
 
   x0 = xw.xdata[1]
 
-  tdata = collect(linspace(0.0, tfinal, max_epoch))
+  tdata = collect(range(0.0, stop = tfinal, length = max_epoch))
   xdata = zeros(T2, length(xw.xdata[1]), max_epoch)
   epoch = 1
 

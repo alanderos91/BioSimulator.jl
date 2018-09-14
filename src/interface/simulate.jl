@@ -57,10 +57,10 @@ end
 
 function build_output(::Val{:fixed}, nspecies, epochs, ntrials, tfinal)
   n = epochs + 1
-  tdata = collect(linspace(0.0, tfinal, n))
+  tdata = collect(range(0.0, stop = tfinal, length = n))
   output = RegularEnsemble(ntrials, nspecies, epochs)
   for i in eachindex(output)
-    @inbounds copy!(output[i].tdata, tdata)
+    @inbounds copyto!(output[i].tdata, tdata)
   end
   return output
 end
@@ -100,7 +100,7 @@ end
 function simulate_chunk!(output, Xt, X0, algorithm, reactions, trial_set)
   a = propensities(reactions)
   for trial in trial_set
-    copy!(Xt, X0)
+    copyto!(Xt, X0)
     reset!(algorithm, Xt, reactions)
 
     xw = output[trial]
