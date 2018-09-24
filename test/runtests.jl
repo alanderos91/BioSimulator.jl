@@ -5,5 +5,6 @@ for model in readdir("models")
   include(joinpath("models", model))
 end
 
-include("network.jl")
-include("dep_graph.jl")
+include(joinpath("interface", "well-mixed", "network.jl"))
+
+include(joinpath("data-structures", "dep_graph.jl"))
