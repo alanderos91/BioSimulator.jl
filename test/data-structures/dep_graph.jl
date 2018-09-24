@@ -1,5 +1,3 @@
-import NewBioSimulator: DGVector, DGView, DGLazy, dependents
-
 @testset "DependencyGraph" begin
   model1 = kendall()
   model1_deps = [

@@ -5,6 +5,8 @@ using Random, DataStructures
 ## imports
 
 import Base: show, <=
+import Base: getindex, setindex!, iterate, firstindex, lastindex, length, isempty, haskey, get
+import Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 
 ## load order
 
@@ -19,5 +21,6 @@ export get_species, get_reaction
 
 ## data structures
 include(joinpath("data-structures", "dep_graph.jl"))
+export DGView, DGLazy, DGVector, dependents
 
 end # module
