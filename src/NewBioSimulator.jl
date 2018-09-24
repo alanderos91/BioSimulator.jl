@@ -23,4 +23,7 @@ export get_species, get_reaction
 include(joinpath("data-structures", "dep_graph.jl"))
 export DGView, DGLazy, DGVector, dependents
 
+include(joinpath("data-structures", "priority_queue.jl"))
+export PQBinaryHeap, peektop
+
 end # module
