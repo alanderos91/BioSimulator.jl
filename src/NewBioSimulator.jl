@@ -26,4 +26,7 @@ export DGView, DGLazy, DGVector, dependents
 include(joinpath("data-structures", "priority_queue.jl"))
 export PQBinaryHeap, peektop
 
+## model
+include(joinpath("model", "reaction_system.jl"))
+
 end # module
