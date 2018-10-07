@@ -14,7 +14,7 @@ RatesCache(::NextReactionMethod) = HasRates()
     rate_j = rate(model, state, j)
     
     # compute putative reaction time
-    t_j = randexp() / rate_j
+    t_j = rate_j > 0 ? randexp() / rate_j : Inf
     
     # store rate and reaction time
     @inbounds algorithm.rates[j] = rate_j
@@ -46,10 +46,16 @@ end
       rate_j = rate(model, state, j)
       
       @inbounds t_j = pq[j]
-      @inbounds pq[j] = t + (rates[j] / rate_j) * (t_j - t)
+
+      # check for infinite jump times
+      if isfinite(t_j)
+        @inbounds pq[j] = rate_j > 0 ? t + (rates[j] / rate_j) * (t_j - t) : Inf
+      else
+        @inbounds pq[j] = rate_j > 0 ? t + randexp() / rate_j : Inf
+      end
       
       # update total rate
-      algorithm.total_rate += rate_j - rates[j]
+      @inbounds algorithm.total_rate += rate_j - rates[j]
       
       # update reaction rate
       @inbounds rates[j] = rate_j
@@ -58,7 +64,7 @@ end
   
   # update the current reaction's propensity and firing time
   rate_k = rate(model, state, k)
-  @inbounds pq[k] = t + randexp() / rate_k
+  @inbounds pq[k] = rate_k > 0 ? t + randexp() / rate_k : Inf
   algorithm.total_rate += rate_k - rates[k]
   @inbounds rates[k] = rate_k
   
