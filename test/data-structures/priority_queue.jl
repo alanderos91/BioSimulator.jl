@@ -222,7 +222,21 @@ import NewBioSimulator: enqueue!, dequeue!, heapify!
 
         @testset "setindex!" begin
           @testset "changing priorities" begin
-            
+            if exampletype == "easy"
+              minpq_copy = deepcopy(minpq)
+              maxpq_copy = deepcopy(maxpq)
+
+              minpq_copy['a'] = 100
+              maxpq_copy['a'] = 100
+
+              # make sure we do not add a duplicate key
+              @test length(minpq_copy) == length(minpq)
+              @test length(maxpq_copy) == length(maxpq)
+
+              # was the value updated correctly?
+              @test minpq_copy['a'] == 100
+              @test maxpq_copy['a'] == 100
+            end
           end
 
           @testset "adding a new item" begin

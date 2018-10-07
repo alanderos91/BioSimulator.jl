@@ -271,15 +271,17 @@ function Base.setindex!(pq::PQBinaryHeap{K,V,ForwardOrdering}, value, key) where
 end
 
 function Base.setindex!(pq::PQBinaryHeap{K,V,ReverseOrdering}, value, key) where {K,V}
-  _setindex_kernel(pq, value, key, is_maxheap_violation)
+  _setindex!(pq, value, key, is_maxheap_violation)
 end
 
 @inline function _setindex!(pq, value, key, is_violation)
-  i = get(pq, key, 0)
+  irange = searchsorted(pq.keys, key)
+  i = isempty(irange) ? 0 : irange[end]
 
   # if the key exists...
   if i != 0
     old_value = update_keyvalue!(pq, value, i)
+    node = pq.keymap[i]
     
     if is_violation(value, old_value)
       sift_down!(pq, node, length(pq), is_violation)
