@@ -17,3 +17,21 @@ function build_simulator(::FirstReaction, state, model, rates_cache)
 
   return ExactSimulator(algorithm)
 end
+
+struct EnhancedDirect <: SimulationAlgorithm end
+
+function build_simulator(::EnhancedDirect, state, model, rates_cache)
+  number_jumps = length(model.reactions)
+  algorithm = EnhancedDirectMethod{HasRates}(zeros(number_jumps), 0.0)
+
+  return ExactSimulator(algorithm)
+end
+
+struct SortingDirect <: SimulationAlgorithm end
+
+function build_simulator(::SortingDirect, state, model, rates_cache)
+  number_jumps = length(model.reactions)
+  algorithm = SortingDirectMethod{HasRates}(zeros(number_jumps), 0.0, collect(1:number_jumps), 1)
+
+  return ExactSimulator(algorithm)
+end

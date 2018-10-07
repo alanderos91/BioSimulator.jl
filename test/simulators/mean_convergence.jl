@@ -13,7 +13,7 @@ import NewBioSimulator: parse_model
   expected = kendall_mean(5, 4.0, 2.0, 1.0, 0.5)
   result   = zeros(Int, N)
 
-  @testset "$(alg), $(rates_cache)" for (alg, rates_cache) in [(Direct(), HasRates), (Direct(), HasSums), (FirstReaction(), HasRates)]
+  @testset "$(alg), $(rates_cache)" for (alg, rates_cache) in [(Direct(), HasRates), (Direct(), HasSums), (FirstReaction(), HasRates), (EnhancedDirect(), HasRates), (SortingDirect(), HasRates)]
     msg = rates_cache == HasRates ? "linear search" : "binary search"
 
     @info "Precompiling $(alg) using $(msg)...\n"
