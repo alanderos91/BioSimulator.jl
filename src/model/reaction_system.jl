@@ -29,7 +29,7 @@ is_compatible_law(::MassActionOrder1,  order, num_reactants) = order == 1
 is_compatible_law(::MassActionOrder2A, order, num_reactants) = order == 2 && num_reactants == 2
 is_compatible_law(::MassActionOrder2B, order, num_reactants) = order == 2 && num_reactants == 1
 
-function fire_reaction!(x, r::ReactionStruct)
+function execute_jump!(x, r::ReactionStruct)
     net_change = r.net_change
     
     for v in net_change
@@ -100,8 +100,8 @@ end
 
 ##### convenience functions #####
 
-@inline function fire_reaction!(x, rxn::ReactionSystem, j)
-    @inbounds fire_reaction!(x, rxn.reactions[j])
+@inline function execute_jump!(x, rxn::ReactionSystem, j)
+    @inbounds execute_jump!(x, rxn.reactions[j])
 end
 
 @inline @inbounds rate(rxn::ReactionSystem, x, j) = rate(rxn.reactions[j], x, rxn.rxn_rates)

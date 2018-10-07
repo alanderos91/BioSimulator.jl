@@ -1,5 +1,5 @@
 import NewBioSimulator: MassActionOrder0, MassActionOrder1, MassActionOrder2A, MassActionOrder2B
-import NewBioSimulator: ReactionStruct, ReactionLike, fire_reaction!, rate
+import NewBioSimulator: ReactionStruct, ReactionLike, execute_jump!, rate
 import NewBioSimulator: ReactionSystem
 
 # define notion of equality for ReactionStruct
@@ -55,37 +55,37 @@ end
     @testset "fire_reaction!" begin
       result   = copy(x)
       expected = x + [1, 0, 0, 0, 0]
-      fire_reaction!(result, rxn0[1])
+      execute_jump!(result, rxn0[1])
       @test result == expected
 
       result   = copy(x)
       expected = x + [0, 4, 0, 0, 0]
-      fire_reaction!(result, rxn0[2])
+      execute_jump!(result, rxn0[2])
       @test result == expected
 
       result   = copy(x)
       expected = x + [-1, 0, 0, 0, 0]
-      fire_reaction!(result, rxn1[1])
+      execute_jump!(result, rxn1[1])
       @test result == expected
 
       result   = copy(x)
       expected = x + [-1, 1, 0, 0, 0]
-      fire_reaction!(result, rxn1[2])
+      execute_jump!(result, rxn1[2])
       @test result == expected
 
       result   = copy(x)
       expected = x + [-1, 0, 2, 0, 2]
-      fire_reaction!(result, rxn1[3])
+      execute_jump!(result, rxn1[3])
       @test result == expected
 
       result   = copy(x)
       expected = x + [-1, -1, 1, 0, 0]
-      fire_reaction!(result, rxn2a[1])
+      execute_jump!(result, rxn2a[1])
       @test result == expected
 
       result   = copy(x)
       expected = x + [1, -2, 0, 0, 0]
-      fire_reaction!(result, rxn2b[1])
+      execute_jump!(result, rxn2b[1])
       @test result == expected
     end
 
@@ -173,31 +173,31 @@ end
 
     @testset "fire_reaction!" begin
       result = copy(x); expected = x + [1, 0, 0, 0, 0]
-      fire_reaction!(result, m, 1)
+      execute_jump!(result, m, 1)
       @test result == expected
 
       result = copy(x); expected = x + [0, 4, 0, 0, 0]
-      fire_reaction!(result, m, 2)
+      execute_jump!(result, m, 2)
       @test result == expected
 
       result = copy(x); expected = x + [-1, 0, 0, 0, 0]
-      fire_reaction!(result, m, 3)
+      execute_jump!(result, m, 3)
       @test result == expected
 
       result = copy(x); expected = x + [-1, 1, 0, 0, 0]
-      fire_reaction!(result, m, 4)
+      execute_jump!(result, m, 4)
       @test result == expected
 
       result = copy(x); expected = x + [-1, 0, 2, 0, 2]
-      fire_reaction!(result, m, 5)
+      execute_jump!(result, m, 5)
       @test result == expected
 
       result = copy(x); expected = x + [-1, -1, 1, 0, 0]
-      fire_reaction!(result, m, 6)
+      execute_jump!(result, m, 6)
       @test result == expected
 
       result = copy(x); expected = x + [1, -2, 0, 0, 0]
-      fire_reaction!(result, m, 7)
+      execute_jump!(result, m, 7)
       @test result == expected
     end
 
