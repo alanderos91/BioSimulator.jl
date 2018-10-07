@@ -1,7 +1,16 @@
 import NewBioSimulator: parse_model
 
 @testset "birth-death-immigration" begin
-  N = 100_000
+  ALGORITHMS = [
+    (Direct(), HasRates),
+    (Direct(), HasSums),
+    (EnhancedDirect(), HasRates),
+    (SortingDirect(), HasRates),
+    (FirstReaction(), HasRates),
+    (NextReaction(), HasRates)
+  ]
+
+  N = 10_000
 
   function kendall_mean(i, t, α, μ, ν)
     x = exp((α - μ) * t)
@@ -13,7 +22,7 @@ import NewBioSimulator: parse_model
   expected = kendall_mean(5, 4.0, 2.0, 1.0, 0.5)
   result   = zeros(Int, N)
 
-  @testset "$(alg), $(rates_cache)" for (alg, rates_cache) in [(Direct(), HasRates), (Direct(), HasSums), (FirstReaction(), HasRates), (EnhancedDirect(), HasRates), (SortingDirect(), HasRates)]
+  @testset "$(alg), $(rates_cache)" for (alg, rates_cache) in ALGORITHMS
     msg = rates_cache == HasRates ? "linear search" : "binary search"
 
     @info "Precompiling $(alg) using $(msg)...\n"
@@ -24,6 +33,6 @@ import NewBioSimulator: parse_model
       result[i] = simulate(state, model, alg, 4.0, rates_cache)[1]
     end
     # @test mean(result) ≈ expected
-    println("  absolute error = $(abs(mean(result) - expected))")
+    println("  absolute error = $(abs(mean(result) - expected))\n")
   end
 end

@@ -35,9 +35,10 @@ include(joinpath("model", "reaction_system.jl"))
 include(joinpath("algorithms", "ssa_utils.jl"))
 include(joinpath("algorithms", "abstract_algorithms.jl"))
 include(joinpath("algorithms", "direct.jl"))
-include(joinpath("algorithms", "firstreaction.jl"))
 include(joinpath("algorithms", "enhanced_direct.jl"))
 include(joinpath("algorithms", "sorting_direct.jl"))
+include(joinpath("algorithms", "firstreaction.jl"))
+include(joinpath("algorithms", "nextreaction.jl"))
 
 export HasRates, HasSums
 
@@ -47,7 +48,7 @@ include(joinpath("simulators", "exact.jl"))
 include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect
-export FirstReaction
+export FirstReaction, NextReaction
 
 include("simulate.jl")
 
