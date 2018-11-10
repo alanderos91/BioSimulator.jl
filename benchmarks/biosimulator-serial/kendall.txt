@@ -1,0 +1,108 @@
+model: kendall / algorithm: odm / output: fixed
+
+n = 1000
+mean:               1.055676735 ms
+std:                0.2542876841367359 ms
+median:             1.0228315 ms
+mad (normal=true):  0.011554660389923406 ms
+mad (normal=false): 0.0077935 ms
+
+model: kendall / algorithm: odm / output: full
+
+n = 1000
+mean:               1.4849921209999999 ms
+std:                0.5496434166635127 ms
+median:             1.3324989999999999 ms
+mad (normal=true):  0.018152240262273335 ms
+mad (normal=false): 0.0122435 ms
+
+model: kendall / algorithm: frm / output: fixed
+
+n = 1000
+mean:               1.0719520390000001 ms
+std:                0.24177217544081217 ms
+median:             1.038992 ms
+mad (normal=true):  0.01345313253071983 ms
+mad (normal=false): 0.009073999999999999 ms
+
+model: kendall / algorithm: frm / output: full
+
+n = 1000
+mean:               1.505723752 ms
+std:                0.5362297646709249 ms
+median:             1.351616 ms
+mad (normal=true):  0.02285950230602862 ms
+mad (normal=false): 0.0154185 ms
+
+model: kendall / algorithm: nrm / output: fixed
+
+n = 1000
+mean:               2.7511626349999996 ms
+std:                0.26615597454264767 ms
+median:             2.7041595 ms
+mad (normal=true):  0.030502316742424998 ms
+mad (normal=false): 0.020573499999999998 ms
+
+model: kendall / algorithm: nrm / output: full
+
+n = 1000
+mean:               3.0683991120000003 ms
+std:                0.41276364902204443 ms
+median:             2.9692165 ms
+mad (normal=true):  0.028604585902737827 ms
+mad (normal=false): 0.019293499999999998 ms
+
+model: kendall / algorithm: dm / output: fixed
+
+n = 1000
+mean:               1.072246439 ms
+std:                0.24044989219568633 ms
+median:             1.0393305 ms
+mad (normal=true):  0.010782224634081988 ms
+mad (normal=false): 0.0072724999999999995 ms
+
+model: kendall / algorithm: dm / output: full
+
+n = 1000
+mean:               1.542525081 ms
+std:                0.5184749703685908 ms
+median:             1.3793045 ms
+mad (normal=true):  0.01610699050184486 ms
+mad (normal=false): 0.010863999999999999 ms
+
+model: kendall / algorithm: otl / output: fixed
+
+n = 1000
+mean:               0.754293672 ms
+std:                0.26280969055931763 ms
+median:             0.725927 ms
+mad (normal=true):  0.010150636088998603 ms
+mad (normal=false): 0.006846499999999999 ms
+
+model: kendall / algorithm: otl / output: full
+
+n = 1000
+mean:               0.7904209289999999 ms
+std:                0.24314654812932296 ms
+median:             0.7612335 ms
+mad (normal=true):  0.008095008113040586 ms
+mad (normal=false): 0.00546 ms
+
+model: kendall / algorithm: sal / output: fixed
+
+n = 1000
+mean:               0.622354882 ms
+std:                0.24053665017909734 ms
+median:             0.5976825 ms
+mad (normal=true):  0.008960847808647856 ms
+mad (normal=false): 0.006044 ms
+
+model: kendall / algorithm: sal / output: full
+
+n = 1000
+mean:               0.627877209 ms
+std:                0.22406325607734823 ms
+median:             0.6042084999999999 ms
+mad (normal=true):  0.004309183348086531 ms
+mad (normal=false): 0.0029065 ms
+
