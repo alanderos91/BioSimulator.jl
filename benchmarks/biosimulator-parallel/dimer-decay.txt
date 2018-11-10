@@ -1,0 +1,108 @@
+model: dimer-decay / algorithm: odm / output: fixed
+
+n = 1000
+mean:               1.082506352 ms
+std:                0.44732044179152897 ms
+median:             1.0241305 ms
+mad (normal=true):  0.008442678333280149 ms
+mad (normal=false): 0.0056945 ms
+
+model: dimer-decay / algorithm: odm / output: full
+
+n = 1000
+mean:               1.3063790979999998 ms
+std:                0.4145225492407421 ms
+median:             1.2470885 ms
+mad (normal=true):  0.02907605340822261 ms
+mad (normal=false): 0.0196115 ms
+
+model: dimer-decay / algorithm: frm / output: fixed
+
+n = 1000
+mean:               1.18283498 ms
+std:                0.36799059014911223 ms
+median:             1.1358584999999999 ms
+mad (normal=true):  0.012027610497626694 ms
+mad (normal=false): 0.0081125 ms
+
+model: dimer-decay / algorithm: frm / output: full
+
+n = 1000
+mean:               1.30727208 ms
+std:                0.8949504987893482 ms
+median:             1.2391625 ms
+mad (normal=true):  0.02558081867809565 ms
+mad (normal=false): 0.017254 ms
+
+model: dimer-decay / algorithm: nrm / output: fixed
+
+n = 1000
+mean:               2.065620983 ms
+std:                0.46794996738336975 ms
+median:             1.9977904999999998 ms
+mad (normal=true):  0.02810272505177368 ms
+mad (normal=false): 0.018955 ms
+
+model: dimer-decay / algorithm: nrm / output: full
+
+n = 1000
+mean:               2.301285188 ms
+std:                0.8122518548555212 ms
+median:             2.1843375 ms
+mad (normal=true):  0.032745493899023974 ms
+mad (normal=false): 0.0220865 ms
+
+model: dimer-decay / algorithm: dm / output: fixed
+
+n = 1000
+mean:               0.8250330459999999 ms
+std:                0.3808074011798185 ms
+median:             0.789526 ms
+mad (normal=true):  0.01002832140597189 ms
+mad (normal=false): 0.006764 ms
+
+model: dimer-decay / algorithm: dm / output: full
+
+n = 1000
+mean:               1.0804473689999998 ms
+std:                0.49257516805993184 ms
+median:             1.0129135 ms
+mad (normal=true):  0.02421460073374274 ms
+mad (normal=false): 0.0163325 ms
+
+model: dimer-decay / algorithm: otl / output: fixed
+
+n = 1000
+mean:               1.6932093719999999 ms
+std:                0.6946836997805163 ms
+median:             1.55168 ms
+mad (normal=true):  0.2886352238019983 ms
+mad (normal=false): 0.19468149999999998 ms
+
+model: dimer-decay / algorithm: otl / output: full
+
+n = 1000
+mean:               1.667773601 ms
+std:                0.6368456066293532 ms
+median:             1.530254 ms
+mad (normal=true):  0.26961714384411767 ms
+mad (normal=false): 0.181854 ms
+
+model: dimer-decay / algorithm: sal / output: fixed
+
+n = 1000
+mean:               1.703707458 ms
+std:                0.5608715250049209 ms
+median:             1.5898249999999998 ms
+mad (normal=true):  0.05291481447957418 ms
+mad (normal=false): 0.0356905 ms
+
+model: dimer-decay / algorithm: sal / output: full
+
+n = 1000
+mean:               1.6631283049999999 ms
+std:                0.5380421889229831 ms
+median:             1.5808 ms
+mad (normal=true):  0.05427658461727157 ms
+mad (normal=false): 0.036608999999999996 ms
+

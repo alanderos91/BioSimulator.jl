@@ -1,0 +1,108 @@
+model: mmek / algorithm: odm / output: fixed
+
+n = 1000
+mean:               0.582299343 ms
+std:                0.5152545396351845 ms
+median:             0.5294004999999999 ms
+mad (normal=true):  0.006748805298637499 ms
+mad (normal=false): 0.004552 ms
+
+model: mmek / algorithm: odm / output: full
+
+n = 1000
+mean:               0.5846879009999999 ms
+std:                0.42708396715870195 ms
+median:             0.5445559999999999 ms
+mad (normal=true):  0.010953465190319386 ms
+mad (normal=false): 0.007388 ms
+
+model: mmek / algorithm: frm / output: fixed
+
+n = 1000
+mean:               0.53526098 ms
+std:                0.09412794307237694 ms
+median:             0.5132464999999999 ms
+mad (normal=true):  0.006949697899245009 ms
+mad (normal=false): 0.0046875 ms
+
+model: mmek / algorithm: frm / output: full
+
+n = 1000
+mean:               0.5269402389999999 ms
+std:                0.0815888856122654 ms
+median:             0.514064 ms
+mad (normal=true):  0.010196596757772276 ms
+mad (normal=false): 0.0068775 ms
+
+model: mmek / algorithm: nrm / output: fixed
+
+n = 1000
+mean:               1.003866465 ms
+std:                0.6630781944306615 ms
+median:             0.9365525 ms
+mad (normal=true):  0.0063751895395740875 ms
+mad (normal=false): 0.0043 ms
+
+model: mmek / algorithm: nrm / output: full
+
+n = 1000
+mean:               0.985689324 ms
+std:                0.3249512451787718 ms
+median:             0.9454874999999999 ms
+mad (normal=true):  0.009063147361724744 ms
+mad (normal=false): 0.0061129999999999995 ms
+
+model: mmek / algorithm: dm / output: fixed
+
+n = 1000
+mean:               0.476901471 ms
+std:                0.3241981545518079 ms
+median:             0.4455575 ms
+mad (normal=true):  0.006732496674233937 ms
+mad (normal=false): 0.004541 ms
+
+model: mmek / algorithm: dm / output: full
+
+n = 1000
+mean:               0.519067614 ms
+std:                0.5354323907561587 ms
+median:             0.46240349999999997 ms
+mad (normal=true):  0.009868941667482539 ms
+mad (normal=false): 0.0066565 ms
+
+model: mmek / algorithm: otl / output: fixed
+
+n = 1000
+mean:               0.7153022619999999 ms
+std:                0.5991045642025635 ms
+median:             0.6490305 ms
+mad (normal=true):  0.010888971993814391 ms
+mad (normal=false): 0.0073444999999999995 ms
+
+model: mmek / algorithm: otl / output: full
+
+n = 1000
+mean:               0.715546246 ms
+std:                0.8131677894067892 ms
+median:             0.6569625 ms
+mad (normal=true):  0.010371543819555937 ms
+mad (normal=false): 0.0069955 ms
+
+model: mmek / algorithm: sal / output: fixed
+
+n = 1000
+mean:               0.8581355289999999 ms
+std:                0.33401991107372453 ms
+median:             0.809391 ms
+mad (normal=true):  0.046902862483533966 ms
+mad (normal=false): 0.0316355 ms
+
+model: mmek / algorithm: sal / output: full
+
+n = 1000
+mean:               0.7821571119999999 ms
+std:                0.4013561603396565 ms
+median:             0.7399169999999999 ms
+mad (normal=true):  0.04499697733164501 ms
+mad (normal=false): 0.03035 ms
+

@@ -1,0 +1,9 @@
+model: kendall
+
+n = 1000
+mean:               1268.577754661 ms
+std:                27.3268735916296 ms
+median:             1258.725829 ms
+mad (normal=true):  23.40977456723363 ms
+mad (normal=false): 15.789653 ms
+

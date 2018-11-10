@@ -1,0 +1,95 @@
+<!-- Stochkit 2.0 text input format 
+
+reference:
+M. Rathinam, L.R. Petzold, Y. Cao, and D.T. Gillespie. J Chem Phys 119, 12784 (2003).
+-->
+
+<Model>
+   <Description>Dimer Decay</Description>
+   <NumberOfReactions>4</NumberOfReactions>
+   <NumberOfSpecies>3</NumberOfSpecies>
+   <ParametersList>
+     <Parameter>
+       <Id>c1</Id>
+       <Expression>1.0</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>c2</Id>
+       <Expression>0.002</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>c3</Id>
+       <Expression>0.5</Expression>
+     </Parameter>
+     <Parameter>
+       <Id>c4</Id>
+       <Expression>0.04</Expression>
+     </Parameter>
+   </ParametersList>
+   <ReactionsList>
+     <Reaction>
+       <Id>R1</Id>
+       <Description> S1 -> null </Description>
+       <Type>mass-action</Type>
+       <Rate>c1</Rate> 
+       <Reactants>
+           <SpeciesReference id="S1" stoichiometry="1"/>
+       </Reactants>
+       <Products>
+       </Products>  <!-- no product -->
+     </Reaction>
+     <Reaction>
+       <Id>R2</Id>
+       <Description> 2 * S1 -> S2 </Description>
+       <Type>mass-action</Type>
+       <Rate>c2</Rate>
+       <Reactants>
+           <SpeciesReference id="S1" stoichiometry="2"/>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S2" stoichiometry="1"/>
+       </Products>
+     </Reaction>
+     <Reaction>
+       <Id>R3</Id>
+       <Description> S2 -> 2 * S1 </Description>
+       <Type>mass-action</Type>
+       <Rate>c3</Rate>
+       <Reactants>
+           <SpeciesReference id="S2" stoichiometry="1"/>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S1" stoichiometry="2"/>
+       </Products>
+     </Reaction>
+     <Reaction>
+       <Id>R4</Id>
+       <Description> S2 -> S3 </Description>
+       <Type>mass-action</Type>
+       <Rate>c4</Rate>
+       <Reactants>
+           <SpeciesReference id="S2" stoichiometry="1"/>
+       </Reactants>
+       <Products>
+           <SpeciesReference id="S3" stoichiometry="1"/>
+       </Products>
+     </Reaction>
+  </ReactionsList>
+  <SpeciesList>
+     <Species>
+       <Id>S1</Id>
+       <Description>Species #1</Description>
+       <InitialPopulation>10000</InitialPopulation>
+     </Species>
+     <Species>
+       <Id>S2</Id>
+       <Description>Species #2</Description>
+       <InitialPopulation>0</InitialPopulation>
+     </Species>
+     <Species>
+       <Id>S3</Id>
+       <Description>Species #3</Description>
+       <InitialPopulation>0</InitialPopulation>
+     </Species>
+  </SpeciesList>
+</Model>

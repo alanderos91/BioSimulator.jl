@@ -1,0 +1,9 @@
+model: autoreg
+
+n = 1000
+mean:               311.93606980000004 ms
+std:                13.928113463733453 ms
+median:             308.185001 ms
+mad (normal=true):  3.0379927929287276 ms
+mad (normal=false): 2.049094999999994 ms
+
