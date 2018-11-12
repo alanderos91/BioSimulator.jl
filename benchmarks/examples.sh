@@ -1,21 +1,12 @@
 #!/bin/bash
 
-NCORES=1
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  NCORES=`sysctl -n hw.ncpu`
-else
-  NCORES=`nproc`
-fi
+# See the README before running this script.
+# Note: Each benchmark is commented out by default.
+# Note: Relative file paths are used.
 
-# add julia and stochkit to path
+# add stochkit to path
 
-export PATH="$PATH:$JULIA6"
 export PATH="$PATH:$STOCHKIT"
-
-# For the Julia packages:
-#
-# julia [benchmark tool] [model] [tfinal] [nsaves] [nsamples] [seed]
-#
 
 ##### BioSimulator.jl Benchmarks #####
 
@@ -44,6 +35,7 @@ export JULIA_NUM_THREADS=1
 
 # it takes approximately 25 hours to run 1000 samples
 # 100 samples is good enough for our purposes
+
 # python3 stochpy_bench.py autoreg     500.0 1000 10 5357 100
 
 ##### StochKit Benchmarks #####
