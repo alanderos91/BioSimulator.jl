@@ -105,9 +105,25 @@ The `parameters` dictionary is used to associate `MODELS[i]` to a `ParamSet`.
 
 ## Results
 
-Directories: `biosimulator-serial`, `biosimulator-parallel`, `gillespie`, `stochkit`, `stochpy`
+Directories:
 
-The output files are structured as follows:
+- `biosimulator-serial`
+- `biosimulator-parallel`
+- `gillespie`
+- `stochkit`
+- `stochpy`
+
+The BenchmarkTools.jl output is saved in JSON files.
+These files, along with the output from StochPy, are processed using
+
+```
+# for JSON output
+julia analysis.jl <filename>.json >> <another-filename>.txt
+
+# for StochPy output
+julia analysis.jl ./stochpy/<model>.txt >> summary-stochpy.txt
+```
+The summary files are structured as follows:
 
 ```
 ----- <model-name-here> -----
@@ -141,6 +157,7 @@ Please feel free to file an issue if an important point is missing.
 - Uses fixed-interval output.
 - Uses parallelism by default.
 - Selects a variant of SSA based on model information. In our benchmarks, `odm_ssa_small` is used.
+- **The `ssa` command is invoked from within Julia.** The benchmark results use a small adjustment to account for any overhead, which varies depending on the machine.
 
 ### Gillespie.jl
 
