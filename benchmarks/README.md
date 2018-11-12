@@ -105,16 +105,16 @@ The `parameters` dictionary is used to associate `MODELS[i]` to a `ParamSet`.
 
 ## Results
 
-Directories:
+Files:
 
-- `biosimulator-serial`
-- `biosimulator-parallel`
-- `gillespie`
-- `stochkit`
-- `stochpy`
+- `biosimulator-serial.json`
+- `biosimulator-parallel.json`
+- `stochkit.json`
+- `gillespie.json`
+- `stochpy/*.txt`
 
 The BenchmarkTools.jl output is saved in JSON files.
-These files, along with the output from StochPy, are processed using
+These files, along with the output from StochPy, are summarized using
 
 ```
 # for JSON output

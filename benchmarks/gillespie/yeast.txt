@@ -1,9 +1,0 @@
-model: yeast
-
-n = 1000
-mean:               2.7627793859999996 ms
-std:                6.026372927053805 ms
-median:             2.302783 ms
-mad (normal=true):  0.08259428699072856 ms
-mad (normal=false): 0.055708999999999995 ms
-
