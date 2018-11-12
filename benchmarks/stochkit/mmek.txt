@@ -1,9 +1,0 @@
-model: mmek
-
-n = 1000
-mean:               110.666286468 ms
-std:                1.8851154720151178 ms
-median:             110.29028 ms
-mad (normal=true):  1.3311366106586433 ms
-mad (normal=false): 0.8978380000000072 ms
-

@@ -1,9 +1,0 @@
-model: dimer-decay
-
-n = 1000
-mean:               3.005763283 ms
-std:                1.2908831192662136 ms
-median:             2.6905444999999997 ms
-mad (normal=true):  0.05695861203054821 ms
-mad (normal=false): 0.038418 ms
-
