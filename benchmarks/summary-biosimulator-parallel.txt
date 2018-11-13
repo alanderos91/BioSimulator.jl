@@ -1,0 +1,480 @@
+----- yeast odm fixed -----
+trials: 1000
+  mean: 2.7311480190000004 ms
+   std: 34.85334313047803 ms
+median: 1.4012395 ms
+    Q1: 1.369518 ms
+    Q3: 1.464901 ms
+
+----- yeast odm full -----
+trials: 1000
+  mean: 2.3810361600000003 ms
+   std: 3.412559866207006 ms
+median: 1.8273025 ms
+    Q1: 1.791097 ms
+    Q3: 1.8848215 ms
+
+----- yeast frm fixed -----
+trials: 1000
+  mean: 2.163982887 ms
+   std: 4.105640987034603 ms
+median: 2.0372575 ms
+    Q1: 1.9797505 ms
+    Q3: 2.0699395 ms
+
+----- yeast frm full -----
+trials: 1000
+  mean: 1.921098672 ms
+   std: 2.6257741586410854 ms
+median: 1.7715435 ms
+    Q1: 1.74267225 ms
+    Q3: 1.798632 ms
+
+----- yeast nrm fixed -----
+trials: 1000
+  mean: 3.0200929779999997 ms
+   std: 9.303353414243794 ms
+median: 2.661378 ms
+    Q1: 2.4210485 ms
+    Q3: 2.71650475 ms
+
+----- yeast nrm full -----
+trials: 1000
+  mean: 2.728123885 ms
+   std: 2.792136477107773 ms
+median: 2.4929664999999996 ms
+    Q1: 2.45079725 ms
+    Q3: 2.537047 ms
+
+----- yeast dm fixed -----
+trials: 1000
+  mean: 1.4715698800000003 ms
+   std: 3.7360543383826554 ms
+median: 1.3836005 ms
+    Q1: 1.1087535 ms
+    Q3: 1.415333 ms
+
+----- yeast dm full -----
+trials: 1000
+  mean: 1.3610159269999997 ms
+   std: 2.2899642772028144 ms
+median: 1.2385175 ms
+    Q1: 1.2086305 ms
+    Q3: 1.2689949999999999 ms
+
+----- yeast otl fixed -----
+trials: 1000
+  mean: 3.610977861999998 ms
+   std: 8.53181350227071 ms
+median: 3.1889965 ms
+    Q1: 3.0163572499999995 ms
+    Q3: 3.34319875 ms
+
+----- yeast otl full -----
+trials: 1000
+  mean: 3.334949687000001 ms
+   std: 2.4079542706673904 ms
+median: 3.125528 ms
+    Q1: 3.072613 ms
+    Q3: 3.1918582499999997 ms
+
+----- yeast sal fixed -----
+trials: 1000
+  mean: 3.2930832770000005 ms
+   std: 6.343875278444851 ms
+median: 2.826918 ms
+    Q1: 2.7492877499999997 ms
+    Q3: 3.0849925 ms
+
+----- yeast sal full -----
+trials: 1000
+  mean: 3.1268502029999996 ms
+   std: 2.6631900989150905 ms
+median: 2.8280225 ms
+    Q1: 2.77920925 ms
+    Q3: 2.8964585 ms
+
+----- autoreg odm fixed -----
+trials: 1000
+  mean: 199.11009103799992 ms
+   std: 21.39232078613226 ms
+median: 196.285201 ms
+    Q1: 183.71671399999997 ms
+    Q3: 211.86632225 ms
+
+----- autoreg odm full -----
+trials: 1000
+  mean: 371.2654524799999 ms
+   std: 434.00393970472976 ms
+median: 269.118788 ms
+    Q1: 249.9451795 ms
+    Q3: 293.23664999999994 ms
+
+----- autoreg frm fixed -----
+trials: 1000
+  mean: 274.722179623 ms
+   std: 32.647572925411396 ms
+median: 272.49494 ms
+    Q1: 250.86979424999998 ms
+    Q3: 294.422359 ms
+
+----- autoreg frm full -----
+trials: 1000
+  mean: 423.334988468 ms
+   std: 409.98959123072007 ms
+median: 320.429378 ms
+    Q1: 294.36958625 ms
+    Q3: 354.57278974999997 ms
+
+----- autoreg nrm fixed -----
+trials: 1000
+  mean: 527.2050084619999 ms
+   std: 84.89355456220176 ms
+median: 517.989908 ms
+    Q1: 468.4886185 ms
+    Q3: 572.84735 ms
+
+----- autoreg nrm full -----
+trials: 1000
+  mean: 678.1505384889999 ms
+   std: 414.4374552632071 ms
+median: 572.2961634999999 ms
+    Q1: 513.32559825 ms
+    Q3: 641.19542 ms
+
+----- autoreg dm fixed -----
+trials: 1000
+  mean: 137.954216805 ms
+   std: 21.767113820627007 ms
+median: 135.1348635 ms
+    Q1: 123.552972 ms
+    Q3: 149.49705749999998 ms
+
+----- autoreg dm full -----
+trials: 1000
+  mean: 315.55689092899996 ms
+   std: 431.15614388947364 ms
+median: 211.78911699999998 ms
+    Q1: 193.37034925 ms
+    Q3: 239.65617375 ms
+
+----- autoreg otl fixed -----
+trials: 1000
+  mean: 591.4603127679999 ms
+   std: 99.94306862346704 ms
+median: 577.1052749999999 ms
+    Q1: 521.497963 ms
+    Q3: 644.6894102499999 ms
+
+----- autoreg otl full -----
+trials: 1000
+  mean: 754.5397333799998 ms
+   std: 424.5961681072361 ms
+median: 641.5143155 ms
+    Q1: 580.4759455 ms
+    Q3: 730.79289325 ms
+
+----- autoreg sal fixed -----
+trials: 1000
+  mean: 528.1827520729996 ms
+   std: 109.09449502878597 ms
+median: 507.60099449999996 ms
+    Q1: 454.72534599999994 ms
+    Q3: 579.572577 ms
+
+----- autoreg sal full -----
+trials: 1000
+  mean: 705.3012978110003 ms
+   std: 447.0322064307869 ms
+median: 585.562425 ms
+    Q1: 515.65538075 ms
+    Q3: 665.7047732499999 ms
+
+----- dimer-decay odm fixed -----
+trials: 1000
+  mean: 1.109288469 ms
+   std: 0.4883241354000119 ms
+median: 1.0386185000000001 ms
+    Q1: 1.03103825 ms
+    Q3: 1.0473184999999998 ms
+
+----- dimer-decay odm full -----
+trials: 1000
+  mean: 1.3560081750000001 ms
+   std: 0.47410909462088213 ms
+median: 1.2762025000000001 ms
+    Q1: 1.25488675 ms
+    Q3: 1.30524875 ms
+
+----- dimer-decay frm fixed -----
+trials: 1000
+  mean: 1.2120241780000003 ms
+   std: 0.6269554679527152 ms
+median: 1.124001 ms
+    Q1: 1.1154354999999998 ms
+    Q3: 1.133616 ms
+
+----- dimer-decay frm full -----
+trials: 1000
+  mean: 1.3099041359999999 ms
+   std: 0.5101643768267424 ms
+median: 1.242658 ms
+    Q1: 1.22683775 ms
+    Q3: 1.2625082499999998 ms
+
+----- dimer-decay nrm fixed -----
+trials: 1000
+  mean: 2.0565827609999996 ms
+   std: 0.5087687171705856 ms
+median: 1.9903019999999998 ms
+    Q1: 1.9728487499999998 ms
+    Q3: 2.011768 ms
+
+----- dimer-decay nrm full -----
+trials: 1000
+  mean: 2.3059850379999998 ms
+   std: 0.9274502027544701 ms
+median: 2.1777655 ms
+    Q1: 2.15547625 ms
+    Q3: 2.20811975 ms
+
+----- dimer-decay dm fixed -----
+trials: 1000
+  mean: 0.8695677670000002 ms
+   std: 0.39001789854988955 ms
+median: 0.8086985 ms
+    Q1: 0.80094975 ms
+    Q3: 0.8158095 ms
+
+----- dimer-decay dm full -----
+trials: 1000
+  mean: 1.1242493679999999 ms
+   std: 0.7150891625344484 ms
+median: 1.034402 ms
+    Q1: 1.01681625 ms
+    Q3: 1.05324625 ms
+
+----- dimer-decay otl fixed -----
+trials: 1000
+  mean: 1.6685962349999997 ms
+   std: 0.6678214652803779 ms
+median: 1.524419 ms
+    Q1: 1.36329 ms
+    Q3: 1.78069275 ms
+
+----- dimer-decay otl full -----
+trials: 1000
+  mean: 1.6582515480000002 ms
+   std: 0.7256341142252403 ms
+median: 1.5158625 ms
+    Q1: 1.3587875 ms
+    Q3: 1.7469792499999999 ms
+
+----- dimer-decay sal fixed -----
+trials: 1000
+  mean: 1.7547554979999997 ms
+   std: 0.9144998153825492 ms
+median: 1.584368 ms
+    Q1: 1.5496915 ms
+    Q3: 1.64169425 ms
+
+----- dimer-decay sal full -----
+trials: 1000
+  mean: 1.7929549870000006 ms
+   std: 0.945231495684683 ms
+median: 1.5988604999999998 ms
+    Q1: 1.561277 ms
+    Q3: 1.648946 ms
+
+----- kendall odm fixed -----
+trials: 1000
+  mean: 0.8741260909999999 ms
+   std: 0.5839690503410578 ms
+median: 0.8136684999999999 ms
+    Q1: 0.7380239999999999 ms
+    Q3: 0.9061427499999999 ms
+
+----- kendall odm full -----
+trials: 1000
+  mean: 1.104402861 ms
+   std: 0.4349071538338908 ms
+median: 1.0512934999999999 ms
+    Q1: 0.92327925 ms
+    Q3: 1.19775875 ms
+
+----- kendall frm fixed -----
+trials: 1000
+  mean: 0.76809334 ms
+   std: 0.29345715516073456 ms
+median: 0.7393034999999999 ms
+    Q1: 0.6259625 ms
+    Q3: 0.85959975 ms
+
+----- kendall frm full -----
+trials: 1000
+  mean: 0.9863817739999997 ms
+   std: 0.8516833361025162 ms
+median: 0.9051989999999999 ms
+    Q1: 0.76819075 ms
+    Q3: 1.06289225 ms
+
+----- kendall nrm fixed -----
+trials: 1000
+  mean: 1.575231233 ms
+   std: 0.6467052603537874 ms
+median: 1.473882 ms
+    Q1: 1.21623875 ms
+    Q3: 1.743183 ms
+
+----- kendall nrm full -----
+trials: 1000
+  mean: 1.7021816969999999 ms
+   std: 0.5992916044229061 ms
+median: 1.6107494999999998 ms
+    Q1: 1.36479125 ms
+    Q3: 1.9416794999999998 ms
+
+----- kendall dm fixed -----
+trials: 1000
+  mean: 0.6067466450000002 ms
+   std: 0.3463266682015789 ms
+median: 0.5603914999999999 ms
+    Q1: 0.48053175 ms
+    Q3: 0.6584297499999999 ms
+
+----- kendall dm full -----
+trials: 1000
+  mean: 0.860689072 ms
+   std: 0.7958815069016775 ms
+median: 0.7944305 ms
+    Q1: 0.67927575 ms
+    Q3: 0.92662025 ms
+
+----- kendall otl fixed -----
+trials: 1000
+  mean: 0.537914818 ms
+   std: 0.46208314133396156 ms
+median: 0.47143749999999995 ms
+    Q1: 0.446293 ms
+    Q3: 0.49937499999999996 ms
+
+----- kendall otl full -----
+trials: 1000
+  mean: 0.4778589680000001 ms
+   std: 0.2006739599193545 ms
+median: 0.465437 ms
+    Q1: 0.4444285 ms
+    Q3: 0.48686575 ms
+
+----- kendall sal fixed -----
+trials: 1000
+  mean: 0.41936425899999996 ms
+   std: 0.3400578343927924 ms
+median: 0.3728645 ms
+    Q1: 0.354332 ms
+    Q3: 0.39462525 ms
+
+----- kendall sal full -----
+trials: 1000
+  mean: 0.400169185 ms
+   std: 0.6133641067009578 ms
+median: 0.3543475 ms
+    Q1: 0.33951175 ms
+    Q3: 0.3747875 ms
+
+----- mmek odm fixed -----
+trials: 1000
+  mean: 0.5927720259999999 ms
+   std: 0.39861474330806157 ms
+median: 0.5346065 ms
+    Q1: 0.529426 ms
+    Q3: 0.53844025 ms
+
+----- mmek odm full -----
+trials: 1000
+  mean: 0.586742123 ms
+   std: 0.22001111397055928 ms
+median: 0.5520814999999999 ms
+    Q1: 0.5444235 ms
+    Q3: 0.5596074999999999 ms
+
+----- mmek frm fixed -----
+trials: 1000
+  mean: 0.5633641949999999 ms
+   std: 0.42221974122461725 ms
+median: 0.510737 ms
+    Q1: 0.5048055 ms
+    Q3: 0.5154479999999999 ms
+
+----- mmek frm full -----
+trials: 1000
+  mean: 0.5515907329999997 ms
+   std: 0.3740359469604871 ms
+median: 0.512956 ms
+    Q1: 0.5063949999999999 ms
+    Q3: 0.5205884999999999 ms
+
+----- mmek nrm fixed -----
+trials: 1000
+  mean: 1.0379108569999997 ms
+   std: 0.6826508477678693 ms
+median: 0.9345005 ms
+    Q1: 0.92957675 ms
+    Q3: 0.9398825 ms
+
+----- mmek nrm full -----
+trials: 1000
+  mean: 1.056192485 ms
+   std: 0.8467309449362863 ms
+median: 0.9403845 ms
+    Q1: 0.93460225 ms
+    Q3: 0.9468384999999999 ms
+
+----- mmek dm fixed -----
+trials: 1000
+  mean: 0.512121097 ms
+   std: 0.4905303056626033 ms
+median: 0.454161 ms
+    Q1: 0.449316 ms
+    Q3: 0.45900925 ms
+
+----- mmek dm full -----
+trials: 1000
+  mean: 0.49842173700000003 ms
+   std: 0.3288947860479631 ms
+median: 0.46714049999999996 ms
+    Q1: 0.46111075 ms
+    Q3: 0.47534649999999995 ms
+
+----- mmek otl fixed -----
+trials: 1000
+  mean: 0.7050844439999996 ms
+   std: 0.460064646565019 ms
+median: 0.6521604999999999 ms
+    Q1: 0.6447039999999999 ms
+    Q3: 0.6598917499999999 ms
+
+----- mmek otl full -----
+trials: 1000
+  mean: 0.71900381 ms
+   std: 0.5221123824511258 ms
+median: 0.659619 ms
+    Q1: 0.65273075 ms
+    Q3: 0.6676757499999999 ms
+
+----- mmek sal fixed -----
+trials: 1000
+  mean: 0.8631034249999997 ms
+   std: 0.4101971221641738 ms
+median: 0.8044899999999999 ms
+    Q1: 0.7779302499999999 ms
+    Q3: 0.840727 ms
+
+----- mmek sal full -----
+trials: 1000
+  mean: 0.8193680920000002 ms
+   std: 0.5157264768046458 ms
+median: 0.7481035 ms
+    Q1: 0.7199242499999999 ms
+    Q3: 0.7783547499999999 ms
+
