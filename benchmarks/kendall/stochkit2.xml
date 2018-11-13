@@ -1,0 +1,62 @@
+<Model>
+  <Description>Kendall's Process</Description>
+  <NumberOfReactions>3</NumberOfReactions>
+  <NumberOfSpecies>1</NumberOfSpecies>
+  <ParametersList>
+    <Parameter>
+      <Id>alpha</Id>
+      <Expression>2.0</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>mu</Id>
+      <Expression>1.0</Expression>
+    </Parameter>
+    <Parameter>
+      <Id>nu</Id>
+      <Expression>0.5</Expression>
+    </Parameter>
+  </ParametersList>
+  <ReactionsList>
+    <Reaction>
+        <Id>Birth</Id>
+        <Description> X -> 2X </Description>
+        <Type>mass-action</Type>
+        <Rate>alpha</Rate>
+        <Reactants>
+            <SpeciesReference id="X" stoichiometry="1"/>
+        </Reactants>
+        <Products>
+            <SpeciesReference id="X" stoichiometry="2"/>
+        </Products>
+    </Reaction>
+    <Reaction>
+        <Id>Death</Id>
+        <Description> X -> null </Description>
+        <Type>mass-action</Type>
+        <Rate>mu</Rate>
+        <Reactants>
+            <SpeciesReference id="X" stoichiometry="1"/>
+        </Reactants>
+        <Products>
+        </Products>
+    </Reaction>
+    <Reaction>
+        <Id>Immigration</Id>
+        <Description> null -> X </Description>
+        <Type>mass-action</Type>
+        <Rate>nu</Rate>
+        <Reactants>
+        </Reactants>
+        <Products>
+            <SpeciesReference id="X" stoichiometry="1"/>
+        </Products>
+    </Reaction>
+    </ReactionsList>
+    <SpeciesList>
+        <Species>
+            <Id>X</Id>
+            <Description>Particle</Description>
+            <InitialPopulation>5</InitialPopulation>
+        </Species>
+    </SpeciesList>
+</Model>

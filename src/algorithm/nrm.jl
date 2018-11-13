@@ -71,7 +71,7 @@ function step!(algorithm::NRM, Xt::Vector, r::AbstractReactionSystem)
   elseif intensity(a) == 0
     algorithm.t = algorithm.end_time
   else
-    throw(Error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
+    throw(error("intensity = $(intensity(a)) < 0 at time $algorithm.t"))
   end
 
   if algorithm.stats_tracked
