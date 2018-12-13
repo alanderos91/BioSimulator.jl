@@ -21,6 +21,24 @@ Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git", "BioSimulator")
 
 ## Project Status
 
+## Citation
+
+If you use BioSimulator.jl in an academic manuscript, please cite:
+
+Landeros A, Stutz, T, Keys, KL, Alekseyenko, A, Sinsheimer, JS, Lange, K, & Sehl, ME (2018) BioSimulator. jl: Stochastic simulation in Julia. _Computer Methods and Programs in Biomedicine_ 167, 23-35. ([journal](https://www.sciencedirect.com/science/article/pii/S0169260718301822))([preprint](https://arxiv.org/abs/1811.12499))
+
+```
+@article{landeros2018biosimulator,
+    title     = {{BioSimulator.jl: Stochastic simulation in Julia}},
+    author    = {Landeros, Alfonso and Stutz, Timothy and Keys, Kevin L and Alekseyenko, Alexander and Sinsheimer, Janet S and Lange, Kenneth and Sehl, Mary E},
+    journal   = {{Computer Methods and Programs in Biomedicine}},
+    volume    = {167},
+    pages     = {23--35},
+    year      = {2018},
+    publisher = {Elsevier}
+}
+```
+
 ## Contributing
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
