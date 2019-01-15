@@ -1,0 +1,166 @@
+<Model>
+    <Description>Auto-Regulation</Description>
+    <NumberOfReactions>8</NumberOfReactions>
+    <NumberOfSpecies>5</NumberOfSpecies>
+    <ParametersList>
+        <Parameter>
+            <Id>k1</Id>
+            <Expression>1.0</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k1r</Id>
+            <Expression>10.0</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k2</Id>
+            <Expression>0.01</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k3</Id>
+            <Expression>10.0</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k4</Id>
+            <Expression>1.0</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k4r</Id>
+            <Expression>1.0</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k5</Id>
+            <Expression>0.1</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k6</Id>
+            <Expression>0.01</Expression>
+        </Parameter>
+    </ParametersList>
+    <ReactionsList>
+        <Reaction>
+            <Id>repression binding</Id>
+            <Description> gene + P2 -> P2_gene </Description>
+            <Type>mass-action</Type>
+            <Rate>k1</Rate>
+            <Reactants>
+                <SpeciesReference id="gene" stoichiometry="1"/>
+                <SpeciesReference id="P2" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="P2_gene" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>reverse repression binding</Id>
+            <Description> P2_gene -> gene + P2 </Description>
+            <Type>mass-action</Type>
+            <Rate>k1r</Rate>
+            <Reactants>
+                <SpeciesReference id="P2_gene" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="gene" stoichiometry="1"/>
+                <SpeciesReference id="P2" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>transcription</Id>
+            <Description> gene -> gene + RNA </Description>
+            <Type>mass-action</Type>
+            <Rate>k2</Rate>
+            <Reactants>
+                <SpeciesReference id="gene" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="gene" stoichiometry="1"/>
+                <SpeciesReference id="RNA" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>translation</Id>
+            <Description> RNA -> RNA + P </Description>
+            <Type>mass-action</Type>
+            <Rate>k3</Rate>
+            <Reactants>
+                <SpeciesReference id="RNA" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="RNA" stoichiometry="1"/>
+                <SpeciesReference id="P" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>dimerization</Id>
+            <Description> P + P -> P2 </Description>
+            <Type>mass-action</Type>
+            <Rate>k4</Rate>
+            <Reactants>
+                <SpeciesReference id="P" stoichiometry="2"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="P2" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>dissocation</Id>
+            <Description> P2 -> 2P </Description>
+            <Type>mass-action</Type>
+            <Rate>k4r</Rate>
+            <Reactants>
+                <SpeciesReference id="P2" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="P" stoichiometry="2"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>RNA degradation</Id>
+            <Description> RNA -> null </Description>
+            <Type>mass-action</Type>
+            <Rate>k5</Rate>
+            <Reactants>
+                <SpeciesReference id="RNA" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>protein degradation</Id>
+            <Description> P -> null </Description>
+            <Type>mass-action</Type>
+            <Rate>k6</Rate>
+            <Reactants>
+                <SpeciesReference id="P" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+            </Products>
+        </Reaction>
+    </ReactionsList>
+    <SpeciesList>
+        <Species>
+            <Id>gene</Id>
+            <Description>Gene</Description>
+            <InitialPopulation>10</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>P2_gene</Id>
+            <Description>Gene bounded by protein dimer</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>RNA</Id>
+            <Description>RNA</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>P</Id>
+            <Description>Protein</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>P2</Id>
+            <Description>Protein dimer</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+    </SpeciesList>
+</Model>

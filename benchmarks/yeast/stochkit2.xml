@@ -1,0 +1,177 @@
+<Model>
+    <Description>Yeast Polarization</Description>
+    <NumberOfReactions>8</NumberOfReactions>
+    <NumberOfSpecies>7</NumberOfSpecies>
+    <ParametersList>
+        <Parameter>
+            <Id>k1</Id>
+            <Expression>0.038</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k2</Id>
+            <Expression>0.0004</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k3</Id>
+            <Expression>0.042</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k4</Id>
+            <Expression>0.01</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k5</Id>
+            <Expression>0.011</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k6</Id>
+            <Expression>0.1</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k7</Id>
+            <Expression>0.00105</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>k8</Id>
+            <Expression>3.21</Expression>
+        </Parameter>
+    </ParametersList>
+    <ReactionsList>
+        <Reaction>
+            <Id>receptor upregulation</Id>
+            <Description>null -> R</Description>
+            <Type>mass-action</Type>
+            <Rate>k1</Rate>
+            <Reactants>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="R" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>receptor downregulation</Id>
+            <Description>R -> null</Description>
+            <Type>mass-action</Type>
+            <Rate>k2</Rate>
+            <Reactants>
+                <SpeciesReference id="R" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>ligand binding</Id>
+            <Description>L + R -> RL + L</Description>
+            <Type>mass-action</Type>
+            <Rate>k3</Rate>
+            <Reactants>
+                <SpeciesReference id="L" stoichiometry="1"/>
+                <SpeciesReference id="R" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="RL" stoichiometry="1"/>
+                <SpeciesReference id="L" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>ligand degradation</Id>
+            <Description>RL -> R</Description>
+            <Type>mass-action</Type>
+            <Rate>k4</Rate>
+            <Reactants>
+                <SpeciesReference id="RL" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="R" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>ligand binding</Id>
+            <Description>protein activation</Description>
+            <Type>mass-action</Type>
+            <Rate>k5</Rate>
+            <Reactants>
+                <SpeciesReference id="RL" stoichiometry="1"/>
+                <SpeciesReference id="G" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="Ga" stoichiometry="1"/>
+                <SpeciesReference id="Gbg" stoichiometry="1"/>
+                <SpeciesReference id="RL" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>dephosphorylation</Id>
+            <Description>Ga -> Gd</Description>
+            <Type>mass-action</Type>
+            <Rate>k6</Rate>
+            <Reactants>
+                <SpeciesReference id="Ga" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="Gd" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>rebinding</Id>
+            <Description>Gd + Gbg -> G</Description>
+            <Type>mass-action</Type>
+            <Rate>k7</Rate>
+            <Reactants>
+                <SpeciesReference id="Gd" stoichiometry="1"/>
+                <SpeciesReference id="Gbg" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="G" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>bound receptor upregulation</Id>
+            <Description>null -> RL</Description>
+            <Type>mass-action</Type>
+            <Rate>k3</Rate>
+            <Reactants>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="RL" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+    </ReactionsList>
+    <SpeciesList>
+        <Species>
+            <Id>R</Id>
+            <Description>receptor</Description>
+            <InitialPopulation>50</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>L</Id>
+            <Description>ligand</Description>
+            <InitialPopulation>2</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>RL</Id>
+            <Description>receptor-ligand</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>G</Id>
+            <Description>G protein</Description>
+            <InitialPopulation>50</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>Ga</Id>
+            <Description>G alpha subunit</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>Gbg</Id>
+            <Description>G beta-gamma subunit</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>Gd</Id>
+            <Description>dephosphorylated G alpha subunit</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+    </SpeciesList>
+</Model>
