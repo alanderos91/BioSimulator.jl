@@ -1,0 +1,82 @@
+<Model>
+    <Description>Michaelis-Menten</Description>
+    <NumberOfReactions>3</NumberOfReactions>
+    <NumberOfSpecies>4</NumberOfSpecies>
+    <ParametersList>
+        <Parameter>
+            <Id>a1</Id>
+            <Expression>0.00166</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>a2</Id>
+            <Expression>0.0001</Expression>
+        </Parameter>
+        <Parameter>
+            <Id>a3</Id>
+            <Expression>0.1</Expression>
+        </Parameter>
+    </ParametersList>
+    <ReactionsList>
+        <Reaction>
+            <Id>Binding</Id>
+            <Description> S + E -> SE </Description>
+            <Type>mass-action</Type>
+            <Rate>a1</Rate>
+            <Reactants>
+                <SpeciesReference id="S" stoichiometry="1"/>
+                <SpeciesReference id="E" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="SE" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>Dissociation</Id>
+            <Description> SE -> S + E </Description>
+            <Type>mass-action</Type>
+            <Rate>a2</Rate>
+            <Reactants>
+                <SpeciesReference id="SE" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="S" stoichiometry="1"/>
+                <SpeciesReference id="E" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+        <Reaction>
+            <Id>Conversion</Id>
+            <Description> SE -> P + E </Description>
+            <Type>mass-action</Type>
+            <Rate>a3</Rate>
+            <Reactants>
+                <SpeciesReference id="SE" stoichiometry="1"/>
+            </Reactants>
+            <Products>
+                <SpeciesReference id="P" stoichiometry="1"/>
+                <SpeciesReference id="E" stoichiometry="1"/>
+            </Products>
+        </Reaction>
+    </ReactionsList>
+    <SpeciesList>
+        <Species>
+            <Id>S</Id>
+            <Description>Substrate</Description>
+            <InitialPopulation>301</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>E</Id>
+            <Description>Enzyme</Description>
+            <InitialPopulation>120</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>SE</Id>
+            <Description>Subsrate-Enzyme Complex</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+        <Species>
+            <Id>P</Id>
+            <Description>Protein</Description>
+            <InitialPopulation>0</InitialPopulation>
+        </Species>
+    </SpeciesList>
+</Model>
