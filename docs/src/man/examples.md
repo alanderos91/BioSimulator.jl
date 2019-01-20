@@ -4,15 +4,15 @@ The following examples illustrate BioSimulator.jl's interface and features.
 Each code block assumes BioSimulator.jl and Plots.jl are loaded; that is, `using BioSimulator, Plots`.
 
 ```@setup kendall
-using BioSimulator, Plots
+using BioSimulator, Plots, TikzPictures
 gr(fmt = :png, dpi = 300)
 ```
 ```@setup mmek
-using BioSimulator, Plots
+using BioSimulator, Plots, TikzPictures
 gr(fmt = :png, dpi = 300)
 ```
 ```@setup gene
-using BioSimulator, Plots
+using BioSimulator, Plots, TikzPictures
 gr(fmt = :png, dpi = 300)
 ```
 ```@setup brusselator_cascade
@@ -41,7 +41,7 @@ model <= Reaction("immigration", 0.5, "0 --> X")
 # Petri net; the "scale = 2" argument is optional and can be omitted
 # it is used to pass additional options for the underlying Tikz document
 fig = visualize(model, "scale = 2")
-nothing #hide
+TikzPictures.save(SVG("kendall_petri.svg"), fig) # hide
 ```
 ![](kendall_petri.svg)
 
@@ -88,7 +88,7 @@ model <= Reaction("Conversion", 0.1, "SE --> P + E")
 
 # Petri net
 fig = visualize(model)
-nothing #hide
+TikzPictures.save(SVG("mmek_petri.svg"), fig) # hide
 ```
 ![](mmek_petri.svg)
 
@@ -175,7 +175,7 @@ model = autoreg()
 
 # Petri net
 fig = visualize(model)
-nothing # hide
+TikzPictures.save(SVG("gene_petri.svg"), fig) # hide
 ```
 ![](gene_petri.svg)
 
