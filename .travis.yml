@@ -3,9 +3,9 @@ language: julia
 # for building petri nets in docs
 sudo: required
 
+# we do not need macos sotware to test
 os:
   - linux
-  - osx
 
 julia:
   - 0.7
