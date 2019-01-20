@@ -103,9 +103,9 @@ end
 
   if species == nothing
     species = collect(keys(result.id2index))
-    labels = map(String, keys(result.id2index))
+    labels = [string(s) for s in keys(result.id2index)]
   else
-    labels = map(s -> String(s), species)
+    labels = [string(s) for s in species]
   end
 
   label --> reshape(labels, 1, length(labels))
