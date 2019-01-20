@@ -106,7 +106,7 @@ end
     r.scaled_rates[i] = k[i]
     r.dependencies[i] = g[i]
     for j in eachindex(g[i])
-      r.dependencies[i][j] = findfirst(ix, g[i][j])
+      r.dependencies[i][j] = something(findfirst(isequal(g[i][j]), ix), 0)
     end
   end
 

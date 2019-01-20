@@ -60,15 +60,15 @@ function make_dependency_graph!(dg, reactions_dict)
   return dg
 end
 
-function make_species_vector(dict::Associative{Symbol,Species})
-  X0     = Array{Int}(length(dict))
-  id     = Array{Symbol}(length(dict))
+function make_species_vector(dict::AbstractDict{Symbol,Species})
+  X0     = zeros(Int, length(dict))
+  id     = Array{Symbol}(undef, length(dict))
   id2ind = Dict{Symbol,Int}()
 
   i = 1
   for (key, s) in dict
     X0[i] = s.population
-    id[i] = s.id
+    id[i] = Symbol(s.id)
     id2ind[key] = i
     i = i + 1
   end

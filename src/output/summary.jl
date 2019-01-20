@@ -57,7 +57,7 @@ function get_regular_path(xw::SamplePath{T1,T2}, tfinal, epochs) where {T1,T2}
 
   x0 = xw.xdata[1]
 
-  tdata = collect(linspace(0.0, tfinal, max_epoch))
+  tdata = collect(range(0.0, stop = tfinal, length = max_epoch))
   xdata = zeros(T2, length(xw.xdata[1]), max_epoch)
   epoch = 1
 
@@ -103,9 +103,9 @@ end
 
   if species == nothing
     species = collect(keys(result.id2index))
-    labels = map(String, keys(result.id2index))
+    labels = [string(s) for s in keys(result.id2index)]
   else
-    labels = map(s -> String(s), species)
+    labels = [string(s) for s in species]
   end
 
   label --> reshape(labels, 1, length(labels))

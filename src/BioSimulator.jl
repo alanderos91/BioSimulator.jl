@@ -4,13 +4,14 @@ __precompile__()
 
 using DataStructures
 using RecipesBase
+using SparseArrays
+using LightGraphs: DiGraph, add_edge!
+using Random
 
 import TikzGraphs
-using LightGraphs: DiGraph, add_edge!
-
 import StatsFuns.RFunctions: poisrand
-
 import DataFrames: DataFrame
+import Statistics: mean, std
 
 import Base: (<=),
              (>=),

@@ -31,7 +31,7 @@ mutable struct OTL <: TauLeapMethod
   # end
   function OTL(end_time, ϵ, δ, β, stats_tracked)
     new(end_time, ϵ, δ, β,
-    0.0, Matrix{Float64}(0,0), Int[],
+    0.0, Matrix{Float64}(undef,0,0), Int[],
     stats_tracked,
     Dict{Symbol,Int}(
       :negative_excursions => 0,

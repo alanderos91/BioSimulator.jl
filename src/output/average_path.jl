@@ -12,7 +12,7 @@ function AveragePath(xw :: RegularEnsemble{T1,T2}) where {T1,T2}
   trials = length(xw)
 
   xmean = mean(xw[k].xdata for k in 1:trials)
-  temp = std([xw[k].xdata[i, j] for i in 1:d, j in 1:n, k in 1:trials], 3)
+  temp = std([xw[k].xdata[i, j] for i in 1:d, j in 1:n, k in 1:trials], dims=3)
   xstd = reshape(temp, n, d)
 
   return AveragePath{T1}(tdata, xmean, xstd)
