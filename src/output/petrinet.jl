@@ -55,11 +55,11 @@ function petri_net(model :: Network)
   end
 
   species_nodes  = collect(1:s)
-  species_labels = map(string, keys(species))
+  species_labels = [string(v) for v in keys(species)]
   species_styles = Dict( i => "draw, rounded corners, fill=blue!10, font=\\large" for i in species_nodes )
 
   reaction_nodes = collect(s+1:s+r)
-  reaction_labels = map(string, keys(reactions))
+  reaction_labels = [string(v) for v in keys(reactions)]
   reaction_styles = Dict( i => "draw, rounded corners, thick, fill=red!10, font=\\large" for i in reaction_nodes)
 
   node_labels = [ species_labels; reaction_labels ]
@@ -85,7 +85,7 @@ function draw(x :: PetriNet, options)
   edge_labels     = x.edge_labels
   edge_styles     = x.edge_styles
 
-  labels = map(x -> replace(x, "_", "\$\\cdot\$"), labels)
+  labels = map(x -> replace(x, "_" => "\$\\cdot\$"), labels)
 
   TikzGraphs.plot(graph, TikzGraphs.Layouts.Layered(),
     labels,
