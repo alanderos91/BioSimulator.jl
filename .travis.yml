@@ -1,5 +1,8 @@
 language: julia
 
+# for building petri nets in docs
+sudo: required
+
 os:
   - linux
   - osx
@@ -16,6 +19,15 @@ matrix:
 
 notifications:
   email: false
+
+# for building petri nets in docs
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install -y pdf2svg
+  - sudo apt-get install -y texlive-latex-base
+  - sudo apt-get install -y texlive-binaries
+  - sudo apt-get install -y texlive-pictures
+  - sudo apt-get install -y texlive-latex-extra
 
 #script: # the default script is equivalent to the following
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
