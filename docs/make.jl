@@ -6,7 +6,7 @@ ENV["PLOTS_TEST"] = "true"
 
 makedocs(
   doctest  = false,
-  format   = :html,
+  format   = Documenter.HTML(),
   modules  = [BioSimulator],
   clean    = true,
   sitename = "BioSimulator.jl",
@@ -22,7 +22,6 @@ makedocs(
 deploydocs(
   repo   = "github.com/alanderos91/BioSimulator.jl.git",
   target = "build",
-  julia  = "0.6",
   deps   = nothing,
   make   = nothing
 )
