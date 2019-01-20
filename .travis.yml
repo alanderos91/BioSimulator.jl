@@ -3,9 +3,7 @@ language: julia
 # for building petri nets in docs
 sudo: required
 
-# we do not need macos sotware to test
-os:
-  - linux
+dist: trusty
 
 julia:
   - 0.7
@@ -20,15 +18,6 @@ matrix:
 notifications:
   email: false
 
-# for building petri nets in docs
-before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get install -y pdf2svg
-  - sudo apt-get install -y texlive-latex-base
-  - sudo apt-get install -y texlive-binaries
-  - sudo apt-get install -y texlive-pictures
-  - sudo apt-get install -y texlive-latex-extra
-
 #script: # the default script is equivalent to the following
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("Example"); Pkg.test("Example"; coverage=true)';
@@ -41,8 +30,13 @@ jobs:
   include:
     - stage: "Documentation"
       julia: 1.0
-      os: linux
       script:
+        - sudo apt-get -qq update
+        - sudo apt-get install -y pdf2svg
+        - sudo apt-get install -y texlive-latex-base
+        - sudo apt-get install -y texlive-binaries
+        - sudo apt-get install -y texlive-pictures
+        - sudo apt-get install -y texlive-latex-extra
         - julia -e 'using Pkg; Pkg.add("Documenter"); Pkg.add("TikzPictures"); Pkg.add("Plots")'
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate();
                                     Pkg.develop(PackageSpec(path=pwd()))'
