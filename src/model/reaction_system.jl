@@ -65,7 +65,7 @@ end
   i = r.paramidx
   k, _ = r.reactants[1]
   
-  return 1//2 * p[i] * x[k] * (x[k] - 1)
+  return 1//2 * x[k] * (x[k] - 1) * p[i]
 end
 
 ##### type union for heterogeneous ReactionStruct arrays #####
