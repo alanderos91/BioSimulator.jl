@@ -29,8 +29,6 @@ end
   
   # return the reaction index
   return @inbounds algorithm.search_order[idx]
-
-  return nothing
 end
 
 @inline function update!(algorithm::SortingDirectMethod, state, model, j)
