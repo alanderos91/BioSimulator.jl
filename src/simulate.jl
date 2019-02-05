@@ -18,7 +18,7 @@ function simulate(initial_state, model, algname, tfinal, rates_cache)
   simulator = build_simulator(algname, initial_state, model, rates_cache)
 
   # copy state
-  state = deepcopy(initial_state)
+  state = copy(initial_state)
 
   # feedforward down the chain...
   simulate!(simulator, state, model, tfinal)
