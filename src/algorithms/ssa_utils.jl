@@ -29,32 +29,16 @@ end
 
 # linear search
 @inline function search_jump_rates(::HasRates, rates, total_rate)
-  n = length(rates)
-  j = 1
-  @inbounds c = rates[1]
   u = rand() * total_rate
-  
-  while c < u && j < n
-      @inbounds c += rates[j += 1]
-  end
-  
-  return j
-end
+  c = zero(total_rate)
+  j = 0
 
-# linear search on ordered rates
-@inline function search_jump_rates(::HasRates, rates, total_rate, search_order)
-  n = length(rates)
-  j = 1
-  @inbounds c = rates[search_order[1]]
-  u = rand() * total_rate
-  
-  while c < u && j < n
-      @inbounds c += rates[search_order[j += 1]]
+  for rate in rates
+    c += rate
+    j += 1
+    c >= u && break
   end
-  
-  # set search index to j
-  # set next reaction to search_order[j]
-  
+
   return j
 end
 
