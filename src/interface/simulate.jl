@@ -113,7 +113,7 @@ end
 
 function simulate!(xw :: RegularPath, Xt, algorithm, reactions)
   epoch = 1
-  while !done(algorithm)
+  while !isdone(algorithm)
     epoch = update!(xw, algorithm.t, Xt, epoch)
     step!(algorithm, Xt, reactions)
   end
@@ -123,7 +123,7 @@ function simulate!(xw :: RegularPath, Xt, algorithm, reactions)
 end
 
 function simulate!(xw :: SamplePath, Xt, algorithm, reactions)
-  while !done(algorithm)
+  while !isdone(algorithm)
     update!(xw, algorithm.t, Xt)
     step!(algorithm, Xt, reactions)
   end

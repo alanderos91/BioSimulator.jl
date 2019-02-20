@@ -6,7 +6,7 @@ All concrete subtypes should be immutable and avoid subtyping `Algorithm` direct
 
 - `get_time` : Return the current simulation time.
 - `end_time` : Return the termination time specified by the user.
-- `done` : Has the simulation terminated? Defaults to `time >= end_time`.
+- `isdone` : Has the simulation terminated? Defaults to `time >= end_time`.
 - `init!` : Initialize an `Algorithm` prior to simulation. Memory allocation should happen here because it occurs outside loops in the main simulation routine.
 - `step!` : Carry out a simulation step. This should (1) update simulation time, (2) update the species counts, (3) update propensities, and (4) update any relevant data structures.
 """
@@ -17,7 +17,7 @@ get_time(x::Algorithm) = x.t
 end_time(x::Algorithm) = x.end_time
 
 ##### termination criterion #####
-done(x::Algorithm) = (x.t >= x.end_time)
+isdone(x::Algorithm) = (x.t >= x.end_time)
 
 ##### setup outside iteration loop #####
 init!(x::Algorithm, Xt, r) = nothing;
