@@ -41,7 +41,7 @@ function step!(algorithm::ODM, Xt, r)
     # update algorithm variables
     set_time!(algorithm, τ)
 
-    if !done(algorithm)
+    if !isdone(algorithm)
       μ = select_reaction(a)
       fire_reaction!(Xt, r, μ)
       update_propensities!(r, Xt, μ)
