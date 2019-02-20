@@ -58,7 +58,7 @@ end
 OptimizedDirect()
 ```
 
-Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF. Sorting is done with pre-simulation.
+Optimized Direct Method. Similar to `SSA`, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF. Sorting is isdone with pre-simulation.
 
 #### References
 
