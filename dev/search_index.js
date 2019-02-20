@@ -245,7 +245,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Algorithms",
     "title": "BioSimulator.OptimizedDirect",
     "category": "type",
-    "text": "OptimizedDirect()\n\nOptimized Direct Method. Similar to SSA, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF. Sorting is done with pre-simulation.\n\nReferences\n\nYang Cao, Hong Li, and Linda Petzold. Efficient formulation of the stochastic simulation algorithm for chemically reacting systems. Journal of Chemical Physics, 2004. https://doi.org/10.1063/1.1778376\n\n\n\n\n\n"
+    "text": "OptimizedDirect()\n\nOptimized Direct Method. Similar to SSA, with the added benefit of sorting reactions according to their propensities over time. This improves the search on the CMF. Sorting is isdone with pre-simulation.\n\nReferences\n\nYang Cao, Hong Li, and Linda Petzold. Efficient formulation of the stochastic simulation algorithm for chemically reacting systems. Journal of Chemical Physics, 2004. https://doi.org/10.1063/1.1778376\n\n\n\n\n\n"
 },
 
 {
