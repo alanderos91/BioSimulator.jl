@@ -93,7 +93,7 @@ function ReactionSystem(model::Network)
 
   build_reactions!(reactions, rxn_rates, model)
 
-  dep_graph = DGVector{DGLazy}(model)
+  dep_graph = rxnrxn_depgraph(DGLazy(), model)
 
   return ReactionSystem(reactions, rxn_rates, dep_graph)
 end

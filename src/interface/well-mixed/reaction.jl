@@ -39,12 +39,12 @@ struct Reaction
         affects = collect(keys(reactants))
         
         for s in union(keys(reactants), keys(products))
-            vm = get(reactants, s, 0)
-            vp = get(products, s, 0)
-            
-            v = vp - vm
-            
-            v != 0 && push!(affectedby, s)
+          vm = get(reactants, s, 0)
+          vp = get(products, s, 0)
+
+          v = vp - vm
+
+          v != 0 && push!(affectedby, s)
         end
     
         return new(Symbol(replace(name, " " => "_")), rate, reactants, products, affectedby, affects, origex)
@@ -56,8 +56,8 @@ function Base.show(io::IO, x::Reaction)
     print(io, " -> ")
     print_participants(io, x.products)
     println(io)
-    println(io, "  affected by: $(x.affectedby...)")
-    println(io, "  affects: $(x.affects...)")
+    println(io, "  affected by: $(join(x.affectedby, ", "))")
+    println(io, "  affects: $(join(x.affects, ", "))")
 end
 
 function print_participants(io, participants)

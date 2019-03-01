@@ -22,7 +22,7 @@ export get_species, get_reaction
 ## data structures
 include(joinpath("data-structures", "dep_graph.jl"))
 
-export DGView, DGLazy, DGVector, dependents
+export DGView, DGLazy, DGVector, dependents, rxnrxn_depgraph, spcrxn_depgraph
 
 include(joinpath("data-structures", "priority_queue.jl"))
 
