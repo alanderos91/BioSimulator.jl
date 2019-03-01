@@ -14,11 +14,11 @@ function simulate(network::Network, algname::SimulationAlgorithm; tfinal=0.0, ra
 end
 
 function simulate(initial_state, model, algname, tfinal, rates_cache)
-  # build the simulator
-  simulator = build_simulator(algname, initial_state, model, rates_cache)
-
   # copy state
   state = copy(initial_state)
+
+  # build the simulator
+  simulator = build_simulator(algname, state, model, rates_cache)
 
   # feedforward down the chain...
   simulate!(simulator, state, model, tfinal)
@@ -27,7 +27,7 @@ end
 function simulate!(simulator, state, model, tfinal)
   initialize!(simulator, state, model)
 
-  while simulator.t < tfinal && simulator.algorithm.total_rate > 0
+  while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
     tnew = get_new_time(simulator)
 
     if tnew <= tfinal

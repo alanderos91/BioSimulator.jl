@@ -39,6 +39,7 @@ include(joinpath("algorithms", "enhanced_direct.jl"))
 include(joinpath("algorithms", "sorting_direct.jl"))
 include(joinpath("algorithms", "firstreaction.jl"))
 include(joinpath("algorithms", "nextreaction.jl"))
+include(joinpath("algorithms", "rejection.jl"))
 
 export HasRates, HasSums
 
@@ -48,7 +49,7 @@ include(joinpath("simulators", "exact.jl"))
 include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect
-export FirstReaction, NextReaction
+export FirstReaction, NextReaction, RejectionSSA
 
 include("simulate.jl")
 

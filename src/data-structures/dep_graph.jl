@@ -64,10 +64,38 @@ function spcrxn_depgraph(::Iter, model::Network) where Iter <: DGIterStyle
         push!(deps_value, j)
         idx += 1
       end
-      stop = idx - 1
-
-      deps_range[i] = (start, stop)
     end
+    stop = idx - 1
+    deps_range[i] = (start, stop)
+  end
+
+  return DGVector{Iter}(deps_range, deps_value)
+end
+
+function rxnspc_depgraph(::Iter, model::Network) where Iter <: DGIterStyle
+  num_reactions = number_reactions(model)
+  num_species = number_species(model)
+
+  species   = species_list(model)
+  reactions = reaction_list(model)
+
+  indexmap = OrderedDict(key => i for (i, key) in enumerate(keys(species)))
+
+  deps_range = Vector{Tuple{Int,Int}}(undef, num_reactions)
+  deps_value  = Int[]
+
+  idx = 1
+  
+  for (j, rxn) in enumerate(values(reactions))
+    start = idx
+    for (key, i) in indexmap
+      if haskey(rxn.products, key)
+        push!(deps_value, i)
+        idx += 1
+      end
+    end
+    stop = idx - 1
+    deps_range[j] = (start, stop)
   end
 
   return DGVector{Iter}(deps_range, deps_value)

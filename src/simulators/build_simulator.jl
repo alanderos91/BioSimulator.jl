@@ -45,3 +45,21 @@ function build_simulator(::NextReaction, state, model, rates_cache)
 
   return ExactSimulator(algorithm)
 end
+
+struct RejectionSSA <: SimulationAlgorithm end
+
+function build_simulator(::RejectionSSA, state, model, rates_cache)
+  number_species = length(state)
+  number_jumps = length(model.reactions)
+
+  interval_lo = Vector{Int}(undef, number_species)
+  interval_hi = Vector{Int}(undef, number_species)
+  rates = [Vector{Float64}(undef, 2) for j in 1:number_jumps]
+  total_rate = Vector{Float64}(undef, 2)
+  spc_dg = model.spc_graph
+  rxn_dg = model.rxn_graph
+
+  algorithm = RejectionMethod(state, model, interval_lo, interval_hi, rates, total_rate, spc_dg, rxn_dg)
+
+  return ExactSimulator(algorithm)
+end

@@ -7,7 +7,8 @@ import NewBioSimulator: parse_model
     (EnhancedDirect(), HasRates),
     (SortingDirect(), HasRates),
     (FirstReaction(), HasRates),
-    (NextReaction(), HasRates)
+    (NextReaction(), HasRates),
+    (RejectionSSA(), HasRates)
   ]
 
   N = 10_000

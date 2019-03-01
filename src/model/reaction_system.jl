@@ -83,6 +83,8 @@ struct ReactionSystem{R,DG<:DependencyGraph}
   reactions::Vector{ReactionLike}
   rxn_rates::R
   dep_graph::DG
+  spc_graph::DG
+  rxn_graph::DG
 end
 
 function ReactionSystem(model::Network)
@@ -94,8 +96,10 @@ function ReactionSystem(model::Network)
   build_reactions!(reactions, rxn_rates, model)
 
   dep_graph = rxnrxn_depgraph(DGLazy(), model)
+  spc_graph = spcrxn_depgraph(DGLazy(), model)
+  rxn_graph = rxnspc_depgraph(DGLazy(), model)
 
-  return ReactionSystem(reactions, rxn_rates, dep_graph)
+  return ReactionSystem(reactions, rxn_rates, dep_graph, spc_graph, rxn_graph)
 end
 
 ##### convenience functions #####
