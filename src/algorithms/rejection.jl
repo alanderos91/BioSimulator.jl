@@ -87,17 +87,21 @@ end
 
   # for i in dependents(rxn_dg, k)
   for i in eachindex(state)
+    @inbounds x = state[i]
+    @inbounds x_lo = interval_lo[i]
+    @inbounds x_hi = interval_hi[i]
+
     # check for states that have left interval
-    if (state[i] == 0) || (state[i] < interval_lo[i]) || (state[i] > interval_hi[i])
-      interval_lo[i], interval_hi[i] = make_interval(state[i], 0.1)
+    if (x == 0) || (x < x_lo) || (x > x_hi)
+      @inbounds interval_lo[i], interval_hi[i] = make_interval(x, 0.1)
 
       # check which propensity bounds must be updated based on a species-reaction dependency graph
       for j in dependents(spc_dg, i)
         @inbounds total_rate[1] -= rates[j][1]
         @inbounds total_rate[2] -= rates[j][2]
 
-        rates[j][1] = rate(model, interval_lo, j)
-        rates[j][2] = rate(model, interval_hi, j)
+        @inbounds rates[j][1] = rate(model, interval_lo, j)
+        @inbounds rates[j][2] = rate(model, interval_hi, j)
 
         @inbounds total_rate[1] += rates[j][1]
         @inbounds total_rate[2] += rates[j][2]
@@ -114,8 +118,6 @@ function make_interval(x, p)
     lo = max(0, x-4)
     hi = x+4
   else
-    # lo = trunc((1 - p) * x)
-    # hi = trunc((1 + p) * x)
     lo = trunc(Int, (1-p)*x)
     hi = trunc(Int, (1+p)*x)
   end
@@ -126,8 +128,8 @@ end
 lower(x) = first(x)
 upper(x) = last(x)
 
-lower(x, j) = first(x[j])
-upper(x, j) = last(x[j])
+@inbounds lower(x, j) = first(x[j])
+@inbounds upper(x, j) = last(x[j])
 
-iterate_upper(x) = (upper(x, j) for j in eachindex(x))
-iterate_lower(x) = (lower(x, j) for j in eachindex(x))
+@inbounds iterate_upper(x) = (upper(x, j) for j in eachindex(x))
+@inbounds iterate_lower(x) = (lower(x, j) for j in eachindex(x))
