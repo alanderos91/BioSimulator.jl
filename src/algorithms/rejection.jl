@@ -37,6 +37,7 @@ RatesCache(::RejectionMethod) = HasRates()
     @inbounds total_rate[1] += lo
     @inbounds total_rate[2] += hi
   end
+  return nothing
 end
 
 @inline function generate_jump(algorithm::RejectionMethod)
@@ -57,7 +58,6 @@ end
 
   while rejected
     # search jumps based on upper bounds
-    @assert upper(total_rate) > 0 
     j = search_jump_rates(ctype, iterate_upper(rates), upper(total_rate))
 
     lo = lower(rates, j)
@@ -108,6 +108,7 @@ end
       end
     end
   end
+  return nothing
 end
 
 function make_interval(x, p)
