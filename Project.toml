@@ -4,8 +4,12 @@ authors = ["Alfonso Landeros <alanderos@ucla.edu>"]
 version = "0.1.0"
 
 [deps]
+Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+MacroTools = "1914dd2f-81c6-5fcd-8719-6d5c9610ff09"
 Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [extras]
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"

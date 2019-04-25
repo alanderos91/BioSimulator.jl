@@ -110,6 +110,18 @@ end
 
 @inline @inbounds rate(rxn::ReactionSystem, x, j) = rate(rxn.reactions[j], x, rxn.rxn_rates)
 
+function netstoichiometry(rxn::ReactionSystem, num_species, num_reactions)
+  V = zeros(Int, num_species, num_reactions)
+  reactions = rxn.reactions
+  for j in eachindex(reactions)
+    r = reactions[j]
+    for (k, v) in r.net_change
+      V[k, j] = v
+    end
+  end
+  return V
+end
+
 ##### helper functions for building a ReactionSystem #####
 
 function build_reactions!(rxn_set, rxn_rates, model)
