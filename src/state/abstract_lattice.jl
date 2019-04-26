@@ -75,4 +75,4 @@ end
 # dirty hacks
 
 # length(lattice::AbstractLattice) = length(lattice.N)
-copy(lattice::AbstractLattice) = deepcopy(lattice)
+Base.copy(lattice::AbstractLattice) = deepcopy(lattice)
