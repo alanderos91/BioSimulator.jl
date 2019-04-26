@@ -52,3 +52,5 @@ end
   
   return (j, s)
 end
+
+abstract type UnsafeLeapAlgorithm <: AbstractAlgorithm end
