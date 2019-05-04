@@ -9,7 +9,7 @@ import Combinatorics: multiexponents
 import MacroTools: postwalk
 import StatsBase: sample
 import Base: show, <=
-import Base: getindex, setindex!, iterate, firstindex, lastindex, length, isempty, haskey, get
+import Base: getindex, setindex!, iterate, firstindex, lastindex, length, isempty, haskey, get, in
 import Base: eachindex, push!, empty!, copy
 import Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 

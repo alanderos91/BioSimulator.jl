@@ -23,8 +23,8 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
   # xlim :: Tuple{Int,Int}
   # ylim :: Tuple{Int,Int}
   # zlim :: Tuple{Int,Int}
-  
-  function SLattice{D,T,M}(sites::Vector{Site{D,T,M}}, compositions, L, K, reactions) where {D,T,M}
+
+  function SLattice{D,T,M}(sites::Vector{Site{D,T,M}}, compositions, L, K, model) where {D,T,M}
     # map an index to a composition
     k2composition = OrderedDict{Int,Vector{Int}}(i => compositions[i] for i in eachindex(compositions))
 
@@ -45,7 +45,7 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
     m = length(sites)
 
     # build the reactant pairs
-    pairs = build_reactant_pairs(reactions)
+    pairs = build_reactant_pairs(model.reactions)
 
     # build the reactant pair to sample index dictionary
     nbmax = capacity(neighborhood(sites[1]))
@@ -78,7 +78,7 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
     number_pairwise_reactants = count(reac_pair -> reac_pair[2] != 0, pairs)
     number_onsite_reactants   = count(reac_pair -> reac_pair[2] == 0, pairs)
     number_sample_classes     = 2 * D * number_pairwise_reactants + number_onsite_reactants
-    
+
     # build the sample classes
     classes = [SampleClass{Site{D,T,M}}(s) for s in 1:number_sample_classes]
 
@@ -99,7 +99,7 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
 
       # don't forget to set the correct neighborhood class
       change_neighbor_class!(site, k)
-      
+
       # add_member!(classes[k], site)
     end
 
@@ -112,11 +112,11 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
 
       N[k, l] += 1
     end
-  
+
     # xlim = ?
     # ylim = ?
     # zlim = ?
-  
+
     # return new(classes, k2composition, composition2k, label2site, coord2site, N, L, K, xlim, ylim, zlim)
 
     # make a dummy vector for doing manipulations with compositions
@@ -127,18 +127,18 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
 end
 
 # function barrier to deal with dimensionality
-function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, reactions) where D
+function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model) where D
   compositions = collect(Vector{Int64}, multiexponents(L + 1, 2 * D))
   sites = [Site(i, State(p[i][2]), p[i][1]) for i in eachindex(p)]
   K = length(compositions)
 
-  return SLattice(sites, compositions, L, K, reactions)
+  return SLattice(sites, compositions, L, K, model)
 end
 
 # generalize to different neighborhood types
-function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, reactions, nbhood) where D
+function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model, nbhood) where D
   compositions = collect(Vector{Int64}, multiexponents(L + 1, 2 * D))
-  
+
   if nbhood == :vonneumann
     if D == 1
       M = VonNeumann1D{Int}
@@ -156,14 +156,14 @@ function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, reactions, nbhood)
   sites = [Site(i, State(p[i][2]), p[i][1], M) for i in eachindex(p)]
   K = length(compositions)
 
-  return SLattice(sites, compositions, L, K, reactions)
+  return SLattice(sites, compositions, L, K, model)
 end
 
 # where does this fall?
-SLattice(sites::Vector{Site{D,T,M}}, compositions, L, K, reactions) where {D,T,M} = SLattice{D,T,M}(sites, compositions, L, K, reactions)
+SLattice(sites::Vector{Site{D,T,M}}, compositions, L, K, model) where {D,T,M} = SLattice{D,T,M}(sites, compositions, L, K, model)
 
 # this is how users build a lattice
-function SLattice(point::Matrix{Int}, ptype::Vector{Int}, reactions; number_types = nothing, nbhood = :vonneumann)
+function SLattice(point::Matrix{Int}, ptype::Vector{Int}, model; number_types = nothing, nbhood = :vonneumann)
   # if the user does not specify the number of types, then we assume all the
   # types occur inside the ptype list
   if number_types == nothing
@@ -171,10 +171,10 @@ function SLattice(point::Matrix{Int}, ptype::Vector{Int}, reactions; number_type
   else
     L = number_types :: Int
   end
-  
+
   p = [(tuple(point[:, i]...), ptype[i] + 1) for i in eachindex(ptype)]
 
-  return SLattice(p, L, reactions, nbhood)
+  return SLattice(p, L, model, nbhood)
 end
 
 # update api #
@@ -184,7 +184,7 @@ sample_from_class(lattice::SLattice, s) = sample(lattice.classes[s])
 
 function add_site!(lattice::SLattice, x)
   k = get_neighbor_class(x)
-  
+
   # add to neighborhood class; don't add open sites for now
   if get_ptype(x) > 1
     add_member!(lattice.classes[k], x)
@@ -337,7 +337,7 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
       k = derive_class(lattice, j)
       change_neighbor_class!(neighbor_site, k)
       sample_class_additions!(lattice, neighbor_site, l, k)
-      
+
       # local neighborhood
       # add_neighbor!(x, neighbor_site)
       # add_neighbor!(neighbor_site, x)
@@ -349,7 +349,7 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
             add_neighbor!(z, neighbor_site)
           end
         end
-      end 
+      end
 
       # update counts
       N[k, l] += 1
@@ -361,5 +361,3 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
 
   return nothing
 end
-
-
