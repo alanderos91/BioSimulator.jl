@@ -14,6 +14,10 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
   # matrix of particle counts
   N :: Matrix{Int}
 
+  # indicator for changing sample classes
+  xclass::Vector{Int}
+  xdiff::Vector{Bool}
+
   # these fields ought to become type parameters in the future
   L :: Int
   K :: Int
@@ -105,6 +109,8 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
 
     # build the count vector
     N = zeros(Int, K, L + 1)
+    xclass = zeros(Int, number_sample_classes)
+    xdiff  = zeros(Bool, number_sample_classes)
 
     for site in sites
       k = get_neighbor_class(site)
@@ -122,7 +128,7 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
     # make a dummy vector for doing manipulations with compositions
     dummy_composition = zeros(Int, L + 1)
 
-    return new{D,T,M}(classes, k2composition, composition2k, label2site, coord2site, isactive, reac2sidx, lk2sidx, N, L, K, dummy_composition)
+    return new{D,T,M}(classes, k2composition, composition2k, label2site, coord2site, isactive, reac2sidx, lk2sidx, N, xclass, xdiff, L, K, dummy_composition)
   end
 end
 
@@ -305,6 +311,7 @@ end
 # update neighbors due to x interacting with y, where x changes from i to j
 function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
   N = lattice.N
+  # S = lattice.Nchange
 
   for coord in eachdir(x)
     if istracked(lattice, coord)
@@ -325,9 +332,21 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
         l = get_ptype(neighbor_site)
         update_classes_neighbor_change!(lattice, neighbor_site, l, k_old, i, j)
 
+        # Nold = N[k_old, l]
+        # Nnew = N[k_new, l]
+
         # 3. update counts only if neighbor_site did not reaction with x
         N[k_old, l] -= 1
         N[k_new, l] += 1
+
+        # up to 2 changes may have occurred
+        # if Nold != N[k_old, l]
+        #   l != 1 && (S[k_old, l] = true)
+        # end
+      
+        # if Nnew != N[k_new, l]
+        #   l != 1 && (S[k_new, l] = true)
+        # end
       end
     else
       neighbor_site = spawn_new_site(lattice, coord)
@@ -353,6 +372,7 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
 
       # update counts
       N[k, l] += 1
+      # l != 1 && (S[k, l] = true)
 
       # add the site
       add_site!(lattice, neighbor_site)

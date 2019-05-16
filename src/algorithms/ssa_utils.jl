@@ -27,6 +27,27 @@ end
   return total_rate
 end
 
+@inline function update_jump_rates!(::HasRates, rates, total_rate, state, model::InteractingParticleSystem, unused)
+  xdiff = state.xdiff
+  reactions = model.reactions
+
+  for s in eachindex(xdiff)
+    if xdiff[s]
+      for j in eachindex(rates)
+        rxn = reactions[j]
+
+        if s == rxn.class
+          rate_j = rate(model, state, j)
+          @inbounds @fastmath total_rate += rate_j - rates[j]
+          @inbounds rates[j] = rate_j
+        end
+      end
+    end
+  end
+
+  return total_rate
+end
+
 # linear search
 @inline function search_jump_rates(::HasRates, rates, total_rate)
   u = rand() * total_rate

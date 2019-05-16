@@ -110,12 +110,28 @@ end
 execute_jump!(state, model::InteractingParticleSystem, j) = execute_jump!(state, model.reactions[j])
 
 function execute_jump!(lattice::AbstractLattice, reaction::IPSReactionStruct)
+  xclass = lattice.xclass
+  xdiff  = lattice.xdiff
+
+  # save counts in each class
+  for s in eachindex(xclass)
+    xdiff[s] = false
+    xclass[s] = length(lattice.classes[s].members)
+  end
+
   if ispairwise(reaction)
     # println("pairwise")
     execute_pairwise!(lattice, reaction)
   else
     # println("onsite")
     execute_onsite!(lattice, reaction)
+  end
+
+  # check which counts have changed
+  for s in eachindex(xclass)
+    if xclass[s] != length(lattice.classes[s].members)
+      xdiff[s] = true
+    end
   end
 
   return nothing
@@ -132,6 +148,7 @@ function execute_pairwise!(lattice::SLattice, reaction)
 
   # unpack counts matrix
   N = lattice.N
+  # S = lattice.Nchange
 
   # println("reaction = $(reaction)")
 
@@ -145,9 +162,11 @@ function execute_pairwise!(lattice::SLattice, reaction)
   y = sample(neighborhood(x), i2, lattice.k2composition[get_neighbor_class(x)][i2])
 
   #### this where we start ####
+  # k1old, k2old = get_neighbor_class(x), get_neighbor_class(y)
+  # l1old, l2old = get_ptype(x), get_ptype(y)
+  # N1old, N2old = N[k1old, l1old], N[k2old, l2old]
 
   # we use up the particles (k1, i1) and (k2, i2)
-
   N[get_neighbor_class(x), get_ptype(x)] -= 1
   N[get_neighbor_class(y), get_ptype(y)] -= 1
 
@@ -163,9 +182,31 @@ function execute_pairwise!(lattice::SLattice, reaction)
   i1 != j1 && update_classes_neighbors!(lattice, x, y, i1, j1)
   i2 != j2 && update_classes_neighbors!(lattice, y, x, i2, j2)
 
+  # k1new, k2new = get_neighbor_class(x), get_neighbor_class(y)
+  # l1new, l2new = get_ptype(x), get_ptype(y)
+  # N1new, N2new = N[k1new, l1new], N[k2new, l2new]
+
   # we produced new particles so update the counts
   N[get_neighbor_class(x), get_ptype(x)] += 1
   N[get_neighbor_class(y), get_ptype(y)] += 1
+
+  # up to four changes may hav occurred:
+
+  # if N1old != N[k1old, l1old]
+  #   l1old != 1 && (S[k1old, l1old] = true)
+  # end
+
+  # if N1new != N[k1new, l1new]
+  #   l1new != 1 && (S[k1new, l1new] = true)
+  # end
+
+  # if N2old != N[k2old, l2old]
+  #   l2old != 1 && (S[k2old, l2old] = true)
+  # end
+
+  # if N2new != N[k2new, l2new]
+  #   l2new != 1 && (S[k2new, l2new] = true)
+  # end
 
   return nothing
 end
@@ -178,10 +219,14 @@ function execute_onsite!(lattice::SLattice, reaction)
 
   # unpack counts matrix
   N = lattice.N
+  # S = lattice.Nchange
 
   # sample a particle x of type i from the given class k
   # println("attempt to sample $(i) from class $(k)")
   x = sample_from_class(lattice, s)
+
+  # k_old, l_old = get_neighbor_class(x), get_ptype(x)
+  # N_old = N[k_old, l_old]
 
   # we use up the x particle
   N[get_neighbor_class(x), get_ptype(x)] -= 1
@@ -195,8 +240,19 @@ function execute_onsite!(lattice::SLattice, reaction)
   # 3. update the remaining particles surrounding x and y
   update_classes_neighbors!(lattice, x, x, i, j)
 
+  # k_new, l_new = get_neighbor_class(x), get_ptype(x)
+  # N_new = N[k_new, l_new]
+
   # update the counts
   N[get_neighbor_class(x), get_ptype(x)] += 1
+
+  # if N_old != N[k_old, l_old]
+  #   l_old != 1 && (S[k_old, l_old] = true)
+  # end
+
+  # if N_new != N[k_new, l_new]
+  #   l_new != 1 && (S[k_new, l_new] = true)
+  # end
 
   return nothing
 end
