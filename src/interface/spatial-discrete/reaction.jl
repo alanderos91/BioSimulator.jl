@@ -187,7 +187,7 @@ function __reactions_nclass(initial, nbtype, d, params)
   elseif nbtype == :hexagon
     d == 1 && (nbmax = 2)
     d == 2 && (nbmax = 6)
-    d == 3 && (nbmax = 9)
+    d == 3 && (nbmax = 12) # I think have to think about this
   end
 
   # compositions = collect(multiexponents(L + 1, 2 * d))

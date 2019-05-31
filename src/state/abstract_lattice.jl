@@ -43,7 +43,7 @@ function derive_class(lattice::AbstractLattice{D,T,M}, i) where {D,T,M}
   composition[i] = 1
 
   k = lattice.composition2k[composition]
-  
+
   # clean up
   fill!(composition, 0)
 

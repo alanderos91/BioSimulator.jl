@@ -91,7 +91,7 @@ rmv_neighbor!(x :: Site, y :: Site) = delete!(neighborhood(x), y)
 function build_composition!(composition, x :: Site{D,T,M}) where {D,T,M}
   fill!(composition, zero(eltype(composition)))
 
-  composition[1] = 2 * D
+  composition[1] = capacity(M)
 
   for y in neighborhood(x)
       l = get_ptype(y)
@@ -134,18 +134,6 @@ function lex_sort!(v; alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x, by = ide
   sort!(v, alg = alg, lt = lt, by = by, rev = rev, order = order)
 end
 
-@generated function distance(
-  x :: Site{D,T,M},
-  y :: Site{D,T,M}) where {D,T,M}
-  ex = :(0)
-
-  for i = 1:D
-      ex = :($ex + abs(x[$i] - y[$i]))
-  end
-
-  return ex
-end
-
 function build_local_neighborhoods!(sites::Vector{Site{1,T,M}}) where {T,M}
   lex_sort!(sites, lt = lex_order_x1, by = coordinates)
   sweep_neighbors!(sites)
@@ -178,7 +166,7 @@ end
 
 function sweep_neighbors!(sites)
   for i = 2:length(sites)
-    x = sites[i - 1]
+    x = sites[i-1]
     y = sites[i]
     d = distance(x, y)
     if d == 1

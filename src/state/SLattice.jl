@@ -81,7 +81,7 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
     # determine number of sample classes
     number_pairwise_reactants = count(reac_pair -> reac_pair[2] != 0, pairs)
     number_onsite_reactants   = count(reac_pair -> reac_pair[2] == 0, pairs)
-    number_sample_classes     = 2 * D * number_pairwise_reactants + number_onsite_reactants
+    number_sample_classes     = capacity(M) * number_pairwise_reactants + number_onsite_reactants
 
     # build the sample classes
     classes = [SampleClass{Site{D,T,M}}(s) for s in 1:number_sample_classes]
@@ -133,18 +133,16 @@ struct SLattice{D,T,M} <: AbstractLattice{D,T,M}
 end
 
 # function barrier to deal with dimensionality
-function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model) where D
-  compositions = collect(Vector{Int64}, multiexponents(L + 1, 2 * D))
-  sites = [Site(i, State(p[i][2]), p[i][1]) for i in eachindex(p)]
-  K = length(compositions)
+# function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model) where D
+#   compositions = collect(Vector{Int64}, multiexponents(L + 1, 2 * D))
+#   sites = [Site(i, State(p[i][2]), p[i][1]) for i in eachindex(p)]
+#   K = length(compositions)
 
-  return SLattice(sites, compositions, L, K, model)
-end
+#   return SLattice(sites, compositions, L, K, model)
+# end
 
 # generalize to different neighborhood types
 function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model, nbhood) where D
-  compositions = collect(Vector{Int64}, multiexponents(L + 1, 2 * D))
-
   if nbhood == :vonneumann
     if D == 1
       M = VonNeumann1D{Int}
@@ -158,6 +156,8 @@ function SLattice(p::Vector{Tuple{NTuple{D,Int64},Int64}}, L, model, nbhood) whe
       M = Hexagonal2D{Int}
     end
   end
+
+  compositions = collect(Vector{Int64}, multiexponents(L + 1, capacity(M)))
 
   sites = [Site(i, State(p[i][2]), p[i][1], M) for i in eachindex(p)]
   K = length(compositions)
@@ -189,12 +189,11 @@ end
 sample_from_class(lattice::SLattice, s) = sample(lattice.classes[s])
 
 function add_site!(lattice::SLattice, x)
+  l = get_ptype(x)
   k = get_neighbor_class(x)
 
   # add to neighborhood class; don't add open sites for now
-  if get_ptype(x) > 1
-    add_member!(lattice.classes[k], x)
-  end
+  sample_class_additions!(lattice, x, l, k)
 
   # add to label2site map
   lattice.label2site[label(x)] = x

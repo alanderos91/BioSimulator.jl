@@ -43,3 +43,24 @@ end
 capacity(x :: Type{VonNeumann1D{T}} ) where {T} = 2
 capacity(x :: Type{VonNeumann2D{T}} ) where {T} = 4
 capacity(x :: Type{VonNeumann3D{T}} ) where {T} = 6
+
+function distance(
+  x :: Site{1,T,VonNeumann1D{T}},
+  y :: Site{1,T,VonNeumann1D{T}}) where T
+
+  return abs(x[1] - y[1])
+end
+
+function distance(
+  x :: Site{2,T,VonNeumann2D{T}},
+  y :: Site{2,T,VonNeumann2D{T}}) where T
+
+  return abs(x[1] - y[1]) + abs(x[2] - y[2])
+end
+
+function distance(
+  x :: Site{3,T,VonNeumann3D{T}},
+  y :: Site{3,T,VonNeumann3D{T}}) where T
+
+  return abs(x[1] - y[1]) + abs(x[2] - y[2]) + abs(x[3] - y[3])
+end
