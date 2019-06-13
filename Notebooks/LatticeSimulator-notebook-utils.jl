@@ -91,13 +91,15 @@ function plot_hex_config(lattice; show_open = false, title = "", xlab = "", ylab
     
     new_coords = zeros(Float64, 2, length(sites))
 
-    thingx = sqrt(1 / 4 - 1 / 16)
-    thingy = 3 / 4
+    thingx = cos(pi / 3)
+    thingy = sin(pi / 3)
 
     for i in 1:length(sites)
         # janky version, modify the sites by shifting the (x,y) coordinates over by the appropriate amount.  Depends on trig.   Done in axial coordinates
         x = sites[i].coord[1]
         y = sites[i].coord[2]
+
+        
         #x = coordinates(sites[i])[1]
         #y = coordinates(sites[i])[2]
 
@@ -167,9 +169,9 @@ function generate_bordered_2D_hexgrid(l, saturation)
     # l is the radius of the hexagon, l >= 2
     
     # number of tiles in a hexagon of length l
-    area = 3 * l * (l + 1) + 1
+    # area = 3 * l * (l + 1) + 1
 
-    N = Int(ceil(area * saturation)) - (6 * l) # take off the border
+    # N = Int(ceil(area * saturation)) - (6 * l) # take off the border
 
     list = Tuple{Int,Int}[]
 
