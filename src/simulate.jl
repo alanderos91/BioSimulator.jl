@@ -20,12 +20,17 @@ function simulate(initial_state, model, algname, tfinal, rates_cache)
   # build the simulator
   simulator = build_simulator(algname, state, model, rates_cache)
 
+  # build the output data
+  output = build_output(state, model)
+
   # feedforward down the chain...
-  simulate!(simulator, state, model, tfinal)
+  simulate!(simulator, state, model, tfinal, output)
 end
 
-function simulate!(simulator, state, model, tfinal)
+function simulate!(simulator, state, model, tfinal, output)
   initialize!(simulator, state, model)
+
+  update!(output, simulator.t, state)
 
   while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
     tnew = get_new_time(simulator)
@@ -35,7 +40,17 @@ function simulate!(simulator, state, model, tfinal)
     else
       simulator.t = tfinal
     end
+
+    update!(output, simulator.t, state)
   end
 
-  return state
+  return output
+end
+
+# this is temporary
+function build_output(state, model)
+  xw = SamplePath{Vector{Float64}, Vector{Vector{Int}}}()
+  sizehint!(xw, 1_000)
+
+  return xw
 end
