@@ -1,4 +1,2 @@
-
-\.DS_Store
-
-Notebooks/\.ipynb_checkpoints/Spatial Simulation tutorial-checkpoint\.ipynb
+.DS_Store
+*/.ipynb_checkpoints
