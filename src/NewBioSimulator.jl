@@ -81,6 +81,7 @@ export Direct, EnhancedDirect, SortingDirect
 export FirstReaction, NextReaction, RejectionSSA
 
 include("simulate.jl")
+include(joinpath("output", "sample_path.jl"))
 
 export simulate
 
