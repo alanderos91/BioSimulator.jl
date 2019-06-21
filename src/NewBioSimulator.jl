@@ -1,7 +1,9 @@
 module NewBioSimulator
 
-using Random, DataStructures
+using Random, DataStructures, Statistics
 using StaticArrays
+using RecipesBase
+using RecursiveArrayTools
 
 ## imports
 
@@ -83,6 +85,6 @@ export FirstReaction, NextReaction, RejectionSSA
 include("simulate.jl")
 include(joinpath("output", "sample_path.jl"))
 
-export simulate
+export simulate, SamplePath, Ensemble
 
 end # module

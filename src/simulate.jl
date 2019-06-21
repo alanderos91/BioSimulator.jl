@@ -30,26 +30,24 @@ end
 function simulate!(simulator, state, model, tfinal, output)
   initialize!(simulator, state, model)
 
-  update!(output, simulator.t, state)
-
   while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
     tnew = get_new_time(simulator)
 
     if tnew <= tfinal
       step!(simulator, state, model)
+      update!(output, simulator.t, state)
     else
       simulator.t = tfinal
     end
-
-    update!(output, simulator.t, state)
   end
+  update!(output, simulator.t, state)
 
   return output
 end
 
 # this is temporary
 function build_output(state, model)
-  xw = SamplePath{Vector{Float64}, Vector{Vector{Int}}}()
+  xw = SamplePath([copy(state)], [0.0])
   sizehint!(xw, 1_000)
 
   return xw
