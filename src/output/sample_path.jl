@@ -96,6 +96,12 @@ end
   # extract the series data
   ts = reg[1].t
   xs = convert(Array, mean(reg)')
+  bars = convert(Array, std(reg)')
+
+  # make the default a scatter plot
+  # and add bars to represent standard deviation
+  seriestype --> :scatter
+  yerrorbar  --> bars
 
   ts, xs
 end
