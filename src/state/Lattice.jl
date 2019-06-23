@@ -4,16 +4,44 @@ struct Lattice{D,T,M,U}
   types::Vector{U}
 end
 
-function Lattice(coord::Matrix{T}, types::Vector{U}; nbhood = VonNeumann()) where {T,U}
+function Lattice(coord::Matrix, types::Vector; nbhood = VonNeumann())
   dimension = size(coord, 1)
-  number_types = length(unique(types))
+  unique_types = unique(types)
+  number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
-  site = [Site(i, State(types[i]), tuple(coord[:,i]...)) for i in eachindex(types)]
+  labels = Dict(unique_types[i] => i for i in eachindex(unique_types))
+  site = [Site(i, State(labels[types[i]]), tuple(coord[:,i]...)) for i in eachindex(types)]
 
   neighbors = [sizehint!(Int[], number_neighbors) for i in eachindex(site)]
 
-  return Lattice{dimension,T,typeof(nbhood),U}(site, neighbors, types)
+  mapping = [(label => l + 1) for (label, l) in labels]
+  T = eltype(coord)
+  U = eltype(mapping)
+
+  return Lattice{dimension,T,typeof(nbhood),U}(site, neighbors, mapping)
+end
+
+##### accessors
+
+dimension(::Lattice{D}) where D <: Number = D
+topology(::Lattice{D,T,M}) where {D,T,M} = M
+
+##### IO
+function Base.summary(io::IO, ::Lattice{D,T,M}) where {D,T,M}
+  print(io, "$(D)-D Lattice with $(M) neighborhoods")
+end
+
+function Base.show(io::IO, lattice::Lattice)
+  Base.summary(io, lattice)
+  print(io, "\n  species: ")
+  show(io, lattice.types)
+end
+
+function Base.show(io::IO, m::MIME"text/plain", lattice::Lattice)
+  Base.summary(io, lattice)
+  print(io, "\n", "species: ")
+  show(io, m, lattice.types)
 end
 
 ##### query API

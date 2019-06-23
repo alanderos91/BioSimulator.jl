@@ -14,7 +14,10 @@ get_neighbor_class(x :: State) = x.class
 transform!(x :: State, l) = (x.ptype = l)
 change_neighbor_class!(x :: State, k) = (x.class = k)
 
-Base.show(io :: IO, x :: State) = print(io, "(l, k) = ", x.ptype, ", ", x.class)
+function Base.show(io :: IO, x :: State)
+  println(io, "  type: ", x.ptype)
+  print(io, "  nbclass: ", x.class)
+end
 
 struct Site{D,T}
   label :: Int
@@ -56,7 +59,19 @@ Base.isless(x::Site, y::Site) = isless(label(x), label(y))
 
 # IO #
 
-Base.show(io :: IO, x :: Site) = print(io, label(x), " / ", state(x), " / ", coordinates(x))
+Base.summary(io::IO, x::Site) = print(io, "Site")
+
+function Base.show(io::IO, x::Site)
+  # summary(io, x)
+  print(io, coordinates(x))
+end
+
+function Base.show(io::IO, m::MIME"text/plain", x::Site)
+  lk = string(get_ptype(x), "|", get_neighbor_class(x))
+  print(io, lk)
+  print(io, " @ ")
+  print(io, coordinates(x))
+end
 
 ##### recipes #####
 
