@@ -342,7 +342,7 @@ function update_classes_neighbors!(lattice::SLattice, x, y, i, j)
         # if Nold != N[k_old, l]
         #   l != 1 && (S[k_old, l] = true)
         # end
-      
+
         # if Nnew != N[k_new, l]
         #   l != 1 && (S[k_new, l] = true)
         # end

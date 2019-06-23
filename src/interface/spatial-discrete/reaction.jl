@@ -169,76 +169,69 @@ macro enumerate_with_nclass(r, n, d, p)
 end
 
 # implements the body of @enumerate_with_nclass
-function __reactions_nclass(initial, nbtype, d, params)
-  nbtype ∉ NBTYPES && error("unsupported neighborhood structure")
-  d > 3 && error("do you really need $(d) dimensions?")
-
-  # determine number of particle types
-  L = 0
-
-  for reaction in initial
-    L = max(L, reaction.input1, reaction.input2, reaction.output1, reaction.output2)
-  end
-
-  # determine maximum number of neighbors
-  nbmax = 0
-  if nbtype == :vonneumann
-    nbmax = 2 * d
-  elseif nbtype == :hexagon
-    d == 1 && (nbmax = 2)
-    d == 2 && (nbmax = 6)
-    d == 3 && (nbmax = 12) # I think have to think about this
-  end
-
-  # compositions = collect(multiexponents(L + 1, 2 * d))
-  compositions = collect(multiexponents(L, nbmax))
-  number_compositions = length(compositions)
-
-  reactions = IPSReactionStruct[]
-
-  for reaction in initial
-    for class in 1:number_compositions
-      # class is the integer corresponding to each composition
-      composition = compositions[class]
-
-      # check for pairwise reaction
-      if reaction.pairwise == true
-        # get the number of reactants in the composition
-        number_reactants = composition[reaction.input2]
-
-        # ignore this class-reaction pair if there are no suitable
-        # reactants in the given configuration
-        if number_reactants != 0
-          rate = params[reaction.p_index]
-
-          push!(reactions, IPSReactionStruct(
-            reaction.pairwise,
-            reaction.input1,
-            reaction.input2,
-            reaction.output1,
-            reaction.output2,
-            class,                  # neighborhood class
-            number_reactants * rate # local rate
-          ) )
-        end
-      else
-        rate = params[reaction.p_index]
-
-        push!(reactions, IPSReactionStruct(
-          reaction.pairwise,
-          reaction.input1,
-          reaction.input2,
-          reaction.output1,
-          reaction.output2,
-          class,                     # neighborhood class
-          rate / number_compositions # scaled local rate
-        ) )
-      end
-    end
-  end
-
-  return reactions
-end
+# function __reactions_nclass(initial, nbhood, d, params)
+#   nbhood ∉ NBTYPES && error("unsupported neighborhood structure")
+#   d > 3 && error("do you really need $(d) dimensions?")
+#
+#   # determine number of particle types
+#   L = 0
+#
+#   for reaction in initial
+#     L = max(L, reaction.input1, reaction.input2, reaction.output1, reaction.output2)
+#   end
+#
+#   # determine maximum number of neighbors
+#   nbmax = capacity(nbhood, d)
+#
+#   # compositions = collect(multiexponents(L + 1, 2 * d))
+#   compositions = collect(multiexponents(L, nbmax))
+#   number_compositions = length(compositions)
+#
+#   reactions = IPSReactionStruct[]
+#
+#   for reaction in initial
+#     for class in 1:number_compositions
+#       # class is the integer corresponding to each composition
+#       composition = compositions[class]
+#
+#       # check for pairwise reaction
+#       if reaction.pairwise == true
+#         # get the number of reactants in the composition
+#         number_reactants = composition[reaction.input2]
+#
+#         # ignore this class-reaction pair if there are no suitable
+#         # reactants in the given configuration
+#         if number_reactants != 0
+#           rate = params[reaction.p_index]
+#
+#           push!(reactions, IPSReactionStruct(
+#             reaction.pairwise,
+#             reaction.input1,
+#             reaction.input2,
+#             reaction.output1,
+#             reaction.output2,
+#             class,                  # neighborhood class
+#             number_reactants * rate # local rate
+#           ) )
+#         end
+#       else
+#         rate = params[reaction.p_index]
+#
+#         push!(reactions, IPSReactionStruct(
+#           reaction.pairwise,
+#           reaction.input1,
+#           reaction.input2,
+#           reaction.output1,
+#           reaction.output2,
+#           class,                     # neighborhood class
+#           rate / number_compositions # scaled local rate
+#         ) )
+#       end
+#     end
+#   end
+#
+#   return reactions
+# end
 
 ## enumerate the full reaction list using a given spatial structure
 macro enumerate_with_sclass(r, n, d, p)
@@ -252,31 +245,42 @@ macro enumerate_with_sclass(r, n, d, p)
 end
 
 # implements the body of the @enumerate_with_sclass macro
-function __reactions_sclass(initial, nbtype, d, params)
-  nbtype ∉ NBTYPES && error("unsupported neighborhood structure")
+function __reactions_sclass(initial, nbhood, d, params)
+  nbhood ∉ NBTYPES && error("unsupported neighborhood structure")
   d > 3 && error("do you really need $(d) dimensions?")
 
-  # determine maximum number of neighbors
-  nbmax = 0
-  if nbtype == :vonneumann
-    nbmax = 2 * d
-  elseif nbtype == :hexagon
-    d == 1 && (nbmax = 2)
-    d == 2 && (nbmax = 6)
-    d == 3 && (nbmax = 9)
+  # determine number of particle types
+  number_types = 0
+
+  for rxn in initial
+    number_types = max(
+      number_types,
+      rxn.input1,
+      rxn.input2,
+      rxn.output1,
+      rxn.output2
+    )
   end
 
-  pairs     = build_reactant_pairs(initial)
-  reac2sidx = build_pair_dictionary(pairs, nbmax)
+  number_types -= 1
+
+  # determine maximum number of neighbors
+  number_neighbors = capacity(nbhood, d)
+
+  pairs = build_reactant_pairs(initial)
+  isactive = build_active_set(pairs, number_types)
+  reactant_to_class = map_reactant_to_class(pairs, number_neighbors)
+  
   reactions = IPSReactionStruct[]
 
   for reaction in initial
-    sampleidx = reac2sidx[(reaction.input1, reaction.input2)]
+    reactant_pair = (reaction.input1, reaction.input2)
+    sampleidx = reactant_to_class[reactant_pair]
 
     if reaction.pairwise == true
 
       # iterate over the possible number of adjacent reactants
-      for number_reactants in 1:nbmax
+      for number_reactants in 1:number_neighbors
         rate = params[reaction.p_index]
 
         push!(reactions, IPSReactionStruct(
@@ -297,16 +301,25 @@ function __reactions_sclass(initial, nbtype, d, params)
       rate = params[reaction.p_index]
 
       push!(reactions, IPSReactionStruct(
-      reaction.pairwise,                    # all as expected...
-      reaction.input1,
-      reaction.input2,
-      reaction.output1,
-      reaction.output2,
-      sampleidx,
-      rate                          # total rate at which a particle in this class undergoes this reaction
+        reaction.pairwise,
+        reaction.input1,
+        reaction.input2,
+        reaction.output1,
+        reaction.output2,
+        sampleidx,
+        rate # total rate at which a particle in this class undergoes this reaction
       ) )
     end
   end
 
-  return InteractingParticleSystem(reactions)
+  # enumerate the possible neighborhood compositions
+  composition = collect(Vector{Int}, multiexponents(number_types + 1, number_neighbors))
+
+  # build a mapping from (l,k) to sample classes s
+  pair_to_classes = map_pair_to_classes(composition, reactant_to_class, isactive, number_types)
+
+  # group everything from our sample class enumeration
+  enumeration = SampleClassEnumeration(composition, reactant_to_class, pair_to_classes)
+
+  return InteractingParticleSystem(reactions, isactive, enumeration)
 end
