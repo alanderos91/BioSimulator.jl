@@ -15,8 +15,6 @@ import Base: getindex, setindex!, iterate, firstindex, lastindex, length, isempt
 import Base: eachindex, push!, empty!, copy
 import Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 
-const global NBTYPES = [:vonneumann, :hexagon]
-
 ## load order
 
 ## interface
@@ -33,7 +31,8 @@ export get_species, get_reaction
 #### discrete-spatial
 include(joinpath("interface", "spatial-discrete", "reaction.jl"))
 
-export @def_reactions, @enumerate_with_sclass, @enumerate_with_nclass
+# export @def_reactions, @enumerate_with_sclass, @enumerate_with_nclass
+export @def_reactions, @enumerate_with_sclass
 
 ## data structures
 include(joinpath("data-structures", "dep_graph.jl"))
@@ -46,20 +45,24 @@ export PQBinaryHeap, peektop
 
 ## state
 include(joinpath("state", "site.jl"))
-include(joinpath("state", "neighborhood.jl"))
+# include(joinpath("state", "neighborhood.jl"))
 include(joinpath("state", "vonneumann.jl"))
-include(joinpath("state", "sample_class.jl"))
-include(joinpath("state", "neighborhood_class.jl"))
+# include(joinpath("state", "sample_class.jl"))
+# include(joinpath("state", "neighborhood_class.jl"))
 include(joinpath("state", "hexagonal.jl"))
-include(joinpath("state", "abstract_lattice.jl"))
-include(joinpath("state", "SLattice.jl"))
-include(joinpath("state", "NLattice.jl"))
+include(joinpath("state", "Lattice.jl"))
+# include(joinpath("state", "abstract_lattice.jl"))
+# include(joinpath("state", "SLattice.jl"))
+# include(joinpath("state", "NLattice.jl"))
 
-export VonNeumann1D, VonNeumann2D, VonNeumann3D, Hexagonal2D
-export SLattice, NLattice
+export VonNeumann, Hexagonal
+export Lattice
+
+const global NBTYPES = [VonNeumann(), Hexagonal()]
 
 ## model
 include(joinpath("model", "reaction_system.jl"))
+include(joinpath("model", "SampleClassEnumeration.jl"))
 include(joinpath("model", "ips.jl"))
 
 ## algorithms

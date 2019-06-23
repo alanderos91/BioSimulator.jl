@@ -39,7 +39,7 @@ function sample(x :: Neighborhood, l, nl)
     c = nl * rand()
     j = 1
     s = get_ptype(x[j]) == l ? 1 : 0
-    
+
     while s < c && j < length(x)
         isequal(get_ptype(x[j += 1]), l) && (s += 1)
     end
