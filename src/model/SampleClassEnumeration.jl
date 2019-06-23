@@ -1,16 +1,18 @@
-struct SampleClassEnumeration
-  class::Vector{Int}
+struct SampleClassEnumeration{D,M}
+  class::Vector{Vector{Int}}
   composition::Vector{Vector{Int}}
   reactant_to_class::OrderedDict{Tuple{Int,Int},Int}
   pair_to_classes::OrderedDict{Tuple{Int,Int},Vector{Int}}
   dummy_composition::Vector{Int}
 end
 
-function SampleClassEnumeration(composition, reactant_to_class, pair_to_classes)
-  class = Int[]
+function SampleClassEnumeration{D,M}(composition, reactant_to_class, pair_to_classes) where {D,M}
+  number_classes = reactant_to_class |> values |> maximum
+
+  class = [Int[] for s in 1:number_classes]
   dummy_composition = zero(composition[1])
 
-  SampleClassEnumeration(
+  SampleClassEnumeration{D,M}(
     class,
     composition,
     reactant_to_class,
@@ -137,4 +139,241 @@ function iterate_reactant_pairs!(sample_classes, l, comp, reactant_to_class, num
   end
 
   return sample_classes
+end
+
+##### accessors
+
+number_compositions(enum::SampleClassEnumeration) = length(enum.composition)
+
+##### query API
+
+# get the index assigned to a particular neighborhood class
+function get_nbclass_index(enum::SampleClassEnumeration, comp)
+  searchsortedfirst(enum.composition, comp)
+end
+
+# derive the neighbor class of a site with
+# (i) nbmax - 1 open sites
+# (ii) 1 neighbor of type i
+function derive_nbclass(enum::SampleClassEnumeration{D,M}) where {D,M}
+  # pull up the worker array
+  comp = enum.dummy_composition
+
+  # build the desired composition
+  comp[1] = capacity(M(), D) - 1
+  comp[i] = 1
+
+  # search for the index; assumes composition is sorted somehow
+  k = get_nbclass_index(enum, comp)
+
+  # cleanup the mess
+  fill!(composition, 0)
+
+  return k
+end
+
+# get neighbor class after a i -> j type change,
+# given that the site was in class k
+function get_new_nbclass(enum::SampleClassEnumeration, k, i, j)
+  # retrieve the list of compositions
+  composition = enum.composition
+
+  # retrieve the worker array
+  comp = enum.dummy_composition
+
+  # copy the composition we need to operate on
+  copyto!(comp, composition[k])
+
+  # generate the new composition
+  comp[i] -= 1
+  comp[j] += 1
+
+  k_new = get_nbclass_index(enum, comp)
+
+  # clean up
+  fill!(comp, 0)
+
+  return k_new
+end
+
+function sample_from_class(lattice, enum, s)
+  return get_site(lattice, rand(enum.class[s]))
+end
+
+##### TODO Here be dragons.
+
+# Update neighbor and sample classes for x, given that
+# 	x changes from type i1 to j1
+# 	y changes from type i2 to j2
+function update_classes_particle!(lattice, x, i1, j1, i2, j2)
+  # unpack information
+  k_old = get_neighbor_class(x)
+
+  # 1. update neighborhood class if necessary
+  if i2 != j2
+    k_new = get_new_class(lattice, k_old, i2, j2)
+    change_neighbor_class!(x, k_new)
+  end
+
+  # 2. update sample class
+  # Case 1: i1 == j1 and i2 != j2; neighborhood structure changed, but not type
+  # use reac2sidx to get sample classes
+  if i1 == j1 && i2 != j2
+    update_classes_neighbor_change!(lattice, x, i1, k_old, i2, j2)
+  end
+
+  if i1 != j1
+    # Case 2: i1 != j1 and i2 == j2; neighborhood structure for x did not change
+    if i2 == j2
+      # removals
+      sample_class_removals!(lattice, x, i1, k_old)
+
+      # additions
+      sample_class_additions!(lattice, x, j1, k_old)
+    else
+    # Case 3: i1 != j1 and i2 != j2; neighborhood structure for x did change
+
+      # removals
+      sample_class_removals!(lattice, x, i1, k_old)
+
+      # additions
+      sample_class_additions!(lattice, x, j1, k_new)
+    end
+  end
+  return nothing
+end
+
+function sample_class_removals!(lattice, x, l, k)
+  if lattice.isactive[l]
+    classes = lattice.lk2sidx[(l, k)]
+
+    for s in classes
+      rmv_member!(lattice.classes[s], x)
+    end
+  end
+  return lattice
+end
+
+function sample_class_additions!(lattice, x, l, k)
+  if lattice.isactive[l]
+    classes = lattice.lk2sidx[(l, k)]
+
+    for s in classes
+      add_member!(lattice.classes[s], x)
+    end
+  end
+  return lattice
+end
+
+function update_classes_neighbor_change!(lattice, x, i1, k_old, i2, j2)
+  if lattice.isactive[i1]
+    s = get(lattice.reac2sidx, (i1, i2), 0)
+
+    # updates for losing particle of type i2
+    if s != 0
+      # get number of neighbors of type i2, the interacting particle
+      number_neighbors = lattice.k2composition[k_old][i2]
+
+      # index shifting
+      s += number_neighbors - 1
+
+      # remove from the sample class
+      rmv_member!(lattice.classes[s], x)
+
+      if number_neighbors != 1
+        # lost a particle of type i2, so add it to the previous class
+        add_member!(lattice.classes[s - 1], x)
+      end
+    end
+
+    # updates for gaining a particle of type j2
+    s = get(lattice.reac2sidx, (i1, j2), 0)
+
+    if s != 0
+      number_neighbors = lattice.k2composition[k_old][j2]
+
+      s += number_neighbors
+
+      add_member!(lattice.classes[s], x)
+
+      if number_neighbors != 0
+        rmv_member!(lattice.classes[s - 1], x)
+      end
+    end
+  end
+  return nothing
+end
+
+# update neighbors due to x interacting with y, where x changes from i to j
+function update_classes_neighbors!(lattice, x, y, i, j)
+  N = lattice.N
+  # S = lattice.Nchange
+
+  for coord in eachdir(x)
+    if istracked(lattice, coord)
+      neighbor_site = get_site(lattice, coord)
+      if neighbor_site != y
+        # 1. change neighborhood classes
+        k_old = get_neighbor_class(neighbor_site)
+        k_new = get_new_class(lattice, k_old, i, j)
+
+        # println()
+        # println("tried to update $(neighbor_site)")
+        # println("$(k_old) ----> $(k_new)")
+        # println()
+
+        change_neighbor_class!(neighbor_site, k_new)
+
+        # 2. change sample classes
+        l = get_ptype(neighbor_site)
+        update_classes_neighbor_change!(lattice, neighbor_site, l, k_old, i, j)
+
+        # Nold = N[k_old, l]
+        # Nnew = N[k_new, l]
+
+        # 3. update counts only if neighbor_site did not reaction with x
+        N[k_old, l] -= 1
+        N[k_new, l] += 1
+
+        # up to 2 changes may have occurred
+        # if Nold != N[k_old, l]
+        #   l != 1 && (S[k_old, l] = true)
+        # end
+
+        # if Nnew != N[k_new, l]
+        #   l != 1 && (S[k_new, l] = true)
+        # end
+      end
+    else
+      neighbor_site = spawn_new_site(lattice, coord)
+      l = get_ptype(neighbor_site)
+
+      # set particle class
+      k = derive_class(lattice, j)
+      change_neighbor_class!(neighbor_site, k)
+      sample_class_additions!(lattice, neighbor_site, l, k)
+
+      # local neighborhood
+      # add_neighbor!(x, neighbor_site)
+      # add_neighbor!(neighbor_site, x)
+      for coord2 in eachdir(neighbor_site)
+        if istracked(lattice, coord2)
+          z = get_site(lattice, coord2)
+          if z ∉ neighborhood(neighbor_site)
+            add_neighbor!(neighbor_site, z)
+            add_neighbor!(z, neighbor_site)
+          end
+        end
+      end
+
+      # update counts
+      N[k, l] += 1
+      # l != 1 && (S[k, l] = true)
+
+      # add the site
+      add_site!(lattice, neighbor_site)
+    end
+  end
+
+  return nothing
 end
