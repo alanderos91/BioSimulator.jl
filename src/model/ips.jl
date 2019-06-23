@@ -43,6 +43,23 @@ struct IPSReactionStruct
   end
 end
 
+function Base.show(io::IO, x::IPSReactionStruct)
+  i1, i2 = x.input1, x.input2
+  o1, o2 = x.output1, x.output2
+
+  if x.pairwise
+    str = "$(i1) + $(i2) --> $(o1) + $(o2)"
+  else
+    str = "$(i1) --> $(o1)"
+  end
+
+  print(io, str, "  class = ", x.class)
+end
+
+function Base.show(io::IO, m::MIME"text/plain", x::IPSReactionStruct)
+  show(io, x)
+end
+
 @inline function has_invalid_type(pairwise, i1, i2, o1, o2)
   if pairwise
     # all types must be positive integers
@@ -108,6 +125,24 @@ function InteractingParticleSystem(reactions::Vector{IPSReactionStruct}, isactiv
   # return InteractingParticleSystem(reactions, dep_graph, isactive, enumeration)
   return InteractingParticleSystem(reactions, isactive, enumeration)
 end
+
+function Base.summary(io::IO, x::InteractingParticleSystem)
+  types = length(x.isactive) - 1
+  print(io, "Interacting Particle System w/ $(types) type")
+end
+
+function Base.show(io::IO, x::InteractingParticleSystem)
+  summary(io, x)
+  println()
+  show(io, x.reactions)
+end
+
+function Base.show(io::IO, m::MIME"text/plain", x::InteractingParticleSystem)
+  summary(io, x)
+  println()
+  show(io, m, x.reactions)
+end
+
 #
 # ##### execute_jump! #####
 #
