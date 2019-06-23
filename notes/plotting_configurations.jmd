@@ -1,0 +1,70 @@
+---
+title: Plotting lattice configurations
+author: Alfonso Landeros
+options:
+  fig_ext: .svg
+---
+
+```{julia}
+using InteractiveUtils
+using NewBioSimulator
+using Plots
+```
+
+```{julia; echo=false}
+versioninfo()
+```
+
+## Foxes and rabbits
+
+The following sets up the point and cell type data:
+
+```{julia; results="hidden"}
+# example parameters
+number_points = 100
+number_types = 1
+type_list = ["rabbit", "fox"]
+xlim = (-10, 10)
+
+# build a list of points
+list = Tuple{Int,Int}[]
+
+while length(list) < number_points
+  point = tuple(rand(xlim[1]:xlim[2], 2)...)
+  if point ∉ list
+    push!(list, point)
+  end
+end
+
+# reinterpret list as a matrix
+# this won't be necessary in the future...
+coord = zeros(Int, 2, length(list))
+
+for i in eachindex(list)
+  coord[1, i] = list[i][1]
+  coord[2, i] = list[i][2]
+end
+
+# randomly assign a site to be a fox or rabbit
+types = [rand(type_list) for i in eachindex(list)]
+```
+
+### VonNeumann neighborhoods
+
+```{julia}
+vonlattice = Lattice(coord, types, nbhood = VonNeumann())
+```
+
+```{julia}
+plot(vonlattice, markersize = 8, grid = nothing)
+```
+
+### Hex neighborhoods
+
+```{julia}
+hexlattice = Lattice(coord, types, nbhood = Hexagonal())
+```
+
+```{julia}
+plot(hexlattice, markersize = 10, grid = nothing)
+```
