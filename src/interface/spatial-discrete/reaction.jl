@@ -8,6 +8,19 @@ struct IPSReactionIR
   p_index    :: Int # parameter index
 end
 
+function Base.show(io::IO, x::IPSReactionIR)
+  i1, i2 = x.input1, x.input2
+  o1, o2 = x.output1, x.output2
+
+  if x.pairwise
+    str = "$(i1) + $(i2) --> $(o1) + $(o2)"
+  else
+    str = "$(i1) --> $(o1)"
+  end
+
+  print(io, str)
+end
+
 ##### helper functions #####
 function clean_expression(input_ex)
   ex = Expr(input_ex.head)
@@ -270,7 +283,7 @@ function __reactions_sclass(initial, nbhood, d, params)
   pairs = build_reactant_pairs(initial)
   isactive = build_active_set(pairs, number_types)
   reactant_to_class = map_reactant_to_class(pairs, number_neighbors)
-  
+
   reactions = IPSReactionStruct[]
 
   for reaction in initial
