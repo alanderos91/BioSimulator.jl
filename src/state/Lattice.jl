@@ -26,6 +26,8 @@ end
 
 dimension(::Lattice{D}) where D <: Number = D
 topology(::Lattice{D,T,M}) where {D,T,M} = M
+number_types(x::Lattice) = length(x.types)
+number_sites(x::Lattice) = length(x.site)
 
 ##### IO
 function Base.summary(io::IO, ::Lattice{D,T,M}) where {D,T,M}
@@ -44,14 +46,29 @@ function Base.show(io::IO, m::MIME"text/plain", lattice::Lattice)
   show(io, m, lattice.types)
 end
 
+##### other Base overloads
+Base.copy(lattice::Lattice) = deepcopy(lattice)
+
 ##### query API
 
 function istracked(lattice::Lattice, coord)
   # ?
 end
 
+# get the site living at the given coordinates
 function get_site(lattice::Lattice, coord)
-  idx = searchsorted(lattiec.site, coord, by = coordinates)
+  idx = searchsorted(lattice.site, coord, by = coordinates)
+
+  # if idx is empty, site was not found
+
+  # if idx has length > 1, we have a duplicate
+
+  # if idx has length = 1, return the object
+end
+
+# get the site with the given id
+function get_site(lattice::Lattice, id::Int)
+  idx = searchsorted(lattice.site)
 
   # if idx is empty, site was not found
 
@@ -66,6 +83,12 @@ end
 
 ##### update API
 
+function spawn_new_site(lattice::Lattice, coord)
+  id = number_sites(lattice) + 1
+
+  return Site(label, State(), coord)
+end
+
 function add_site!(lattice::Lattice{D,T,M}, new_site) where {D,T,M}
   # add neighborhood for site
   push!(lattice.neighbors, sizehint!(Int[], capacity(M(), D)))
@@ -76,40 +99,58 @@ end
 
 ##### recipes
 
-@recipe function f(::Type{Lattice{D,T,VonNeumann}}, lattice::Lattice{D,T,VonNeumann}) where {D,T}
+@recipe function f(lattice::Lattice{D,T,VonNeumann}) where {D,T}
   site = lattice.site
+  types = lattice.types
 
   seriestype := :scatter
   aspect_ratio --> 1
   markerstrokewidth --> 0
   markershape --> :square
-  color --> map(get_ptype, site)
+  # color --> map(get_ptype, site)
+  # label --> map(first, lattice.types)
 
-  [tuple(s...) for s in site]
+  for t in types
+    myseries = filter(x -> get_ptype(x) == last(t) - 1, site)
+
+    @series begin
+      label --> first(t)
+      [tuple(s...) for s in myseries]
+    end
+  end
 end
 
-@recipe function f(::Type{Lattice{2,T,Hexagonal}}, lattice::Lattice{2,T,Hexagonal}) where {T}
+@recipe function f(lattice::Lattice{2,T,Hexagonal}) where {T}
   site = lattice.site
+  types = lattice.types
 
   seriestype := :scatter
   aspect_ratio --> 1
   markerstrokewidth --> 0
   markershape --> :hexagon
-  color --> map(get_ptype, site)
-
-  new_coords = Vector{NTuple{2,Float64}}(undef, length(site))
+  # color --> map(get_ptype, site)
+  # label --> map(first, lattice.types)
 
   A = cos(pi / 3)
   B = sin(pi / 3)
 
-  for i in eachindex(site)
-    s = site[i]
+  for t in types
+    s = filter(x -> get_ptype(x) == last(t) - 1, site)
 
-    x = s[1] + A * s[2]
-    y = B * s[2]
+    @series begin
+      label --> first(t)
+      new_coords = Vector{NTuple{2,Float64}}(undef, length(s))
 
-    new_coords[i] = (x, y)
+      for i in eachindex(s)
+        p = s[i]
+
+        x = p[1] + A * p[2]
+        y = B * p[2]
+
+        new_coords[i] = (x, y)
+      end
+
+      new_coords
+    end
   end
-
-  new_coords
 end
