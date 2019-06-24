@@ -5,7 +5,8 @@ repo_directory = joinpath(@__DIR__,"..")
 dir = joinpath(repo_directory,"notes")
 files = [
   "sample_path.jmd",
-  "plotting_configurations.jmd"
+  "plotting_configurations.jmd",
+  "profiling.jmd"
 ]
 
 for file in files

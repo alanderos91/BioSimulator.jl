@@ -71,10 +71,10 @@ vonlattice = Lattice(coord, types, nbhood = VonNeumann())
 
 
 ````
-2-D Lattice with VonNeumann neighborhoods
+2-D Lattice with NewBioSimulator.VonNeumann neighborhoods
 species: 2-element Array{Pair{String,Int64},1}:
- "rabbit" => 2
-    "fox" => 3
+    "fox" => 2
+ "rabbit" => 3
 ````
 
 
@@ -96,10 +96,10 @@ hexlattice = Lattice(coord, types, nbhood = Hexagonal())
 
 
 ````
-2-D Lattice with Hexagonal neighborhoods
+2-D Lattice with NewBioSimulator.Hexagonal neighborhoods
 species: 2-element Array{Pair{String,Int64},1}:
- "rabbit" => 2
-    "fox" => 3
+    "fox" => 2
+ "rabbit" => 3
 ````
 
 

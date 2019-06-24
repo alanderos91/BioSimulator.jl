@@ -1,0 +1,153 @@
+---
+title: Profiling revised version
+author: Alfonso Landeros
+options:
+  fig_ext: .svg
+---
+
+```{julia}
+using InteractiveUtils, Plots, BenchmarkTools
+using BenchmarkTools, Profile, Random
+using NewBioSimulator
+```
+
+```{julia; echo = false}
+versioninfo()
+```
+
+## Old results
+
+Please note that this code is not executed; everything is copied from some old notes.
+Importantly, this version did not save simulation data.
+
+#### Direct method with linear search
+
+```{julia; eval = false}
+@benchmark NewBioSimulator.simulate($state1, $model1, Direct(), 2.0, HasRates)
+```
+
+```{julia; eval = false}
+BenchmarkTools.Trial:
+  memory estimate:  209.72 KiB
+  allocs estimate:  3411
+  --------------
+  minimum time:     5.181 ms (0.00% GC)
+  median time:      5.531 ms (0.00% GC)
+  mean time:        5.656 ms (0.80% GC)
+  maximum time:     11.883 ms (46.32% GC)
+  --------------
+  samples:          884
+  evals/sample:     1
+```
+
+#### Direct method with bisection
+
+```{julia; eval = false}
+@benchmark NewBioSimulator.simulate($state1, $model1, Direct(), 2.0, HasSums)
+```
+
+```{julia; eval = false}
+BenchmarkTools.Trial:
+  memory estimate:  209.58 KiB
+  allocs estimate:  3399
+  --------------
+  minimum time:     5.177 ms (0.00% GC)
+  median time:      5.520 ms (0.00% GC)
+  mean time:        5.604 ms (0.80% GC)
+  maximum time:     10.697 ms (46.03% GC)
+  --------------
+  samples:          892
+  evals/sample:     1
+```
+
+## Test Model
+
+```{julia; echo = false; results = "hidden"}
+function generate_random_2Dpoints(xlim, ylim, saturation)
+    area = (xlim[2] - xlim[1] + 1) * (ylim[2] - ylim[1] + 1)
+    N = Int(ceil(area * saturation))
+
+    list = Tuple{Int,Int}[]
+
+    while length(list) < N
+        point = (rand(xlim[1]:xlim[2]), rand(ylim[1]:ylim[2]))
+        if point ∉ list
+            push!(list, point)
+        end
+    end
+
+    points = zeros(Int64, 2, length(list))
+    for i in eachindex(list)
+        points[1, i] = list[i][1]
+        points[2, i] = list[i][2]
+    end
+
+    return points
+end
+```
+
+```{julia; results = "hidden"}
+function example()
+  Random.seed!(5357)
+
+  coord = generate_random_2Dpoints((0, 9), (0, 9), 0.8)
+  types = rand(["rabbit", "fox"], size(coord, 2))
+  state = Lattice(coord, types, nbhood = VonNeumann())
+
+  skeleton = @def_reactions begin
+    A + 0 --> 0 + A, α
+    B + 0 --> 0 + B, α
+    A + 0 --> A + A, β
+    B + A --> B + B, γ
+    A --> 0, δ1
+    B --> 0, δ2
+  end α β γ δ1 δ2
+
+  α  = 1.0  # migration rate
+  β  = 0.02 # prey reproduction rate
+  γ  = 0.02 # predation rate
+  δ1 = 0.01 # prey death rate
+  δ2 = 0.01 # predator death rate
+
+  param = [α, β, γ, δ1, δ2]
+
+  model = @enumerate_with_sclass skeleton VonNeumann() 2 param
+
+  return state, model
+end
+
+state, model = example()
+```
+
+## Benchmarks
+
+#### Initialization
+
+```{julia}
+Random.seed!(5357)
+@benchmark simulate($state, $model, Direct(), 0.0, HasRates)
+```
+
+#### Simulation
+```{julia}
+Random.seed!(5357)
+@benchmark simulate($state, $model, Direct(), 2.0, HasRates)
+```
+
+## Profiling
+
+```{julia}
+function run_profile_expirement(state, model)
+  simulate(state, model, Direct(), 2.0, HasRates)
+  return nothing
+end
+
+Profile.init(n = 10^7, delay = 0.001)
+
+# run once to compile, then do the real run
+@profile run_profile_expirement(state, model)
+Profile.clear()
+@profile run_profile_expirement(state, model)
+
+Profile.print(format = :flat, sortedby = :count)
+```
