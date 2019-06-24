@@ -56,6 +56,16 @@ Base.copy(lattice::Lattice) = deepcopy(lattice)
 # this is a dumb hack to make Lattice compatible with SamplePath
 Base.size(lattice::Lattice) = size(lattice.types)
 
+# memory efficiency???
+function __copy(lattice::Lattice{D,T,M,U}) where {D,T,M,U}
+  site = deepcopy(lattice.site)
+  coord_order = Site{D,T}[]
+  neighbors = Vector{Int}[]
+  types = lattice.types
+
+  Lattice{D,T,M,U}(site, coord_order, neighbors, types)
+end
+
 ##### query API
 
 function istracked(lattice::Lattice, coord)

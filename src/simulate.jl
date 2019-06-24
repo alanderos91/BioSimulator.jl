@@ -55,6 +55,13 @@ function build_output(state, model)
   return xw
 end
 
+function build_output(state::Lattice, model)
+  xw = SamplePath([__copy(state)], [0.0])
+  sizehint!(xw, 1_000)
+
+  return xw
+end
+
 initialize_datastructs!(state, model) = nothing
 
 function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSystem)

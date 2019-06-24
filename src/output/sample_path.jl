@@ -34,6 +34,13 @@ function update!(xw::SamplePath, t, x)
   return xw
 end
 
+function update!(xw::SamplePath, t, x::Lattice)
+  push!(xw.u, __copy(x)) # update the data
+  push!(xw.t, t)         # update the time series
+
+  return xw
+end
+
 ##### interpolation
 function get_regular_path(xw::SamplePath, tfinal, epochs) where {T1,T2}
   max_epoch = epochs + 1
