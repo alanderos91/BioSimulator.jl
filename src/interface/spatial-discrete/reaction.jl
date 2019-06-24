@@ -332,7 +332,7 @@ function __reactions_sclass(initial, nbhood, d, params)
   pair_to_classes = map_pair_to_classes(composition, reactant_to_class, isactive, number_types)
 
   # group everything from our sample class enumeration
-  enumeration = SampleClassEnumeration{d,typeof(nbhood)}(composition, reactant_to_class, pair_to_classes)
+  enumeration = SampleClassEnumeration{d,typeof(nbhood)}(composition, reactant_to_class, pair_to_classes, isactive)
 
   return InteractingParticleSystem(reactions, isactive, enumeration)
 end

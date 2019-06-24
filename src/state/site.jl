@@ -37,6 +37,11 @@ label(x :: Site) = x.label
 state(x :: Site) = x.state
 coordinates(x :: Site) = x.coord
 
+# for search / sort compatibility
+label(x::Int) = x
+coordinates(x::NTuple) = MVector(x)
+coordinates(x::AbstractVector) = x
+
 get_ptype(x :: Site) = get_ptype(state(x))
 get_neighbor_class(x :: Site) = get_neighbor_class(state(x))
 
@@ -87,92 +92,45 @@ end
   [(x[1], x[2], x[3])]
 end
 
-#
-# function build_composition!(composition, x :: Site{D,T,M}) where {D,T,M}
-#   fill!(composition, zero(eltype(composition)))
-#
-#   composition[1] = capacity(M)
-#
-#   for y in neighborhood(x)
-#       l = get_ptype(y)
-#       composition[1] -= 1
-#       composition[l] += 1
-#   end
-#
-#   return nothing
-# end
-#
-# const XD1 = (1,)
-#
-# const XD2 = (1, 2)
-# const YD2 = (2, 1)
-#
-# const XD3 = (1, 2, 3)
-# const YD3 = (1, 3, 2)
-# const ZD3 = (2, 3, 1)
-#
-# function lex_order(x, y, idx)
-#   for i in idx
-#     a, b = x[i], y[i]
-#     if !isequal(a, b)
-#       return isless(a, b)
-#     end
-#   end
-#   return false
-# end
-#
-# lex_order_x1(x, y) = lex_order(x, y, XD1)
-#
-# lex_order_x2(x, y) = lex_order(x, y, XD2)
-# lex_order_y2(x, y) = lex_order(x, y, YD2)
-#
-# lex_order_x3(x, y) = lex_order(x, y, XD3)
-# lex_order_y3(x, y) = lex_order(x, y, YD3)
-# lex_order_z3(x, y) = lex_order(x, y, ZD3)
-#
-# function lex_sort!(v; alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x, by = identity, rev::Bool = false, order :: Base.Ordering = Base.Order.Forward)
-#   sort!(v, alg = alg, lt = lt, by = by, rev = rev, order = order)
-# end
-#
-# function build_local_neighborhoods!(sites::Vector{Site{1,T,M}}) where {T,M}
-#   lex_sort!(sites, lt = lex_order_x1, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   return nothing
-# end
-#
-# function build_local_neighborhoods!(sites::Vector{Site{2,T,M}}) where {T,M}
-#   lex_sort!(sites, lt = lex_order_x2, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   lex_sort!(sites, lt = lex_order_y2, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   return nothing
-# end
-#
-# function build_local_neighborhoods!(sites::Vector{Site{3,T,M}}) where {T,M}
-#   lex_sort!(sites, lt = lex_order_x3, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   lex_sort!(sites, lt = lex_order_y3, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   lex_sort!(sites, lt = lex_order_z3, by = coordinates)
-#   sweep_neighbors!(sites)
-#
-#   return nothing
-# end
-#
-# function sweep_neighbors!(sites)
-#   for i = 2:length(sites)
-#     x = sites[i-1]
-#     y = sites[i]
-#     d = distance(x, y)
-#     if d == 1
-#       add_neighbor!(x, y)
-#       add_neighbor!(y, x)
-#     end
-#   end
-#   return sites
-# end
+function build_composition!(comp, lattice, x::Site{D}) where D
+  fill!(comp, zero(eltype(comp)))
+  comp[1] = capacity(topology(lattice), D)
+
+  for id in neighborhood(lattice, x)
+    y = get_site(lattice, id)
+    l = get_ptype(y)
+
+    comp[1] -= 1
+    comp[l] += 1
+  end
+
+  return comp
+end
+
+const XD1 = (1,)
+
+const XD2 = (1, 2)
+const YD2 = (2, 1)
+
+const XD3 = (1, 2, 3)
+const YD3 = (1, 3, 2)
+const ZD3 = (2, 3, 1)
+
+function lex_order(x, y, idx)
+  for i in idx
+    a, b = x[i], y[i]
+    if !isequal(a, b)
+      return isless(a, b)
+    end
+  end
+  return false
+end
+
+lex_order_x1(x, y) = lex_order(x, y, XD1)
+
+lex_order_x2(x, y) = lex_order(x, y, XD2)
+lex_order_y2(x, y) = lex_order(x, y, YD2)
+
+lex_order_x3(x, y) = lex_order(x, y, XD3)
+lex_order_y3(x, y) = lex_order(x, y, YD3)
+lex_order_z3(x, y) = lex_order(x, y, ZD3)
