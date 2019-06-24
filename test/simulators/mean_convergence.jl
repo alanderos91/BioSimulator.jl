@@ -29,8 +29,8 @@ import NewBioSimulator: parse_model
     @time simulate(state, model, alg, 4.0, rates_cache)
 
     @info "Running $(alg) using $(msg)...\n"
-    @time result = [simulate(state, model, alg, 4.0, rates_cache)[end] for i in 1:N]
-    # @test mean(result) ≈ expected
+    @time result = [simulate(state, model, alg, 4.0, rates_cache)[end][1] for i in 1:N]
+
     println("  absolute error = $(abs(mean(result) - expected))\n")
   end
 end
