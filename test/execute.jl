@@ -1,4 +1,4 @@
-import NewBioSimulator: execute_jump!, get_site, initialize_datastructs!, get_neighbor_class, get_ptype
+import NewBioSimulator: execute_jump!, get_site, initialize_datastructs!, get_neighbor_class, get_ptype, coordinates
 
 @testset "Execute" begin
   @testset "Predator-Prey Model" begin
