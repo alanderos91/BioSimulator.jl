@@ -13,3 +13,6 @@ include(joinpath("data-structures", "priority_queue.jl"))
 include(joinpath("model", "reaction_system.jl"))
 
 include(joinpath("simulators", "mean_convergence.jl"))
+
+##### spatial simulations
+include(joinpath("lattice.jl"))
