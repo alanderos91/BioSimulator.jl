@@ -186,13 +186,23 @@ function execute_pairwise!(lattice, reaction, enumeration)
 
   # sample a particle of type i1 with nbclass k; i.e. sample class s
   x = sample_from_class(lattice, enumeration, s)
+  #
+  # if get_ptype(x) == 1
+  #   println("execute reaction:")
+  #   @show reaction
+  #   println("center particle:")
+  #   display(x)
+  #   println("class members:")
+  #   for z in lattice.site[enumeration.class[s]]
+  #     print("  ")
+  #     display(z)
+  #   end
+  #   error("sampled an open site")
+  # end
 
   # sample a particle of type i2 from x's neighborhood
   y = sample_neighbor(x, lattice, enumeration, i2)
-
   # we use up the particles (k1, i1) and (k2, i2)
-  # N[get_neighbor_class(x), get_ptype(x)] -= 1
-  # N[get_neighbor_class(y), get_ptype(y)] -= 1
 
   # change the types for x and y
   i1 != j1 && transform!(x, j1)

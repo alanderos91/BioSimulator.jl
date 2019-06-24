@@ -18,8 +18,8 @@ function SampleClassEnumeration{D,M}(composition, reactant_to_class, pair_to_cla
     composition,
     reactant_to_class,
     pair_to_classes,
-    dummy_composition,
-    isactive
+    isactive,
+    dummy_composition
   )
 end
 
@@ -294,7 +294,7 @@ function sample_class_additions!(enumeration, x, l, k)
   if isactive[l]
     affected_classes = pair_to_classes[(l, k)]
 
-    for s in classes
+    for s in affected_classes
       add_class_member!(class[s], x)
     end
   end

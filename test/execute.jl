@@ -80,5 +80,9 @@ import NewBioSimulator: execute_jump!, get_site, initialize_datastructs!, get_ne
 
       @test test_sample_classes == expected_sample_classes
     end
+
+    # check invariants
+    @test issorted(lattice.site)
+    @test issorted(lattice.coord_order, by = coordinates)
   end
 end
