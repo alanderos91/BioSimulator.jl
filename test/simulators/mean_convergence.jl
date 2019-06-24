@@ -21,7 +21,6 @@ import NewBioSimulator: parse_model
   state, model = parse_model(kendall())
 
   expected = kendall_mean(5, 4.0, 2.0, 1.0, 0.5)
-  result   = zeros(Int, N)
 
   @testset "$(alg), $(rates_cache)" for (alg, rates_cache) in ALGORITHMS
     msg = rates_cache == HasRates ? "linear search" : "binary search"
@@ -30,9 +29,7 @@ import NewBioSimulator: parse_model
     @time simulate(state, model, alg, 4.0, rates_cache)
 
     @info "Running $(alg) using $(msg)...\n"
-    @time for i in 1:N
-      result[i] = simulate(state, model, alg, 4.0, rates_cache)[1]
-    end
+    @time result = [simulate(state, model, alg, 4.0, rates_cache)[end] for i in 1:N]
     # @test mean(result) ≈ expected
     println("  absolute error = $(abs(mean(result) - expected))\n")
   end
