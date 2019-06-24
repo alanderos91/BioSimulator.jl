@@ -1,5 +1,6 @@
 struct Lattice{D,T,M,U}
-  site::Vector{Site{D,T}}
+  site::Vector{Site{D,T}}  # sorted by ID
+  coord_order::Vector{Site{D,T}} # sort by coord
   neighbors::Vector{Vector{Int}}
   types::Vector{U}
 end
@@ -10,22 +11,25 @@ function Lattice(coord::Matrix, types::Vector; nbhood = VonNeumann())
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
-  labels = Dict(unique_types[i] => i for i in eachindex(unique_types))
+  labels = Dict(unique_types[i] => i+1 for i in eachindex(unique_types))
   site = [Site(i, State(labels[types[i]]), tuple(coord[:,i]...)) for i in eachindex(types)]
+
+  site_by_coord = sort(site, by = coordinates)
 
   neighbors = [sizehint!(Int[], number_neighbors) for i in eachindex(site)]
 
-  mapping = [(label => l + 1) for (label, l) in labels]
+  mapping = [(label => l) for (label, l) in labels]
   T = eltype(coord)
   U = eltype(mapping)
 
-  return Lattice{dimension,T,typeof(nbhood),U}(site, neighbors, mapping)
+  return Lattice{dimension,T,typeof(nbhood),U}(site, site_by_coord, neighbors, mapping)
 end
 
 ##### accessors
 
-dimension(::Lattice{D}) where D <: Number = D
-topology(::Lattice{D,T,M}) where {D,T,M} = M
+dimension(::Lattice{D}) where D = D
+topology(::Lattice{D,T,M}) where {D,T,M} = M()
+
 number_types(x::Lattice) = length(x.types)
 number_sites(x::Lattice) = length(x.site)
 
@@ -49,36 +53,38 @@ end
 ##### other Base overloads
 Base.copy(lattice::Lattice) = deepcopy(lattice)
 
+# this is a dumb hack to make Lattice compatible with SamplePath
+Base.size(lattice::Lattice) = size(lattice.types)
+
 ##### query API
 
 function istracked(lattice::Lattice, coord)
-  # ?
+  idx = searchsorted(lattice.coord_order, coord, by = coordinates)
+
+  return !isempty(idx)
 end
 
 # get the site living at the given coordinates
 function get_site(lattice::Lattice, coord)
-  idx = searchsorted(lattice.site, coord, by = coordinates)
+  idx = searchsorted(lattice.coord_order, coord, by = coordinates)
 
-  # if idx is empty, site was not found
-
-  # if idx has length > 1, we have a duplicate
-
-  # if idx has length = 1, return the object
+  lattice.coord_order[idx[1]]
 end
 
 # get the site with the given id
 function get_site(lattice::Lattice, id::Int)
-  idx = searchsorted(lattice.site)
+  idx = searchsorted(lattice.site, id, by = label)
 
   # if idx is empty, site was not found
 
   # if idx has length > 1, we have a duplicate
 
   # if idx has length = 1, return the object
+  lattice.site[idx[1]]
 end
 
-function neighborhood(lattice::Lattice, site)
-  lattice.nbhood[label(site)]
+function neighborhood(lattice::Lattice, x::Site)
+  lattice.neighbors[label(x)]
 end
 
 ##### update API
@@ -86,15 +92,63 @@ end
 function spawn_new_site(lattice::Lattice, coord)
   id = number_sites(lattice) + 1
 
-  return Site(label, State(), coord)
+  return Site(id, State(), coord)
 end
 
-function add_site!(lattice::Lattice{D,T,M}, new_site) where {D,T,M}
+# this function assumes new_site is not tracked!
+function add_site!(lattice::Lattice, new_site::Site)
   # add neighborhood for site
-  push!(lattice.neighbors, sizehint!(Int[], capacity(M(), D)))
+  nbmax = capacity(topology(lattice), dimension(lattice))
+  push!(lattice.neighbors, sizehint!(Int[], nbmax))
 
-  # add site to list
+  # new sites are always added to the end of the list sorted by IDs
   push!(lattice.site, new_site)
+
+  # add site to list sorted by coord
+  idx = searchsortedfirst(lattice.coord_order, new_site, by = coordinates)
+  insert!(lattice.coord_order, idx[1], new_site)
+
+  new_site
+end
+
+function add_neighbor!(lattice::Lattice{D}, x::Site{D}, y::Site{D}) where D
+  nb = neighborhood(lattice, x)
+
+  nbtype = topology(lattice)
+  neighbor_count  = length(nb)
+  nbhood_capacity = capacity(nbtype, D)
+
+  if neighbor_count ≥ nbhood_capacity
+    msg = """
+    Neighborhood of $(x) at capacity ($(nbhood_capacity)).
+    Failed to add $(y) as a neighbor.
+    """
+    throw(ErrorException(msg))
+  end
+
+  # store neighbors in sorted fashion
+  i = label(y)
+  idx = searchsortedfirst(nb, i)
+  insert!(nb, idx, i)
+end
+
+function rmv_neighbor!(lattice::Lattice, x::Site, y::Site)
+  i = label(x)
+  j = label(y)
+
+  nb = neighborhood(lattice, x)
+  idx = findfirst(isequal(j), nb)
+
+  if idx isa Nothing
+    msg = """
+    $(y) is not adjacent to $(x) under $(topology(lattice)) structure.
+    Failed to remove neighbor.
+    """
+    throw(ErrorException(msg))
+  end
+
+  # delete item, which preserves ordering
+  deleteat!(nb, idx)
 end
 
 ##### recipes
@@ -111,7 +165,7 @@ end
   # label --> map(first, lattice.types)
 
   for t in types
-    myseries = filter(x -> get_ptype(x) == last(t) - 1, site)
+    myseries = filter(x -> get_ptype(x) == last(t), site)
 
     @series begin
       label --> first(t)
@@ -135,7 +189,7 @@ end
   B = sin(pi / 3)
 
   for t in types
-    s = filter(x -> get_ptype(x) == last(t) - 1, site)
+    s = filter(x -> get_ptype(x) == last(t), site)
 
     @series begin
       label --> first(t)
@@ -154,3 +208,81 @@ end
     end
   end
 end
+
+
+##### building neighborhoods
+
+function build_local_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{1})
+  sites = lattice.coord_order
+
+  sort!(sites, lt = lex_order_x1, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  return nothing
+end
+
+function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{2})
+  sites = lattice.coord_order
+
+  sort!(sites, lt = lex_order_x2, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  sort!(sites, lt = lex_order_y2, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  return nothing
+end
+
+function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{3})
+  sites = lattice.coord_order
+
+  sort!(sites, lt = lex_order_x3, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  sort!(sites, lt = lex_order_y3, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  sort!(sites, lt = lex_order_z3, by = coordinates)
+  sweep_neighbors!(nbtype, lattice, sites)
+
+  return nothing
+end
+
+function sweep_neighbors!(nbtype::VonNeumann, lattice, sites)
+  for i = 2:length(sites)
+    x = sites[i-1]
+    y = sites[i]
+    d = distance(nbtype, x, y)
+    if d == 1
+      add_neighbor!(lattice, x, y)
+      add_neighbor!(lattice, y, x)
+    end
+  end
+  return sites
+end
+
+function build_neighborhoods!(nbtype::Hexagonal, lattice::Lattice{2})
+  sites = lattice.coord_order
+
+  sweep_neighbors!(nbtype, lattice, sites)
+end
+
+function sweep_neighbors!(nbtype::Hexagonal, lattice, sites)
+  n = length(sites)
+
+  for i in 1:n
+    for j in 1:i-1 # j < i
+      x = sites[i]
+      y = sites[j]
+      d = distance(nbtype, x, y)
+
+      if d == 1
+        add_neighbor!(lattice, x, y)
+        add_neighbor!(lattice, y, x)
+      end
+    end
+  end
+  return sites
+end
+
+### TODO: 3D

@@ -2,7 +2,7 @@
 get_number_jumps(model::ReactionSystem) = length(model.reactions)
 get_number_jumps(model::InteractingParticleSystem) = length(model.reactions)
 get_number_jumps(model::Vector{T}) where T = length(model)
-get_number_species(state::AbstractLattice) = length(state.N)
+get_number_species(state::Lattice) = length(state.types)
 get_number_species(state::Vector{T}) where T = length(state)
 
 abstract type SimulationAlgorithm end

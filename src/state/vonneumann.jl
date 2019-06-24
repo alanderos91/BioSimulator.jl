@@ -2,6 +2,7 @@ struct VonNeumann end
 
 capacity(::VonNeumann, d::Int) = 2 * d
 
+##### eachdir - iterating over adjacent sites
 @inline function eachdir(::VonNeumann, x::Site{1})
   return ((x[1] - 1,),
           (x[1] + 1,))
