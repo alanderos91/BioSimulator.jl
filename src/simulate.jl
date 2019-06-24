@@ -64,8 +64,13 @@ function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSys
   nbtype = topology(lattice)
   enum = model.enumeration
   class = enum.class
+  isactive = enum.isactive
   pair_to_classes = enum.pair_to_classes
   dummy_composition = enum.dummy_composition
+
+  for s in eachindex(class)
+    empty!(class[s])
+  end
 
   # add missing open sites
   for i in 1:number_init
@@ -81,9 +86,7 @@ function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSys
   # build neighborhoods
   build_neighborhoods!(nbtype, lattice)
 
-  # add assign sites to classes in the enumeration
-  empty_list = Int[]
-
+  # assign sites to classes in the enumeration
   for x in site
     # build the neighborhood composition around x
     build_composition!(dummy_composition, lattice, x)
@@ -92,11 +95,13 @@ function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSys
     l = get_ptype(x)
     k = get_nbclass_index(enum, dummy_composition)
 
-    classes = get(pair_to_classes, (l,k), empty_list)
+    if isactive[l]
+      classes = pair_to_classes[(l,k)]
 
-    # add x to each assigned class
-    for s in classes
-      add_class_member!(class[s], x)
+      # add x to each assigned class
+      for s in classes
+        add_class_member!(class[s], x)
+      end
     end
 
     # change the neighborhood class of x
