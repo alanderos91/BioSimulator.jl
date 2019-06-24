@@ -56,8 +56,16 @@ function build_output(state, model)
 end
 
 function build_output(state::Lattice, model)
-  xw = SamplePath([__copy(state)], [0.0])
-  sizehint!(xw, 1_000)
+  xw = ([__copy(state)], [0.0])
+  sizehint!(xw[1], 1_000)
+  sizehint!(xw[2], 1_000)
+
+  return xw
+end
+
+function update!(xw::Tuple{Vector{L},Vector{T}}, t::T, x::L) where {L,T}
+  push!(xw[1], __copy(x))
+  push!(xw[2], t)
 
   return xw
 end
