@@ -129,10 +129,34 @@ function add_neighbor!(lattice::Lattice{D}, x::Site{D}, y::Site{D}) where D
   neighbor_count  = length(nb)
   nbhood_capacity = capacity(nbtype, D)
 
+  if label(y) in nb
+    error("$(y) is already a neighbor of $(x)")
+  end
+
   if neighbor_count ≥ nbhood_capacity
     msg = """
     Neighborhood of $(x) at capacity ($(nbhood_capacity)).
     Failed to add $(y) as a neighbor.
+    """
+    nb_y = neighborhood(lattice, y)
+
+    @debug """
+    Neighbor data:
+
+    x: $(label(x)) / $(get_ptype(x))|$(get_neighbor_class(x)) @ $(x)
+
+    y: $(label(y)) / $(get_ptype(y))|$(get_neighbor_class(y)) @ $(y)
+
+    Neighborhood:
+
+    x:  $(nb)
+
+    y:  $(nb_y)
+
+    Sites:
+
+    x:  $(lattice.site[nb])
+    y:  $(lattice.site[nb_y])
     """
     throw(ErrorException(msg))
   end
@@ -263,7 +287,7 @@ function sweep_neighbors!(nbtype::VonNeumann, lattice, sites)
     x = sites[i-1]
     y = sites[i]
     d = distance(nbtype, x, y)
-    if d == 1
+    if d == 1 && !(label(y) in neighborhood(lattice, x))
       add_neighbor!(lattice, x, y)
       add_neighbor!(lattice, y, x)
     end
