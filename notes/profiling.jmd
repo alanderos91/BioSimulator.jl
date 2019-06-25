@@ -142,7 +142,7 @@ function run_profile_expirement(state, model)
   return nothing
 end
 
-Profile.init(n = 10^7, delay = 0.001)
+Profile.init(n = 10^7, delay = 1e-5)
 
 # run once to compile, then do the real run
 @profile run_profile_expirement(state, model)

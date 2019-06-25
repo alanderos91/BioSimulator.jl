@@ -3,6 +3,8 @@
 using InteractiveUtils
 using NewBioSimulator
 using Plots
+# force the GR backend to use crisp SVG output
+# gr(fmt = :svg)
 ````
 
 
@@ -107,3 +109,130 @@ plot(hexlattice, markersize = 10, grid = nothing)
 
 
 ![](figures/plotting_configurations_7_1.svg)
+
+
+
+### Working with simulation output
+
+Spatial simulations return a tuple `(config, t)`, where the former contains the spatial data and the latter stores time points.
+
+````julia
+skeleton = @def_reactions begin
+  A + 0 --> 0 + A, α
+  B + 0 --> 0 + B, α
+  A + 0 --> A + A, β
+  B + A --> B + B, γ
+  A --> 0, δ1
+  B --> 0, δ2
+end α β γ δ1 δ2
+
+α  = 1.0  # migration rate
+β  = 0.02 # prey reproduction rate
+γ  = 0.02 # predation rate
+δ1 = 0.01 # prey death rate
+δ2 = 0.01 # predator death rate
+
+param = [α, β, γ, δ1, δ2]
+
+model = @enumerate_with_sclass skeleton Hexagonal() 2 param
+
+# cold run
+@time config, t = simulate(hexlattice, model, Direct(), 1.0, HasRates);
+````
+
+
+````
+1.220384 seconds (2.98 M allocations: 155.022 MiB, 7.69% gc time)
+````
+
+
+
+````julia
+
+# the real deal
+@time config, t = simulate(hexlattice, model, Direct(), 10.0, HasRates);
+````
+
+
+````
+0.291530 seconds (146.79 k allocations: 190.876 MiB, 53.62% gc time)
+````
+
+
+
+````julia
+length(config), length(t)
+````
+
+
+````
+(6314, 6314)
+````
+
+
+
+
+
+#### Compare the initial and ending configurations
+
+````julia
+using Printf # for pretty printing
+
+__maketitle(t) = @sprintf "t = %1.2f" t
+
+plot(
+  plot(config[1],   title = __maketitle(t[1]), markersize = 6),
+  plot(config[end], title = __maketitle(t[end]), markersize = 3),
+  layout = grid(2,1),
+  legend = nothing,
+  size = (800, 800),
+  markershape = :hexagon
+)
+````
+
+
+![](figures/plotting_configurations_10_1.svg)
+
+
+
+#### Animations
+
+The animation does not proceed at the correct time scale.
+We need to interpolate `t` to get this right.
+
+For immediate viewing:
+
+````julia
+
+@gif for i in eachindex(t)
+  plot(config[i],
+    title = __maketitle(t[i]),
+    xlim  = (-50, 50),
+    ylim  = (-50, 50),
+    markershape = :hexagon,
+    legend = nothing
+  )
+end every 50
+````
+
+
+
+
+For post-processing:
+````julia
+animation = @animate for i in eachindex(t)
+  plot(config[i],
+    title = __maketitle(t[i]),
+    xlim  = (-50, 50),
+    ylim  = (-50, 50),
+    markershape = :hexagon,
+    legend = nothing
+  )
+end every 50
+
+fname = joinpath("figures", "plotting_configurations_11_1.gif")
+gif(animation, fname, fps = 15)
+````
+
+
+![](figures/plotting_configurations_11_1.gif)
