@@ -16,9 +16,6 @@ Platform Info:
   WORD_SIZE: 64
   LIBM: libopenlibm
   LLVM: libLLVM-6.0.1 (ORCJIT, haswell)
-Environment:
-  JULIA_EDITOR = atom  -a
-  JULIA_NUM_THREADS = 4
 ````
 
 

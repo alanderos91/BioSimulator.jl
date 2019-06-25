@@ -18,7 +18,8 @@ versioninfo()
 ## Example model
 
 ```{julia}
-include(joinpath(@__DIR__, "test", "test-models", "kendall.jl"))
+NBS = NewBioSimulator |> pathof |> dirname |> dirname
+include(joinpath(NBS, "test", "test-models", "kendall.jl"))
 
 m = kendall()
 m.reaction_list
