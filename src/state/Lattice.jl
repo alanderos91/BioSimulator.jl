@@ -66,6 +66,13 @@ function __copy(lattice::Lattice{D,T,M,U}) where {D,T,M,U}
   Lattice{D,T,M,U}(site, coord_order, neighbors, types)
 end
 
+function __simple_copy(lattice)
+  coord = coordinates.(lattice.site)
+  types = get_ptype.(lattice.site)
+
+  return coord, types
+end
+
 ##### query API
 
 function istracked(lattice::Lattice, coord)
