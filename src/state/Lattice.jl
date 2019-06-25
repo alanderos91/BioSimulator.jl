@@ -83,14 +83,15 @@ end
 
 # get the site with the given id
 function get_site(lattice::Lattice, id::Int)
-  idx = searchsorted(lattice.site, id, by = label)
-
-  # if idx is empty, site was not found
-
-  # if idx has length > 1, we have a duplicate
-
-  # if idx has length = 1, return the object
-  lattice.site[idx[1]]
+  # idx = searchsorted(lattice.site, id, by = label)
+  #
+  # # if idx is empty, site was not found
+  #
+  # # if idx has length > 1, we have a duplicate
+  #
+  # # if idx has length = 1, return the object
+  # lattice.site[idx[1]]
+  lattice.site[id]
 end
 
 function neighborhood(lattice::Lattice, x::Site)
