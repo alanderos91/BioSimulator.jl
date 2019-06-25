@@ -125,7 +125,7 @@ function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSys
 
   # clean up
   fill!(dummy_composition, 0)
-  sort!(lattice.coord_order, by = coordinates)
+  sort!(lattice.coord_order, alg = Base.Sort.DEFAULT_STABLE, by = coordinates)
 
   return nothing
 end
