@@ -128,7 +128,8 @@ end
 
 function Base.summary(io::IO, x::InteractingParticleSystem)
   types = length(x.isactive) - 1
-  print(io, "Interacting Particle System w/ $(types) type")
+  str = length(types) > 1 ? "types" : "type"
+  print(io, "Interacting Particle System w/ $(types) ", str)
 end
 
 function Base.show(io::IO, x::InteractingParticleSystem)
