@@ -11,7 +11,7 @@ function Lattice(coord::Matrix, types::Vector; nbhood = VonNeumann())
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
-  labels = Dict(unique_types[i] => i+1 for i in eachindex(unique_types))
+  labels = OrderedDict(unique_types[i] => i+1 for i in eachindex(unique_types))
   site = [Site(i, State(labels[types[i]]), tuple(coord[:,i]...)) for i in eachindex(types)]
 
   site_by_coord = sort(site, by = coordinates)
