@@ -1,14 +1,17 @@
 struct SampleClassEnumeration{D,M}
   class::Vector{Vector{Int}}
   composition::Vector{Vector{Int}}
+  pairs::Vector{Tuple{Int,Int}}
   reactant_to_class::OrderedDict{Tuple{Int,Int},Int}
   pair_to_classes::OrderedDict{Tuple{Int,Int},Vector{Int}}
   isactive::Vector{Bool}
   dummy_composition::Vector{Int}
 end
 
-function SampleClassEnumeration{D,M}(composition, reactant_to_class, pair_to_classes, isactive) where {D,M}
-  number_classes = reactant_to_class |> values |> maximum
+function SampleClassEnumeration{D,M}(composition, pairs, reactant_to_class, pair_to_classes, isactive) where {D,M}
+  number_pairwise = count(x -> x[2] != 0, pairs)
+  number_onsite   = count(x -> x[2] == 0, pairs)
+  number_classes  = capacity(M(), D) * number_pairwise + number_onsite
 
   class = [Int[] for s in 1:number_classes]
   dummy_composition = zero(composition[1])
@@ -16,6 +19,7 @@ function SampleClassEnumeration{D,M}(composition, reactant_to_class, pair_to_cla
   SampleClassEnumeration{D,M}(
     class,
     composition,
+    pairs,
     reactant_to_class,
     pair_to_classes,
     isactive,
