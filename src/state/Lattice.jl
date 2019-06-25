@@ -220,13 +220,12 @@ end
   end
 end
 
-
 ##### building neighborhoods
 
 function build_local_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{1})
   sites = lattice.coord_order
 
-  sort!(sites, lt = lex_order_x1, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x1, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
@@ -235,10 +234,10 @@ end
 function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{2})
   sites = lattice.coord_order
 
-  sort!(sites, lt = lex_order_x2, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x2, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, lt = lex_order_y2, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_y2, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
@@ -247,13 +246,13 @@ end
 function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{3})
   sites = lattice.coord_order
 
-  sort!(sites, lt = lex_order_x3, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x3, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, lt = lex_order_y3, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_y3, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, lt = lex_order_z3, by = coordinates)
+  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_z3, by = coordinates)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
