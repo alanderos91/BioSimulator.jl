@@ -48,6 +48,26 @@ function simulate!(simulator, state, model, tfinal, output)
 end
 
 ##### temporary hacks
+
+# spatial simulations should only save the final configuration
+# need a better way of storing data
+function simulate!(simulator, state::Lattice, model, tfinal, output)
+  initialize!(simulator, state, model)
+
+  while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
+    tnew = get_new_time(simulator)
+
+    if tnew <= tfinal
+      step!(simulator, state, model)
+    else
+      simulator.t = tfinal
+    end
+  end
+  update!(output, simulator.t, state)
+
+  return output
+end
+
 function build_output(state, model)
   xw = SamplePath([copy(state)], [0.0])
   sizehint!(xw, 1_000)
