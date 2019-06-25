@@ -440,7 +440,7 @@ function sample_neighbor(iter, number_l, l)
   j = 0 # tracks the random index we want to generate
 
   for val in iter
-    s > c && break
+    s >= c && break
     isequal(val, l) && (s += 1)
     j += 1
   end
