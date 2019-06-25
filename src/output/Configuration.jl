@@ -35,3 +35,40 @@ end
     end
   end
 end
+
+@recipe function f(config::Configuration{2,T,Hexagonal}) where T
+  # unpack information
+  coord = config.coord
+  tcode = config.tcode
+  label = config.label
+
+  # set plot settings
+  seriestype := :scatter
+  aspect_ratio --> 1
+  markerstrokewidth --> 0
+  markershape --> :hexagon
+  grid --> nothing
+
+  A = cos(pi / 3)
+  B = sin(pi / 3)
+
+  for t in label
+    idx = findall(isequal(last(t)), tcode)
+    new_coord = Vector{NTuple{2,Float64}}(undef, length(idx))
+
+    @series begin
+      label --> first(t)
+
+      for i in eachindex(idx)
+        c = coord[idx[i]]
+
+        x = c[1] + A * c[2]
+        y = B * c[2]
+
+        new_coord[i] = (x, y)
+      end
+
+      new_coord
+    end
+  end
+end
