@@ -7,7 +7,7 @@ end
 
 function Lattice(coord::Matrix, types::Vector; nbhood = VonNeumann())
   dimension = size(coord, 1)
-  unique_types = unique(types)
+  unique_types = sort!(unique(types))
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
