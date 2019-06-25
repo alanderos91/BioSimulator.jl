@@ -5,9 +5,13 @@ struct Lattice{D,T,M,U}
   types::Vector{U}
 end
 
-function Lattice(coord::Matrix, types::Vector; nbhood = VonNeumann())
+
+function Lattice(coord::Matrix, types::Vector;
+    nbhood = VonNeumann(),
+    type_list = unique(types)
+  )
   dimension = size(coord, 1)
-  unique_types = sort!(unique(types))
+  unique_types = sort!(type_list)
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
