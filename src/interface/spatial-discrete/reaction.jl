@@ -58,7 +58,8 @@ end
 
 # build a Dictionary that maps a particle type to an index
 function build_species_dict(ex)
-  tokens = Symbol[:∅]
+  open_site = :∅
+  tokens = Symbol[]
 
   for line in ex.args
     formula = line.args[1]
@@ -74,6 +75,10 @@ function build_species_dict(ex)
 
   filter!(x -> (x != :+), tokens)
   filter!(x -> (x != :*), tokens)
+  filter!(x -> (x != open_site), tokens)
+
+  sort!(tokens)
+  tokens = [open_site; tokens]
 
   return OrderedDict{Symbol,Int}(tokens[i] => i for i in eachindex(tokens))
 end
