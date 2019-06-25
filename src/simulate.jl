@@ -57,15 +57,15 @@ function build_output(state, model)
 end
 
 function build_output(state::Lattice, model)
-  xw = ([__simple_copy(state)], [0.0])
+  xw = ([Configuration(state)], [0.0])
   sizehint!(xw[1], 1_000)
   sizehint!(xw[2], 1_000)
 
   return xw
 end
 
-function update!(xw::Tuple{Vector{L},Vector{T}}, t::T, x) where {L,T}
-  push!(xw[1], __simple_copy(x))
+function update!(xw, t, x::Lattice)
+  push!(xw[1], Configuration(x))
   push!(xw[2], t)
 
   return xw

@@ -56,21 +56,13 @@ Base.copy(lattice::Lattice) = deepcopy(lattice)
 # this is a dumb hack to make Lattice compatible with SamplePath
 Base.size(lattice::Lattice) = size(lattice.types)
 
-# memory efficiency???
-function __copy(lattice::Lattice{D,T,M,U}) where {D,T,M,U}
-  site = deepcopy(lattice.site)
-  coord_order = Site{D,T}[]
-  neighbors = Vector{Int}[]
-  types = lattice.types
-
-  Lattice{D,T,M,U}(site, coord_order, neighbors, types)
-end
-
 function __simple_copy(lattice)
   coord = coordinates.(lattice.site)
-  types = get_ptype.(lattice.site)
+  tcode = get_ptype.(lattice.site)
 
-  return coord, types
+  idx = findall(!isequal(1), tcode)
+
+  return coord[idx], tcode[idx]
 end
 
 ##### query API
