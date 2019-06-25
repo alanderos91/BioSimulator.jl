@@ -87,7 +87,8 @@ export FirstReaction, NextReaction, RejectionSSA
 
 include("simulate.jl")
 include(joinpath("output", "sample_path.jl"))
+include(joinpath("output", "Configuration.jl"))
 
-export simulate, SamplePath, Ensemble
+export simulate, SamplePath, Ensemble, Configuration
 
 end # module
