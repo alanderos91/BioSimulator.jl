@@ -69,14 +69,14 @@ end
 ##### query API
 
 function istracked(lattice::Lattice, coord)
-  idx = searchsorted(lattice.coord_order, coord, by = coordinates)
+  idx = searchsorted(lattice.coord_order, coord, by = coordinates, lt = <)
 
   return !isempty(idx)
 end
 
 # get the site living at the given coordinates
 function get_site(lattice::Lattice, coord)
-  idx = searchsorted(lattice.coord_order, coord, by = coordinates)
+  idx = searchsorted(lattice.coord_order, coord, by = coordinates, lt = <)
 
   lattice.coord_order[idx[1]]
 end
@@ -249,7 +249,7 @@ end
 function build_local_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{1})
   sites = lattice.coord_order
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x1, by = coordinates)
+  sort_by_x_1D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
@@ -258,10 +258,10 @@ end
 function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{2})
   sites = lattice.coord_order
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x2, by = coordinates)
+  sort_by_x_2D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_y2, by = coordinates)
+  sort_by_y_2D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
@@ -270,13 +270,13 @@ end
 function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{3})
   sites = lattice.coord_order
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_x3, by = coordinates)
+  sort_by_x_3D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_y3, by = coordinates)
+  sort_by_y_3D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
-  sort!(sites, alg = Base.Sort.DEFAULT_STABLE, lt = lex_order_z3, by = coordinates)
+  sort_by_z_3D!(sites)
   sweep_neighbors!(nbtype, lattice, sites)
 
   return nothing
@@ -310,7 +310,7 @@ function sweep_neighbors!(nbtype::Hexagonal, lattice, sites)
       y = sites[j]
       d = distance(nbtype, x, y)
 
-      if d == 1
+      if d == 1 && !(label(y) in neighborhood(lattice, x))
         add_neighbor!(lattice, x, y)
         add_neighbor!(lattice, y, x)
       end

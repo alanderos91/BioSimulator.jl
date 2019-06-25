@@ -35,11 +35,11 @@ Site(id, state, coord::NTuple{N,T}) where {N,T} = Site{N,T}(id, state, coord)
 
 label(x :: Site) = x.label
 state(x :: Site) = x.state
-coordinates(x :: Site) = x.coord
+coordinates(x :: Site) = x.coord.data
 
 # for search / sort compatibility
 label(x::Int) = x
-coordinates(x::NTuple) = MVector(x)
+coordinates(x::NTuple) = x
 coordinates(x::AbstractVector) = x
 
 get_ptype(x :: Site) = get_ptype(state(x))
@@ -59,8 +59,6 @@ Base.iterate(x::Site, state) = iterate(coordinates(x), state)
 Base.getindex(x :: Site, i) = getindex(coordinates(x), i)
 Base.setindex!(x :: Site, val, i) = setindex!(coordinates(x), val, i)
 Base.eachindex(x :: Site) = eachindex(coordinates(x))
-
-Base.isless(x::Site, y::Site) = isless(label(x), label(y))
 
 # IO #
 
@@ -107,6 +105,8 @@ function build_composition!(comp, lattice, x::Site{D}) where D
   return comp
 end
 
+##### sorting #####
+
 const XD1 = (1,)
 
 const XD2 = (1, 2)
@@ -116,11 +116,17 @@ const XD3 = (1, 2, 3)
 const YD3 = (1, 3, 2)
 const ZD3 = (2, 3, 1)
 
+Base.isless(x::Site, y::Site) = isless(label(x), label(y))
+
+Base.:(<)(::Site{D}, ::Tuple{}) where D = false
+Base.:(<)(x::Site{D}, y::NTuple{D}) where D = x.coord.data < y
+
+# does not work for missing but should not be an issue
 function lex_order(x, y, idx)
   for i in idx
     a, b = x[i], y[i]
     if !isequal(a, b)
-      return isless(a, b)
+      return a < b
     end
   end
   return false
@@ -134,3 +140,33 @@ lex_order_y2(x, y) = lex_order(x, y, YD2)
 lex_order_x3(x, y) = lex_order(x, y, XD3)
 lex_order_y3(x, y) = lex_order(x, y, YD3)
 lex_order_z3(x, y) = lex_order(x, y, ZD3)
+
+sort_by_x_1D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_x1,
+  by = coordinates)
+
+sort_by_x_2D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_x2,
+  by = coordinates)
+
+sort_by_y_2D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_y2,
+  by = coordinates)
+
+sort_by_x_3D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_x3,
+  by = coordinates)
+
+sort_by_y_3D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_y3,
+  by = coordinates)
+
+sort_by_z_3D!(sites) = sort!(sites,
+  alg = Base.Sort.DEFAULT_STABLE,
+  lt = lex_order_z3,
+  by = coordinates)
