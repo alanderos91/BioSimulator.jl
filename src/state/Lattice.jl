@@ -249,7 +249,7 @@ end
 
 ##### building neighborhoods
 
-function build_local_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{1})
+function build_neighborhoods!(nbtype::VonNeumann, lattice::Lattice{1})
   sites = lattice.coord_order
 
   sort_by_x_1D!(sites)
