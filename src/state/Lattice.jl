@@ -6,27 +6,35 @@ struct Lattice{D,T,M,U}
 end
 
 
-function Lattice(coord::Matrix, types::Vector;
+function Lattice(coord, types::Vector;
     nbhood = VonNeumann(),
     type_list = unique(types)
   )
-  dimension = size(coord, 1)
+  dimension = coord isa Matrix ? size(coord, 1) : length(coord[1])
   unique_types = sort!(type_list)
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
   labels = OrderedDict(unique_types[i] => i+1 for i in eachindex(unique_types))
-  site = [Site(i, State(labels[types[i]]), tuple(coord[:,i]...)) for i in eachindex(types)]
+  site = build_sites(coord, types, labels)
 
   site_by_coord = sort(site, by = coordinates)
 
   neighbors = [sizehint!(Int[], number_neighbors) for i in eachindex(site)]
 
   mapping = [(label => l) for (label, l) in labels]
-  T = eltype(coord)
+  T = coord isa Matrix ? eltype(coord) : eltype(coord[1])
   U = eltype(mapping)
 
   return Lattice{dimension,T,typeof(nbhood),U}(site, site_by_coord, neighbors, mapping)
+end
+
+function build_sites(coord::Matrix, types, labels)
+  site = [Site(i, State(labels[types[i]]), tuple(coord[:,i]...)) for i in eachindex(types)]
+end
+
+function build_sites(coord::Vector{NTuple{N,T}}, types, labels) where {N,T}
+  site = [Site(i, State(labels[types[i]]), coord[i]) for i in eachindex(types)]
 end
 
 ##### accessors
