@@ -7,8 +7,6 @@ mutable struct TauLeapSimulator{M,F} <: AbstractSimulator
   execute_leap!::F
 end
 
-RatesCache(::TauLeapSimulator) = HasRates()
-
 ###### constructors #####
 function TauLeapSimulator(algorithm::M, number_jumps, execute_leap!::F) where {M,F}
   next_leap_jumps = zeros(Int, number_jumps)
