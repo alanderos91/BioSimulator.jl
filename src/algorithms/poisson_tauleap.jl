@@ -1,45 +1,24 @@
-mutable struct PoissonLeapAlgorithm{LF,C} <: UnsafeLeapAlgorithm
+mutable struct PoissonLeapMethod{F1,F2} <: UnsafeLeapAlgorithm
   rates::Vector{Float64}
   total_rate::Float64
-  leap_formula::LF
-  cache::C
+  stoichiometry::SparseMatrixCSC{Int,Int}
+  leap_formula::F1
+  contract!::F2
 end
 
-function generate_leap!(v, algorithm::PoissonLeapAlgorithm)
-  s = tauleap(algorithm.cache...)
+generate_events!(::PoissonLeapMethod, v, rates, s) = map!(rate -> pois_rand(rate * s), v, rates)
 
-  if isfinite(τ)
-    rates = algorithm.rates
-    # [OPTION 1] Use matrix-vector multiplication
-    # 
-    # Time: O(num_reactions + num_reactions * num_species)
-    # Space: O(2*num_reactions + num_species)
-    # 
-    # map!(rate -> pois_rand(rate * τ), v, rates)
-    # mul!(v, S, number_jumps)
+function update!(algorithm::PoissonLeapMethod, state, model)
+  # unpack
+  rates = algorithm.rates
+  total_rate = algorithm.total_rate
+  stoichiometry = algorithm.stoichiometry
 
-    # [OPTION 2] Use explicit for-loop
-    # 
-    # Time: (mul/add) O(num_reactions * num_species) + (bool) O(num_reactions * num_species)
-    # Space: O(num_species + num_reactions)
-    # 
-    # for j in eachindex(rates)
-    #   num_jumps_j = pois_rand(rates[j] * τ)
-    #   for k in eachindex(v)
-    #     if j == 1
-    #       v[k] = num_jumps_j * S[k, j]
-    #     else
-    #       v[k] += num_jumps_j * S[k, j]
-    #     end
-    #   end
-    # end
-  else
-    fill!(v, zero(eltype(v)))
-  end
+  # update jump rates
+  update_jump_rates!(algorithm, state, model)
 
-  return v, s
-end
+  # update auxilliary variables
+  update!(algorithm.formula, state, model, stoichiometry, rates, total_rate)
 
-function update!(algorithm::PoissonLeapAlgorithm, state, model, v)
-  
+  return nothing
 end

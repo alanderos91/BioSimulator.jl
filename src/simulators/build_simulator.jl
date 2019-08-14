@@ -70,3 +70,25 @@ function build_simulator(::RejectionSSA, state, model, rates_cache)
 
   return ExactSimulator(algorithm)
 end
+
+##### tau-leaping
+
+struct TauLeaping <: SimulationAlgorithm end
+
+function build_simulator(::TauLeaping, state, model, rates_cache)
+  number_species = length(state)
+  number_jumps = get_number_jumps(model)
+
+  rates = zeros(number_jumps)
+  total_rate = zero(eltype(rates))
+  leap_formula = tauleap
+  cache = DG2001(number_species, number_jumps)
+  handler = ?
+
+  V = extract_net_stoichiometry(model)
+  execute_leap! = ApplyLeapUpdate(mul!, V)
+
+  algorithm = PoissonLeapMethod(rates, total_rate, leap_formula, cache, handler)
+
+  return ExactSimulator(algorithm)
+end

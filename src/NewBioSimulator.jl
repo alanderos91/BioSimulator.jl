@@ -75,11 +75,15 @@ include(joinpath("algorithms", "firstreaction.jl"))
 include(joinpath("algorithms", "nextreaction.jl"))
 include(joinpath("algorithms", "rejection.jl"))
 
+include(joinpath("algorithms", "tauleap_utils.jl"))
+include(joinpath("algorithms", "poisson_tauleap.jl"))
+
 export HasRates, HasSums
 
 ## simulators
 include(joinpath("simulators", "abstract_simulators.jl"))
 include(joinpath("simulators", "exact.jl"))
+include(joinpath("simulators", "tauleap.jl"))
 include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect

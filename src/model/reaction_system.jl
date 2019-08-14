@@ -169,3 +169,51 @@ function get_kinetic_law(rtuples)
         error("reaction is not elementary or mass action")
     end
 end
+
+##### extras #####
+
+function execute_leap!(state, stoichiometry, number_jumps)
+  state += stoichiometry * number_jumps
+end
+
+function rate_derivative(rxn, x, i, j)
+  rate_derivative(rxn.reactions[j], x, rxn.rxn_rates, i)
+end
+
+function rate_derivative(r::ReactionStruct{MassActionOrder0}, x, p, i)
+  return zero(eltype(p))
+end
+
+function rate_derivative(r::ReactionStruct{MassActionOrder1}, x, p, i)
+  idx = r.paramidx
+  k, _ = r.reactants[1]
+
+  return i == k ? p[idx] : zero(eltype(p))
+end
+
+function rate_derivative(r::ReactionStruct{MassActionOrder2A}, x, p, i)
+  idx = r.paramidx
+  k1, _ = r.reactants[1]
+  k2, _ = r.reactants[2]
+
+  if i == k1
+    return p[idx] * x[k2]
+  elseif i == k2
+    return p[idx] * x[k1]
+  else
+    return zero(p[idx])
+  end
+end
+
+function rate_derivative(r::ReactionStruct{MassActionOrder2B}, x, p, i)
+  idx = r.paramidx
+  k, _ = r.reactants[1]
+  
+  return 1//2 * x[k] * (x[k] - 1) * p[i]
+
+  if i == k
+    return p[idx] * (x - 1//2)
+  else
+    return zero(eltype(p))
+  end
+end
