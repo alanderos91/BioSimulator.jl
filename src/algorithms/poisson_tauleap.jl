@@ -3,7 +3,7 @@ mutable struct PoissonLeapMethod{F1,F2} <: UnsafeLeapAlgorithm
   total_rate::Float64
   stoichiometry::SparseMatrixCSC{Int,Int}
   leap_formula::F1
-  contract!::F2
+  validate_leap!::F2
 end
 
 generate_events!(::PoissonLeapMethod, v, rates, s) = map!(rate -> pois_rand(rate * s), v, rates)
@@ -17,8 +17,8 @@ function update!(algorithm::PoissonLeapMethod, state, model)
   # update jump rates
   update_jump_rates!(algorithm, state, model)
 
-  # update auxilliary variables
-  update!(algorithm.formula, state, model, stoichiometry, rates, total_rate)
+  # update auxiliary variables
+  update!(algorithm.leap_formula, state, model, stoichiometry, rates, total_rate)
 
   return nothing
 end

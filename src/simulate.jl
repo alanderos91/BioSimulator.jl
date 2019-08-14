@@ -30,7 +30,7 @@ function simulate(initial_state, model, algname, tfinal, rates_cache)
 end
 
 function simulate!(simulator, state, model, tfinal, output)
-  initialize!(simulator, state, model)
+  initialize!(simulator, state, model, tfinal)
 
   while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
     tnew = get_new_time(simulator)

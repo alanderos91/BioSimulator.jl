@@ -3,22 +3,27 @@ mutable struct TauLeapSimulator{M,F} <: AbstractSimulator
   next_leap_jumps::Vector{Int}
   next_leap_time::Float64
   t::Float64
+  tfinal::Float64
   execute_leap!::F
 end
 
+RatesCache(::TauLeapSimulator) = HasRates()
+
 ###### constructors #####
-function TauLeapSimulator(algorithm::M, number_jumps) where M
+function TauLeapSimulator(algorithm::M, number_jumps, execute_leap!::F) where {M,F}
   next_leap_jumps = zeros(Int, number_jumps)
 
-  return TauLeapSimulator{M}(algorithm, next_leap_jumps, 0.0, 0.0)
+  return TauLeapSimulator{M,F}(algorithm, next_leap_jumps, 0.0, 0.0, 0.0, execute_leap!)
 end
 
 ##### main simulation routines #####
 
 # start a new simulation and initialize the stepper with the next event
-@inline function initialize!(simulator::TauLeapSimulator, state, model)
+@inline function initialize!(simulator::TauLeapSimulator, state, model, tfinal)
   # reset the current system time
   simulator.t = 0.0
+
+  simulator.tfinal = tfinal
 
   # set the number of jumps to zero
   fill!(simulator.next_leap_jumps, 0)
@@ -42,6 +47,7 @@ end
   simulator.t = get_new_time(simulator)
 
   # update the system state according to the proposed leap
+  # NOTE: at this point it is assumed that the leap is valid
   simulator.execute_leap!(state, n)
 
   # update statistics
@@ -60,8 +66,11 @@ end
   # unpack
   v = simulator.next_leap_jumps
 
+  # set a limit on how large a leap may be
+  Δt_max = simulator.tfinal - simulator.t
+
   # ask the algorithm for the next random leap
-  v, s = generate_leap!(v, simulator.algorithm)
+  v, s = generate_leap!(v, simulator.algorithm, Δt_max)
 
   # update the stepper's fields
   simulator.next_leap_jumps = v

@@ -13,7 +13,7 @@ end
 ##### main simulation routines #####
 
 # start a new simulation and initialize the stepper with the next event
-@inline function initialize!(simulator::ExactSimulator, state, model)
+@inline function initialize!(simulator::ExactSimulator, state, model, tfinal)
   # reset the current system time
   simulator.t = 0.0
   

@@ -1,7 +1,7 @@
 module NewBioSimulator
 
-using Random, DataStructures, Statistics
-using StaticArrays
+using Random, DataStructures, Statistics, PoissonRandom
+using StaticArrays, SparseArrays, LinearAlgebra
 using RecipesBase
 using RecursiveArrayTools
 
@@ -88,6 +88,7 @@ include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect
 export FirstReaction, NextReaction, RejectionSSA
+export TauLeapingDG2001, TauLeapingDGLP2003
 
 include("simulate.jl")
 include(joinpath("output", "sample_path.jl"))

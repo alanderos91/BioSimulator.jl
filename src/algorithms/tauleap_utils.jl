@@ -1,4 +1,4 @@
-abstract type TauLeapFormula end
+abstract type TauLeapFormula end # <: Function
 
 """
 Gillespie 2001, Eq 26(a)
@@ -7,13 +7,15 @@ struct DG2001Eq26a{T1,T2} <: TauLeapFormula
   ξ::T1
   b::T2
   ϵ::Float64
+
+  DG2001Eq26a(ξ::T1, b::T2, ϵ::Real) where {T1,T2} = new{T1,T2}(ξ, b, ϵ)
 end
 
-function DG2001Eq26a(number_species, number_jumps)
+function DG2001Eq26a(number_species::Integer, number_jumps::Integer, ϵ::Real)
   ξ = zeros(number_species)
   b = zeros(number_species, number_jumps)
 
-  return DG2001Eq26a(ξ, b)
+  return DG2001Eq26a(ξ, b, ϵ)
 end
 
 function (formula::DG2001Eq26a)(rates, total_rate)
@@ -60,23 +62,31 @@ end
 """
   Gillespie and Petzold 2003, Eq 6
 """
-struct DGLP2003{V,B} <: TauLeapCache
-  ν::V
+struct DGLP2003Eq6{U,B} <: TauLeapFormula
+  V::U
   b::B
+  ϵ::Float64
 end
 
-function tauleap(cache::DGLP2003, rates, total_rate, ϵ)
+function DGLP2003Eq6(number_species, number_jumps, V, ϵ)
+  b = zeros(number_species, number_jumps)
+
+  return DGLP2003Eq6(V, b, ϵ)
+end
+
+function (formula::DGLP2003Eq6)(rates, total_rate)
   T = eltype(rates)
+  V = formula.V
+  b = formula.b
+  ϵ = formula.ϵ
+  τ = typemax(T)
+
   A1 = ϵ * total_rate
   A2 = A1^2
 
-  ν = cache.ν
-  b = cache.b
-  τ = typemax(T)
-
   for j in eachindex(rates)
     μ, σ² = zero(T), zero(T)
-    f = f_calculation(ν, b, j)
+    f = f_calculation(V, b, j)
     for k in eachindex(rates)
       μ  = μ + f * rates[k]
       σ² = σ² + f^2 * rates[k]
@@ -88,65 +98,89 @@ function tauleap(cache::DGLP2003, rates, total_rate, ϵ)
   return τ
 end
 
-function f_calculation(ν::DenseMatrix{Int}, b, j)
+function f_calculation(V::DenseMatrix{Int}, b, j)
   f = zero(eltype(b))
 
   @simd for i in 1:size(b, 1)
-    @inbounds @fastmath f = f + b[i, j] * ν[i, j]
+    @inbounds @fastmath f = f + b[i, j] * V[i, j]
   end
 
   return f
 end
 
-function f_calculation(ν::SparseMatrixCSC{Int,Int}, b, j)
+function f_calculation(V::SparseMatrixCSC{Int,Int}, b, j)
   f = zero(eltype(b))
-  rv = rowvals(ν)
-  nz = nonzeros(ν)
+  rv = rowvals(V)
+  nz = nonzeros(V)
 
-  for i in nzrange(ν, j)
+  for i in nzrange(V, j)
     @inbounds @fastmath f = f + b[rv[i], j] * nz[i]
   end
 
   return f
 end
 
+function update!(formula::DGLP2003Eq6, state, model, stoichiometry, rates, total_rate)
+  b = formula.b
+
+  n, m = size(b)
+
+  for j in 1:m
+    for i in 1:n
+      b[i,j] = rate_derivative(model, state, i, j)
+    end
+  end
+
+  return nothing
+end
+
 ##### post-leap check for valid step #####
 
-# TODO
-function is_bad_tauleap(proposal)
-  return any(Base.Fix2(<,0), proposal)
-end
-
-struct RejectionThinning{T,F1,F2}
-  threshold::T
+struct RejectionThinning{T1,T2,F1,F2,F3,F4}
+  threshold::T1
+  proposal::T2
   is_accepted::F1
   is_invalid::F2
+  execute_leap!::F3
+  reverse_leap!::F4
 end
 
-function RejectionThinning(threshold::Real)
+function RejectionThinning(threshold::Real, proposal, execute_leap!, reverse_leap!)
   is_accepted = Base.Fix2(<, threshold)     # x -> x < threshold
   is_negative = Base.Fix2(<, 0)             # x -> x < 0
   is_invalid  = Base.Fix1(any, is_negative) # x -> any(is_negative, x)
 
-  RejectionThinning(threshold, is_accepted, is_invalid)
+  RejectionThinning(threshold, proposal, is_accepted, is_invalid, execute_leap!, reverse_leap!)
 end
 
-function (f::RejectionThinning)(x, v::AbstractVector, s::Real)
+function (f::RejectionThinning)(v::AbstractVector, s::Real)
+  # unpack
+  threshold = f.threshold
   is_invalid = f.is_invalid
   is_accepted = f.is_accepted
+  execute_leap! = f.execute_leap!
+  reverse_leap! = f.reverse_leap!
+  proposal = f.proposal
 
-  while is_invalid(x)
+  execute_leap!(proposal, v)
+
+  while is_invalid(proposal)
+    reverse_leap!(proposal, v)
+
     # reject events in the proposed leap
     for j in eachindex(v)
-      itr = (rand() for j in 1:v[j])
-      v[j] = count(is_accepted, itr)
+      # generate a stream of iid uniform deviates for the rejection step
+      event = (rand() for j in 1:v[j])
+
+      # count the number of accepted events
+      v[j] = count(is_accepted, event)
     end
 
     # contract the leap by the threshold parameter
-    s = s * f.threshold
+    s = s * threshold
 
-    # propose update
-    mul!(x, A, v)
+    # apply new update
+    execute_leap!(proposal, v)
   end
 
   return v, s
@@ -203,3 +237,11 @@ struct ApplyLeapUpdate{F,T} <: Function
 end
 
 (g::ApplyLeapUpdate)(x, n) = g.f(x, g.V, n)
+
+function forward_leap!(x, V, n)
+  x .+= V*n
+end
+
+function backward_leap!(x, V, n)
+  x .-= V*n
+end

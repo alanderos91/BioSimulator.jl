@@ -55,40 +55,32 @@ end
 
 abstract type UnsafeLeapAlgorithm <: AbstractAlgorithm end
 
-##### recovering from negative excursions
+@inline function update_jump_rates!(algorithm::UnsafeLeapAlgorithm, state, model)
+  algorithm.total_rate = update_jump_rates!(RatesCache(algorithm), algorithm.rates, algorithm.total_rate, state, model)
+end
 
-function generate_leap!(v, algorithm::UnsafeLeapAlgorithm)
+function initialize!(algorithm::UnsafeLeapAlgorithm, state, model)
+  update!(algorithm, state, model)
+end
+
+function generate_leap!(v, algorithm::UnsafeLeapAlgorithm, Δt_max)
   # unpack data
   rates = algorithm.rates
-  tota_rate = algorithm.total_rate
+  total_rate = algorithm.total_rate
+  validate_leap! = algorithm.validate_leap!
 
   # evaluate the leap formula to compute τ
   s = algorithm.leap_formula(rates, total_rate)
+  s = min(s, Δt_max)
 
   # if there is a valid leap...
-  if isfinite(τ)
+  if isfinite(s)
     generate_events!(algorithm, v, rates, s)
+    validate_leap!(v, s)
   else
     # otherwise fill the jumps with zeros
     fill!(v, zero(eltype(v)))
   end
 
   return v, s
-end
-
-@inline function validate_leap!(simulator::TauLeapSimulator, state, model)
-  Δ = simulator.proposed_change
-  A = simulator.stoichiometry
-  v = simulator.next_leap_jumps
-  s = simulator.next_leap_time
-
-  # check and contract invalid leaps
-  mul!(Δ, A, v)
-  invalid_leap = is_invalid_leap(Δ, state)
-
-  while invalid_leap
-    algorithm.contract!(v, s)
-    mul!(proposal, stoichiometry, v)
-    invalid_leap = is_invalid_leap(proposal, state)
-  end
 end
