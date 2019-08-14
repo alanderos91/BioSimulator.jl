@@ -84,3 +84,33 @@ function generate_leap!(v, algorithm::UnsafeLeapAlgorithm, Δt_max)
 
   return v, s
 end
+
+abstract type SafeLeapAlgorithm <: AbstractAlgorithm end
+
+@inline function update_jump_rates!(algorithm::SafeLeapAlgorithm, state, model)
+  algorithm.total_rate = update_jump_rates!(RatesCache(algorithm), algorithm.rates, algorithm.total_rate, state, model)
+end
+
+function initialize!(algorithm::SafeLeapAlgorithm, state, model)
+  update!(algorithm, state, model)
+end
+
+function generate_leap!(v, algorithm::SafeLeapAlgorithm, Δt_max)
+  # unpack data
+  rates = algorithm.rates
+  total_rate = algorithm.total_rate
+
+  # evaluate the leap formula to compute τ
+  s = algorithm.leap_formula(rates, total_rate)
+  s = min(s, Δt_max)
+
+  # if there is a valid leap...
+  if isfinite(s)
+    generate_events!(algorithm, v, rates, s)
+  else
+    # otherwise fill the jumps with zeros
+    fill!(v, zero(eltype(v)))
+  end
+
+  return v, s
+end

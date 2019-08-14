@@ -128,30 +128,37 @@ function build_simulator(::TauLeapingDGLP2003, state, model, rates_cache)
   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
 end
 
-# struct StepAnticipation <: SimulationAlgorithm end
+struct StepAnticipation <: SimulationAlgorithm end
 
-# function build_simulator(::StepAnticipation, state, model, rates_cache)
-#   number_species = length(state)
-#   number_jumps = get_number_jumps(model)
+function build_simulator(::StepAnticipation, state, model, rates_cache)
+  number_species = length(state)
+  number_jumps = get_number_jumps(model)
 
-#   rates = zeros(number_jumps)
-#   total_rate = zero(eltype(rates))
+  rates = zeros(number_jumps)
+  total_rate = zero(eltype(rates))
 
-#   # extract stoichiometry
-#   V = extract_net_stoichiometry(model)
+  # extract stoichiometry
+  U = extract_coefficients(model)
+  V = extract_net_stoichiometry(model)
 
-#   # build leap formula
+  # allocate memory for derivatives
+  dxdt = zeros(number_species)
+  drdt = zeros(number_jumps)
 
-#   # build closure to apply leap updates
-#   execute_leap! = ApplyLeapUpdate(forward_leap!, V)  # apply a leap update
-#   reverse_leap! = ApplyLeapUpdate(backward_leap!, V) # reverse a leap update
+  # build leap formula
+  k = model.rxn_rates # note: this needs to change in the future!
+  leap_formula = GenericLeapFormula(k, U, V, dxdt, drdt, 0.125)
 
-#   # build closure that ensures leaps are valid
-#   rejection_threshold = 0.75
-#   proposal = copy(state)
-#   validate_leap! = RejectionThinning(rejection_threshold, proposal, execute_leap!, reverse_leap!)
+  # build closure to apply leap updates
+  execute_leap! = ApplyLeapUpdate(forward_leap!, V)  # apply a leap update
+  reverse_leap! = ApplyLeapUpdate(backward_leap!, V) # reverse a leap update
 
-#   algorithm = StepAnticipationMethod(rates, total_rate, V, leap_formula, validate_leap!)
+  # build closure that ensures leaps are valid
+  rejection_threshold = 0.75
+  proposal = copy(state)
+  validate_leap! = RejectionThinning(rejection_threshold, proposal, execute_leap!, reverse_leap!)
 
-#   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
-# end
+  algorithm = StepAnticipationMethod(rates, total_rate, leap_formula, validate_leap!, U, V, dxdt, drdt)
+
+  return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
+end

@@ -134,6 +134,65 @@ function update!(formula::DGLP2003Eq6, state, model, stoichiometry, rates, total
   return nothing
 end
 
+"""
+Unknown formula?
+"""
+struct GenericLeapFormula
+  k::Vector{Float64}
+  U::SparseMatrixCSC{Int,Int}
+  V::SparseMatrixCSC{Int,Int}
+  dxdt::Vector{Float64}
+  drdt::Vector{Float64}
+  ϵ::Float64
+end
+
+# function GenericLeapFormula(number_species::Integer, number_jumps::Integer, U, V, ϵ)
+#   dxdt = zeros(number_species)
+#   drdt = zeros(number_jumps)
+
+#   return GenericLeapFormula(U, V, dxdt, drdt, ϵ)
+# end
+
+function (formula::GenericLeapFormula)(rates, total_rate)
+  drdt = formula.drdt
+  k = formula.k
+  τ = typemax(total_rate)
+  ϵ = formula.ϵ
+
+  for j in eachindex(rates)
+    A = ϵ * max(rates[j], k[j])
+    B = abs(drdt[j])
+
+    τ = min(τ, A / B)
+  end
+
+  return τ
+end
+
+function update!(formula::GenericLeapFormula, state, model, V, rates, total_rate)
+  dxdt = formula.dxdt
+  drdt = formula.drdt
+  # V = formula.V
+  U = formula.U
+
+  update_mean_derivatives!(dxdt, V, rates)
+  update_time_derivatives!(drdt, state, model, dxdt)
+end
+
+update_mean_derivatives!(dxdt, V, rates) = (dxdt .= V * rates)
+
+function update_time_derivatives!(drdt, state, model, dxdt)
+  for j in eachindex(drdt)
+    drdt[j]  = 0.0
+    for i in eachindex(state)
+      drdx = rate_derivative(model, state, i, j)
+      drdt[j] = drdt[j] + drdx * dxdt[i]
+    end
+  end
+
+  return drdt
+end
+
 ##### post-leap check for valid step #####
 
 struct RejectionThinning{T1,T2,F1,F2,F3,F4}
@@ -201,6 +260,31 @@ function extract_net_stoichiometry(model::ReactionSystem)
 
   for j in eachindex(reaction)
     for (i, v) in reaction[j].net_change
+
+      I[idx] = i
+      J[idx] = j
+      V[idx] = v
+
+      idx += 1
+    end
+  end
+
+  return sparse(I, J, V)
+end
+
+function extract_coefficients(model::ReactionSystem)
+  reaction = model.reactions
+
+  number_entries = sum(length(reaction[j].reactants) for j in eachindex(reaction))
+
+  I = zeros(Int, number_entries) # species index
+  J = zeros(Int, number_entries) # reaction index
+  V = zeros(Int, number_entries) # net stoichiometry
+
+  idx = 1
+
+  for j in eachindex(reaction)
+    for (i, v) in reaction[j].reactants
 
       I[idx] = i
       J[idx] = j

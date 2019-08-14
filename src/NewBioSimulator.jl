@@ -77,6 +77,7 @@ include(joinpath("algorithms", "rejection.jl"))
 
 include(joinpath("algorithms", "tauleap_utils.jl"))
 include(joinpath("algorithms", "poisson_tauleap.jl"))
+include(joinpath("algorithms", "stepanticipation.jl"))
 
 export HasRates, HasSums
 
@@ -88,7 +89,7 @@ include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect
 export FirstReaction, NextReaction, RejectionSSA
-export TauLeapingDG2001, TauLeapingDGLP2003
+export TauLeapingDG2001, TauLeapingDGLP2003, StepAnticipation
 
 include("simulate.jl")
 include(joinpath("output", "sample_path.jl"))
