@@ -85,11 +85,13 @@ export HasRates, HasSums
 include(joinpath("simulators", "abstract_simulators.jl"))
 include(joinpath("simulators", "exact.jl"))
 include(joinpath("simulators", "tauleap.jl"))
+include(joinpath("simulators", "tauleap_hybrid.jl"))
 include(joinpath("simulators", "build_simulator.jl"))
 
 export Direct, EnhancedDirect, SortingDirect
 export FirstReaction, NextReaction, RejectionSSA
 export TauLeapingDG2001, TauLeapingDGLP2003, StepAnticipation
+export HybridSAL
 
 include("simulate.jl")
 include(joinpath("output", "sample_path.jl"))

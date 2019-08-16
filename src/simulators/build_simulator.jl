@@ -162,3 +162,47 @@ function build_simulator(::StepAnticipation, state, model, rates_cache)
 
   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
 end
+
+struct HybridSAL <: SimulationAlgorithm end
+
+function build_simulator(::HybridSAL, state, model, rates_cache)
+  # shared information
+  number_species = length(state)
+  number_jumps = get_number_jumps(model)
+
+  rates = zeros(number_jumps)
+  total_rate = zero(eltype(rates))
+
+  # exact simulator...
+  algorithm = DirectMethod{rates_cache}(rates, 0.0)
+  exact = ExactSimulator(algorithm)
+
+  # tau-leaping simulator...
+
+  # extract stoichiometry
+  U = extract_coefficients(model)
+  V = extract_net_stoichiometry(model)
+
+  # allocate memory for derivatives
+  dxdt = zeros(number_species)
+  drdt = zeros(number_jumps)
+
+  # build leap formula
+  k = model.rxn_rates # note: this needs to change in the future!
+  leap_formula = GenericLeapFormula(k, U, V, dxdt, drdt, 0.125)
+
+  # build closure to apply leap updates
+  execute_leap! = ApplyLeapUpdate(forward_leap!, V)  # apply a leap update
+  reverse_leap! = ApplyLeapUpdate(backward_leap!, V) # reverse a leap update
+
+  # build closure that ensures leaps are valid
+  rejection_threshold = 0.75
+  proposal = copy(state)
+  validate_leap! = RejectionThinning(rejection_threshold, proposal, execute_leap!, reverse_leap!)
+
+  algorithm = StepAnticipationMethod(rates, total_rate, leap_formula, validate_leap!, U, V, dxdt, drdt)
+
+  tauleap = TauLeapSimulator(algorithm, number_jumps, execute_leap!)
+
+  return HybridTauLeapSimulator(exact, tauleap)
+end

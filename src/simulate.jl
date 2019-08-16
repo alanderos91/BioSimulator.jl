@@ -32,7 +32,7 @@ end
 function simulate!(simulator, state, model, tfinal, output)
   initialize!(simulator, state, model, tfinal)
 
-  while simulator.t < tfinal && first(simulator.algorithm.total_rate) > 0
+  while simulator.t < tfinal && cumulative_intensity(simulator) > 0
     tnew = get_new_time(simulator)
 
     if tnew <= tfinal

@@ -16,6 +16,8 @@ end
 
 ##### main simulation routines #####
 
+@inline cumulative_intensity(simulator::TauLeapSimulator) = first(simulator.algorithm.total_rate)
+
 # start a new simulation and initialize the stepper with the next event
 @inline function initialize!(simulator::TauLeapSimulator, state, model, tfinal)
   # reset the current system time
@@ -78,3 +80,20 @@ end
 end
 
 @inline get_new_time(simulator::TauLeapSimulator) = get_new_time(simulator.algorithm, simulator.t, simulator.next_leap_time)
+
+##### helper functions #####
+
+@inline function no_update_step!(simulator::TauLeapSimulator, state, model)
+  # unpack information
+  n = simulator.next_leap_jumps
+  s = simulator.next_leap_time
+
+  # update the system time
+  simulator.t = get_new_time(simulator)
+
+  # update the system state according to the proposed leap
+  # NOTE: at this point it is assumed that the leap is valid
+  simulator.execute_leap!(state, n)
+
+  return nothing
+end
