@@ -94,7 +94,7 @@ export TauLeapingDG2001, TauLeapingDGLP2003, StepAnticipation
 export HybridSAL
 
 include("simulate.jl")
-include(joinpath("output", "sample_path.jl"))
+include(joinpath("output", "SamplePath.jl"))
 include(joinpath("output", "Configuration.jl"))
 
 export simulate, SamplePath, Ensemble, Configuration
