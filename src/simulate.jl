@@ -5,6 +5,8 @@ function parse_model(network::Network)
   return state, model
 end
 
+##### user-facing interface #####
+
 function simulate(network::Network, algname::SimulationAlgorithm; tfinal=0.0, rates_cache = HasRates)
   # build the internal representation of our stochastic process
   initial_state, model = parse_model(network)
@@ -12,6 +14,13 @@ function simulate(network::Network, algname::SimulationAlgorithm; tfinal=0.0, ra
   # feedforward down the chain...
   return simulate(initial_state, model, algname, tfinal, rates_cache)
 end
+
+function simulate(state, model, algname::SimulationAlgorithm; tfinal=0.0, rates_cache = HasRates)
+  # feedforward down the chain...
+  return simulate(initial_state, model, algname, tfinal, rates_cache)
+end
+
+##### internals #####
 
 function simulate(initial_state, model, algname, tfinal, rates_cache)
   # copy state
