@@ -58,7 +58,7 @@ function simulate!(simulator, state, model, tfinal, output, save_points)
       simulator.t = tfinal
     end
   end
-  update!(output, simulator.t, state)
+  update!(output, simulator.t, state, save_points)
 
   return output
 end
