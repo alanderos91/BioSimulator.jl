@@ -1,3 +1,4 @@
+
 # built from RecursiveArrayTools.jl
 # based on DiffEqArray struct
 struct SamplePath{T,N,A,B} <: AbstractVectorOfArray{T, N}
@@ -27,9 +28,20 @@ function Base.sizehint!(xw::SamplePath, n)
   return xw
 end
 
-function update!(xw::SamplePath, t, x)
+function update!(xw::SamplePath, t, x, save_points)
+  i = searchsortedlast(save_points, t)
+
+  if !(save_points[i] in xw.t)
+    push!(xw.u, copy(x))        # update the data
+    push!(xw.t, save_points[i]) # update the time series
+  end
+
+  return xw
+end
+
+function update!(xw::SamplePath, t, x, save_points::Nothing)
   push!(xw.u, copy(x)) # update the data
-  push!(xw.t, t)         # update the time series
+  push!(xw.t, t)       # update the time series
 
   return xw
 end

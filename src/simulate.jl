@@ -7,7 +7,10 @@ end
 
 ##### user-facing interface #####
 
-function simulate(network::Network, algname::SimulationAlgorithm; tfinal=0.0, rates_cache = HasRates)
+function simulate(network::Network, algname::SimulationAlgorithm;
+    tfinal=0.0,
+    rates_cache = HasRates,
+    save_points = nothing)
   # build the internal representation of our stochastic process
   initial_state, model = parse_model(network)
 
@@ -15,14 +18,18 @@ function simulate(network::Network, algname::SimulationAlgorithm; tfinal=0.0, ra
   return simulate(initial_state, model, algname, tfinal, rates_cache)
 end
 
-function simulate(state, model, algname::SimulationAlgorithm; tfinal=0.0, rates_cache = HasRates)
+function simulate(initial_state, model, algname::SimulationAlgorithm;
+    tfinal = 0.0,
+    rates_cache = HasRates,
+    save_points = nothing
+  )
   # feedforward down the chain...
-  return simulate(initial_state, model, algname, tfinal, rates_cache)
+  return simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
 end
 
 ##### internals #####
 
-function simulate(initial_state, model, algname, tfinal, rates_cache)
+function simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
   # copy state
   state = copy(initial_state)
 
@@ -35,10 +42,10 @@ function simulate(initial_state, model, algname, tfinal, rates_cache)
   initialize_datastructs!(state, model)
 
   # feedforward down the chain...
-  simulate!(simulator, state, model, tfinal, output)
+  simulate!(simulator, state, model, tfinal, output, save_points)
 end
 
-function simulate!(simulator, state, model, tfinal, output)
+function simulate!(simulator, state, model, tfinal, output, save_points)
   initialize!(simulator, state, model, tfinal)
 
   while simulator.t < tfinal && cumulative_intensity(simulator) > 0
@@ -46,7 +53,7 @@ function simulate!(simulator, state, model, tfinal, output)
 
     if tnew <= tfinal
       step!(simulator, state, model)
-      update!(output, simulator.t, state)
+      update!(output, simulator.t, state, save_points)
     else
       simulator.t = tfinal
     end
@@ -73,7 +80,18 @@ function build_output(state::Lattice, model)
   return xw
 end
 
-function update!(xw, t, x::Lattice)
+function update!(xw, t, x::Lattice, save_points)
+  i = searchsortedlast(save_points, t)
+
+  if !(save_points[i] in xw.t)
+    push!(xw[1], Configuration(x))
+    push!(xw[2], save_points[i])
+  end
+
+  return xw
+end
+
+function update!(xw, t, x::Lattice, save_points::Nothing)
   push!(xw[1], Configuration(x))
   push!(xw[2], t)
 
