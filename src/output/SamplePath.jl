@@ -31,7 +31,7 @@ end
 function update!(xw::SamplePath, t, x, save_points)
   i = searchsortedlast(save_points, t)
 
-  if !(save_points[i] in xw.t)
+  if (i > 0) && !(save_points[i] in xw.t)
     push!(xw.u, copy(x))        # update the data
     push!(xw.t, save_points[i]) # update the time series
   end

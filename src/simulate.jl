@@ -83,7 +83,7 @@ end
 function update!(xw, t, x::Lattice, save_points)
   i = searchsortedlast(save_points, t)
 
-  if !(save_points[i] in xw.t)
+  if (i > 0) && !(save_points[i] in xw.t)
     push!(xw[1], Configuration(x))
     push!(xw[2], save_points[i])
   end
