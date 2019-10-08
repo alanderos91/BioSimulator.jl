@@ -6,22 +6,18 @@ end
 
 function AveragePath(xw :: RegularEnsemble{T1,T2}) where {T1,T2}
   tdata = xw[1].tdata
-
-  d = size(xw[1].xdata, 1)
-  n = length(tdata)
   trials = length(xw)
 
-  xmean = mean(xw[k].xdata for k in 1:trials)
-  temp = std([xw[k].xdata[i, j] for i in 1:d, j in 1:n, k in 1:trials], dims=3)
-  xstd = reshape(temp, n, d)
+  # temporary fix
+  x = [xw[k].xdata for k in 1:trials]
 
-  return AveragePath{T1}(tdata, xmean, xstd)
+  return AveragePath{T1}(tdata, mean(x), std(x))
 end
 
 @recipe function f(xw :: AveragePath)
   tdata  = xw.tdata
-  xmean  = xw.xmean'
-  xstd   = xw.xstd
+  xmean  = transpose(xw.xmean)
+  xstd   = transpose(xw.xstd)
 
   legend     --> true
   grid       --> false
