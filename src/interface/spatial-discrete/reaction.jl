@@ -176,15 +176,15 @@ function __def_reactions(inputex, p)
 end
 
 ## enumerate the full reaction list using a given spatial structure
-macro enumerate_with_nclass(r, n, d, p)
-  escr = esc(r)
-  escn = esc(n)
-  escd = esc(d)
-  escp = esc(p)
-  quote
-    __reactions_nclass($escr, $escn, $escd, $escp)
-  end
-end
+# macro enumerate_with_nclass(r, n, d, p)
+#   escr = esc(r)
+#   escn = esc(n)
+#   escd = esc(d)
+#   escp = esc(p)
+#   quote
+#     __reactions_nclass($escr, $escn, $escd, $escp)
+#   end
+# end
 
 # implements the body of @enumerate_with_nclass
 # function __reactions_nclass(initial, nbhood, d, params)
