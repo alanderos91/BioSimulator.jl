@@ -29,19 +29,26 @@ function Base.sizehint!(xw::SamplePath, n)
 end
 
 function update!(xw::SamplePath, t, x, save_points)
-  i = searchsortedlast(save_points, t)
+  j = searchsortedlast(save_points, t)
+  i = j
 
-  if (i > 0) && !(save_points[i] in xw.t)
-    push!(xw.u, copy(x))        # update the data
-    push!(xw.t, save_points[i]) # update the time series
+  # backtrack in case the last event jumped over save points
+  while (i > 1) && !(save_points[i] in xw.t)
+    i -= 1
+  end
+
+  # fill in the data for each save point
+  for k in i+1:j
+    push!(xw.u, copy(x))
+    push!(xw.t, save_points[k])
   end
 
   return xw
 end
 
 function update!(xw::SamplePath, t, x, save_points::Nothing)
-  push!(xw.u, copy(x)) # update the data
-  push!(xw.t, t)       # update the time series
+  push!(xw.u, copy(x))
+  push!(xw.t, t)
 
   return xw
 end
@@ -99,21 +106,55 @@ end
   xw.t, xw.u
 end
 
-@recipe function f(ens::Ensemble, epochs = 100)
+@recipe function f(ens::Ensemble;
+    summary = :mean,
+    epochs = 100,
+    error_style = :bars,
+    timepoint = 1,
+    vars = nothing)
   # regularize the sample paths
   tfinal = ens[1].t[end]
 
   reg = get_regular_ensemble(ens, tfinal, epochs)
 
-  # extract the series data
-  ts = reg[1].t
-  xs = convert(Array, mean(reg)')
-  bars = convert(Array, std(reg)')
+  if summary == :mean
+    # extract the series data
+    ts = reg[1].t
+    xs = transpose(mean(reg))
+    xstd = transpose(std(reg))
 
-  # make the default a scatter plot
-  # and add bars to represent standard deviation
-  seriestype --> :scatter
-  yerrorbar  --> bars
+    # make the default a scatter plot
+    # and add bars to represent standard deviation
+    seriestype --> :scatter
 
-  ts, xs
+    if error_style == :bars
+      yerrorbar  --> xstd
+    elseif error_style == :ribbon
+      ribbon --> xstd
+    else
+      error("Unknown option for error_style: $(error_style)")
+    end
+
+    ts, xs
+  elseif summary == :histogram
+    t = max(1, searchsortedlast(reg[1].t, timepoint))
+    default_idxs = 1:length(reg[1].u[1])
+    idxs = (vars == nothing) ? default_idxs : vars
+
+    seriestype --> :histogram
+
+    xs = [reg[n][k,t] for n in eachindex(reg), k in idxs]
+  elseif summary == :phase
+    tmp = mean(reg)
+    idxs = (vars == nothing) ? (1,2) : (vars[1], vars[2])
+    xs = [tmp[idxs[1],t] for t in eachindex(reg[1].t)]
+    ys = [tmp[idxs[2],t] for t in eachindex(reg[1].t)]
+
+    seriestype --> :scatter
+    marker_z --> reg[1].t
+
+    xs, ys
+  else
+    error("Unknown option for summary_type: $(summary_type)")
+  end
 end
