@@ -15,7 +15,7 @@ function simulate(network::Network, algname::SimulationAlgorithm;
   initial_state, model = parse_model(network)
 
   # feedforward down the chain...
-  return simulate(initial_state, model, algname, tfinal, rates_cache)
+  return simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
 end
 
 function simulate(initial_state, model, algname::SimulationAlgorithm;

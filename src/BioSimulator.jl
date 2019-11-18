@@ -45,15 +45,9 @@ export PQBinaryHeap, peektop
 
 ## state
 include(joinpath("state", "site.jl"))
-# include(joinpath("state", "neighborhood.jl"))
 include(joinpath("state", "vonneumann.jl"))
-# include(joinpath("state", "sample_class.jl"))
-# include(joinpath("state", "neighborhood_class.jl"))
 include(joinpath("state", "hexagonal.jl"))
 include(joinpath("state", "Lattice.jl"))
-# include(joinpath("state", "abstract_lattice.jl"))
-# include(joinpath("state", "SLattice.jl"))
-# include(joinpath("state", "NLattice.jl"))
 
 export VonNeumann, Hexagonal
 export Lattice
@@ -67,7 +61,7 @@ include(joinpath("model", "ips.jl"))
 
 ## algorithms
 include(joinpath("algorithms", "ssa_utils.jl"))
-include(joinpath("algorithms", "abstract_algorithms.jl"))
+include(joinpath("algorithms", "abstract_algorithm.jl"))
 include(joinpath("algorithms", "direct.jl"))
 include(joinpath("algorithms", "enhanced_direct.jl"))
 include(joinpath("algorithms", "sorting_direct.jl"))
@@ -82,7 +76,7 @@ include(joinpath("algorithms", "stepanticipation.jl"))
 export HasRates, HasSums
 
 ## simulators
-include(joinpath("simulators", "abstract_simulators.jl"))
+include(joinpath("simulators", "abstract_simulator.jl"))
 include(joinpath("simulators", "exact.jl"))
 include(joinpath("simulators", "tauleap.jl"))
 include(joinpath("simulators", "tauleap_hybrid.jl"))
