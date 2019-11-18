@@ -10,12 +10,10 @@ makedocs(
   modules  = [BioSimulator],
   clean    = true,
   sitename = "BioSimulator.jl",
-  authors  = "Alfonso Landeros, Mary E. Sehl, Kenneth Lange",
+  authors  = "Alfonso Landeros, Timothy Stutz, Kevin L. Keys, Mary E. Sehl, Alexander Alekseyenko, Janet S. Sinsheimer, Kenneth Lange",
   pages = [
     "Home"       => "index.md",
-    "Overview"   => "man/overview.md",
     "Algorithms" => "man/algorithms.md",
-    "Examples"   => "man/examples.md",
   ]
 )
 

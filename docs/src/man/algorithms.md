@@ -6,9 +6,13 @@ CurrentModule = BioSimulator
 
 ```@docs
 Direct
+EnhancedDirect
+SortingDirect
 FirstReaction
 NextReaction
-OptimizedDirect
-TauLeaping
+RejectionSSA
+TauLeapingDG2001
+TauLeapingDGLP2003
 StepAnticipation
+HybridSAL
 ```

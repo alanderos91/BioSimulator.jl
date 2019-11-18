@@ -94,8 +94,6 @@ save(PDF(filename), figure)
 ```@contents
   pages = [
     "Home"       => "index.md",
-    "Overview"   => "man/overview.md",
-    "Algorithms" => "man/algorithms.md",
-    "Examples"   => "man/examples.md",
+    "Algorithms" => "man/algorithms.md"
   ]
 ```
