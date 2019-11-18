@@ -7,6 +7,19 @@ get_number_species(state::Vector{T}) where T = length(state)
 
 abstract type SimulationAlgorithm end
 
+"""
+```
+Direct()
+```
+
+Gillespie's Direct Method.
+
+#### References
+
+- Daniel T Gillespie. A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*, 1976. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
+
+- Daniel T. Gillespie. Exact stochastic simulation of coupled chemical reactions. *The Journal of Physical Chemistry*, 1977. [https://doi.org/10.1021/j100540a008](https://doi.org/10.1021/j100540a008)
+"""
 struct Direct <: SimulationAlgorithm end
 
 function build_simulator(::Direct, state, model, rates_cache)
@@ -16,6 +29,17 @@ function build_simulator(::Direct, state, model, rates_cache)
   return ExactSimulator(algorithm)
 end
 
+"""
+```
+EnhancedDirect()
+```
+
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct EnhancedDirect <: SimulationAlgorithm end
 
 function build_simulator(::EnhancedDirect, state, model, rates_cache)
@@ -25,6 +49,17 @@ function build_simulator(::EnhancedDirect, state, model, rates_cache)
   return ExactSimulator(algorithm)
 end
 
+"""
+```
+SortingDirect()
+```
+
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct SortingDirect <: SimulationAlgorithm end
 
 function build_simulator(::SortingDirect, state, model, rates_cache)
@@ -34,6 +69,17 @@ function build_simulator(::SortingDirect, state, model, rates_cache)
   return ExactSimulator(algorithm)
 end
 
+"""
+```
+FirstReaction()
+```
+
+Gillespie's First Reaction Method.
+
+#### References
+
+- Daniel T Gillespie. A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*, 1976. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
+"""
 struct FirstReaction <: SimulationAlgorithm end
 
 function build_simulator(::FirstReaction, state, model, rates_cache)
@@ -43,6 +89,17 @@ function build_simulator(::FirstReaction, state, model, rates_cache)
   return ExactSimulator(algorithm)
 end
 
+"""
+```
+NextReaction()
+```
+
+Gibson and Bruck's Next Reaction Method.
+
+#### References
+
+- Michael A. Gibson and Jehoshua Bruck. Efficient exact stochastic simulation of chemical systems with many species and many channels. *Journal of Physical Chemistry*, 1999. [https://doi.org/10.1021/jp993732q](https://doi.org/10.1021/jp993732q)
+"""
 struct NextReaction <: SimulationAlgorithm end
 
 function build_simulator(::NextReaction, state, model, rates_cache)
@@ -53,6 +110,17 @@ function build_simulator(::NextReaction, state, model, rates_cache)
   return ExactSimulator(algorithm)
 end
 
+"""
+```
+RejectionSSA()
+```
+
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct RejectionSSA <: SimulationAlgorithm end
 
 function build_simulator(::RejectionSSA, state, model, rates_cache)
@@ -73,6 +141,17 @@ end
 
 ##### tau-leaping
 
+"""
+```
+TauLeapingDG2001
+```
+
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct TauLeapingDG2001 <: SimulationAlgorithm end
 
 function build_simulator(::TauLeapingDG2001, state, model, rates_cache)
@@ -98,7 +177,17 @@ function build_simulator(::TauLeapingDG2001, state, model, rates_cache)
   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
 end
 
+"""
+```
+TauLeapingDGLP2003()
+```
 
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct TauLeapingDGLP2003 <: SimulationAlgorithm end
 
 function build_simulator(::TauLeapingDGLP2003, state, model, rates_cache)
@@ -128,6 +217,22 @@ function build_simulator(::TauLeapingDGLP2003, state, model, rates_cache)
   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
 end
 
+
+"""
+```
+StepAnticipation()
+```
+
+Step Anticipation tau-Leaping.
+
+#### Optional Arguments
+
+Work in progress.
+
+#### References
+
+- Mary E. Sehl, Alexander L. Alekseyenko, and Kenneth L. Lange. Accurate stochastic simulation via the step anticipation tau-leaping (SAL) algorithm. *Journal of Computational Biology*, 2009. [https://dx.doi.org/10.1089/cmb.2008.0249](https://dx.doi.org/10.1089/cmb.2008.0249)
+"""
 struct StepAnticipation <: SimulationAlgorithm end
 
 function build_simulator(::StepAnticipation, state, model, rates_cache)
@@ -163,6 +268,17 @@ function build_simulator(::StepAnticipation, state, model, rates_cache)
   return TauLeapSimulator(algorithm, number_jumps, execute_leap!)
 end
 
+"""
+```
+HybridSAL()
+```
+
+Work in progress.
+
+#### References
+
+- TODO
+"""
 struct HybridSAL <: SimulationAlgorithm end
 
 function build_simulator(::HybridSAL, state, model, rates_cache)
