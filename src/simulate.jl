@@ -54,12 +54,12 @@ function simulate!(simulator, state, model, tfinal, output, save_points)
 
         if tnew <= tfinal
             step!(simulator, state, model)
-            update!(output, simulator.t, state, save_points)
         else
             simulator.t = tfinal
         end
+
+        update!(output, simulator.t, state, save_points)
     end
-    update!(output, simulator.t, state, save_points)
 
     return output
 end
