@@ -1,3 +1,3 @@
 abstract type AbstractSimulator end
 
-cumulative_intensity(::AbstractSimulator) = nothing
+@inline cumulative_intensity(::AbstractSimulator) = nothing
