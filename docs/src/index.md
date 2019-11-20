@@ -20,10 +20,19 @@ BioSimulator.jl aims to provide researchers interested in such phenomena with a 
 
 ## Installation
 
-BioSimulator.jl must be installed with `Pkg.clone` in the Julia REPL:
+BioSimulator.jl can be installed with Julia's package manager at the REPL (note the capitalization in URLs):
+
+**Option 1**: Directly with `Pkg`
 
 ```julia
-Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git", "BioSimulator")
+using Pkg
+Pkg.add("https://github.com/alanderos91/BioSimulator.jl.git")
+```
+
+**Option 2**: Press `]` to enter `pkg` mode:
+
+```julia
+pkg> https://github.com/alanderos91/BioSimulator.jl.git
 ```
 
 You can start using BioSimulator.jl in scripts or the REPL with the command:
