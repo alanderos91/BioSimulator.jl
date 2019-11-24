@@ -3,9 +3,9 @@ module BioSimulator
 using Random, DataStructures, Statistics, PoissonRandom
 using StaticArrays, SparseArrays, LinearAlgebra
 using RecipesBase
-using RecursiveArrayTools
 
 ## imports
+import RecursiveArrayTools: AbstractDiffEqArray
 
 import Combinatorics: multiexponents
 import MacroTools: postwalk
