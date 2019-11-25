@@ -90,6 +90,7 @@ export HybridSAL
 include("simulate.jl")
 include(joinpath("output", "SamplePath.jl"))
 include(joinpath("output", "Configuration.jl"))
+include(joinpath("output", "tabletraits.jl"))
 
 export simulate, SamplePath, Ensemble, Configuration
 
