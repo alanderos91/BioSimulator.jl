@@ -1,4 +1,4 @@
-using IteratorInterfaceExtension, TableTraits
+using IteratorInterfaceExtensions, TableTraits
 
 import IteratorInterfaceExtensions: isiterable, getiterator
 import TableTraits: isiterabletable
@@ -69,3 +69,6 @@ Base.eltype(iter::SamplePathIterator{T,S}) where {T,S} = T
         end
     end
 end
+
+# workaround for broken integrations in IterableTables.jl
+tablefy(xw::SamplePath) = IteratorInterfaceExtensions.getiterator(xw::SamplePath)  

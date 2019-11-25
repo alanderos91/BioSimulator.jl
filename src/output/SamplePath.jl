@@ -9,8 +9,6 @@ SamplePath(xs::AbstractVector{T}, ts, dims::NTuple{N}) where {T, N} = SamplePath
 # Assume that the first element is representative all all other elements
 SamplePath(xs::AbstractVector, ts::AbstractVector) = SamplePath(xs, ts, (size(xs[1])..., length(xs)))
 
-# @inline Base.getindex(xw::SamplePath{T, N}, I::AbstractArray{Int}) where {T, N} = SamplePath(xw.u[I], xw.t[I])
-
 function Base.show(io::IO, xw::SamplePath)
     print(io,"t: "); show(io, xw.t)
     println(io);
@@ -24,17 +22,6 @@ function Base.show(io::IO, m::MIME"text/plain", xw::SamplePath)
     print(io,"x: "); show(io,m,xw.u)
     nothing
 end
-
-# SamplePath() = SamplePath{Float64,Int}()
-
-# Ensemble(ntrials) = [SamplePath() for i in 1:ntrials]
-
-# function Base.sizehint!(xw::SamplePath, n)
-#     sizehint!(xw.t, n)
-#     sizehint!(xw.u, n)
-#
-#     return xw
-# end
 
 function update!(xw::SamplePath, t, x, save_points)
     j = searchsortedlast(save_points, t)
