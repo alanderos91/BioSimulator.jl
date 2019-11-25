@@ -4,7 +4,7 @@
 CurrentModule = BioSimulator
 ```
 
-## Exact
+## Exact algorithms
 
 ### Direct methods
 
@@ -27,7 +27,7 @@ NextReaction
 RejectionSSA
 ```
 
-## Approximate
+## Approximate algorithms
 
 ```@docs
 TauLeapingDG2001

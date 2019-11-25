@@ -1,7 +1,7 @@
 # Examples
 
 The following examples illustrate BioSimulator.jl's interface and features.
-Each code block assumes BioSimulator.jl and Plots.jl are loaded; that is, `using BioSimulator, Plots`.
+Each code block assumes BioSimulator.jl and Plots.jl are loaded.
 
 ```@setup kendall
 using BioSimulator, Plots, TikzPictures
@@ -207,21 +207,27 @@ savefig("gene2.png"); nothing # hide
 ## Brusselator Cascade
 
 The Brusselator is a theoretical model used to study autocatalytic reactions. The reactions in the model are
-  > $A \to X$
-  > $2X + Y \to 3X$
-  > $X + B \to Y + D$
-  > $X \to E,$
-where $A$, $B$, and $D$ are chemical species assumed to be constant in concentration; only $X$ and $Y$ vary over time.. The species $A$ and $B$ act as inputs to the synthesis and conversion of $X$, whereas $D$ and $E$ are byproducts with no impact on the system. The $Y$ species acts as a catalyst to the synthesis of $X$ so that $X$ is autocatalytic. Note that the last reaction can be thought of as the decay of $X$.
 
-One can study the role of stochasticity in chemical reaction cascades by coupling Brusselators. A cascade with $N$ steps is modeled as
-  > $A \to X_{1}$
-  > $2 X_{n} + Y_{n} \to 3 X_{n}; n = 1,\ldots,N$
-  > $X_{n} + B \to Y_{n} + D; n = 1,\ldots,N$
-  > $X_{n} \to X_{n+1}; n = 1,\ldots,N-1$
-  > $X_{N} \to E,$
-where the $X_{n} \to X_{n+1}$ reactions effectively couple each Brusselator. The fixed point of the system is given by the concentrations of $A$ and $B$: $([X_{n}], [Y_{n}]) = ([A], [A] / [B])$ for each $n = 1,\ldots,N$, which is stable for $[B] < [A]^{2} + 1$ and unstable for $[B] > [A]^{2} + 1$. A limit cycle exists in the unstable case which propagates noise down the steps in the cascade. A deterministic model predicts asymptotic stability at the end of the cascade, but small fluctuations from the fixed point are amplified in the stochastic setting.
+> $A \to X$
+> $2X + Y \to 3X$
+> $X + B \to Y + D$
+> $X \to E,$
 
-This example walks through an implementation of the Brusselator cascade, including conversion of deterministic rates to stochastic rates.
+where $A$, $B$, and $D$ are chemical species assumed to be constant in concentration; only $X$ and $Y$ vary over time.
+Species $A$ and $B$ act as inputs to synthesis and conversion of $X$, whereas $D$ and $E$ are negligible by-products.
+Species $Y$ acts as a catalyst.
+
+A cascade with $N$ steps is modeled as
+
+> $A \to X_{1}$
+> $2 X_{n} + Y_{n} \to 3 X_{n}; n = 1,\ldots,N$
+> $X_{n} + B \to Y_{n} + D; n = 1,\ldots,N$
+> $X_{n} \to X_{n+1}; n = 1,\ldots,N-1$
+> $X_{N} \to E,$
+
+where reactions of the form $X_{n} \to X_{n+1}$ effectively couple each Brusselator. The fixed point of the system is given by the concentrations of $A$ and $B$: $([X_{n}], [Y_{n}]) = ([A], [A] / [B])$ for each $n = 1,\ldots,N$, which is stable for $[B] < [A]^{2} + 1$ and unstable for $[B] > [A]^{2} + 1$.
+A limit cycle exists in the unstable case which propagates noise down the steps in the cascade.
+A deterministic model predicts asymptotic stability at the end of the cascade, but small fluctuations from the fixed point are amplified in the stochastic setting.
 
 ### Model Definition
 
@@ -231,33 +237,24 @@ model = Network("Brusselator")
 N = 20    # number of Brusselators
 V = 100.0 # system volume
 
-# ===== "Deterministic" Rates =====
-k1 = 1.0  # buffer rate
-k2 = 1.0  # transition/decay rate
-k3 = 1.0  # conversion rate
-k4 = 1.0  # autocatalytic rate
-
-# ===== "Stochastic" Rates =====
-# To model a constant buffer X0 we add a zero-order reaction (like immigration)
-# The stochastic rates have to take into account the system volume
-
 γ1 = k1                    # buffer rate
 γ2 = k2 / V                # transition/decay rate
 γ3 = k3 / V                # conversion rate
 γ4 = 2 * k4 / (V * V * V)  # autocatalytic rate
 
+# for each Brusselator...
 for i = 1:N
-  # species definitions
+  # define each species
   model <= Species("X$(i)", 0)
   model <= Species("Y$(i)", 0)
 
-  # autocatalytic reactions
+  # define the autocatalytic reactions
   model <= Reaction("conversion$(i)",    γ3, "X$(i) --> Y$(i)")
   model <= Reaction("autocatalysis$(i)", γ4, "X$(i) + X$(i) + Y$(i) --> X$(i) + X$(i) + X$(i)")
 end
 
+# couple the independent systems
 for i = 2:N
-  # cascades
   model <= Reaction("cascade$(i)", γ2, "X$(i-1) --> X$(i)")
 end
 
@@ -271,7 +268,7 @@ nothing # hide
 Here we plot the sample paths for $X$ and $Y$ at the first and twentieth stages in the cascade; the species are labeled $X_{1}$, $Y_{1}$, $X_{20}$, and $Y_{20}$.
 
 ```@example brusselator_cascade
-result = simulate(model, Direct(), Val(:full), time = 10_000.0)
+result = simulate(model, SortingDirect(), Val(:full), time = 10_000.0)
 
 p1 = plot(result, plot_type = :trajectory, species = ["X1", "Y1"], title = "brusselator 1")
 
