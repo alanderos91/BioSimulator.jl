@@ -1,5 +1,5 @@
 name = "BioSimulator"
-uuid = "b1b5f1a8-b9dc-11e8-34ec-e5bc9df8861c"
+uuid = "6aabf0a6-ec0e-58c4-b8bf-f645d5ac4ee8"
 authors = ["Alfonso Landeros <alanderos@ucla.edu>", "Timothy Stutz <stutztim@ucla.edu>"]
 version = "0.9.1-beta"
 
