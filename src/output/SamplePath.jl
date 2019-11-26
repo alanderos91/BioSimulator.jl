@@ -9,6 +9,7 @@ SamplePath(xs::AbstractVector{T}, ts, dims::NTuple{N}) where {T, N} = SamplePath
 # Assume that the first element is representative all all other elements
 SamplePath(xs::AbstractVector, ts::AbstractVector) = SamplePath(xs, ts, (size(xs[1])..., length(xs)))
 
+##### pretty printing
 function Base.show(io::IO, xw::SamplePath)
     print(io,"t: "); show(io, xw.t)
     println(io);
@@ -23,7 +24,8 @@ function Base.show(io::IO, m::MIME"text/plain", xw::SamplePath)
     nothing
 end
 
-function update!(xw::SamplePath, t, x, save_points)
+##### update! logic
+function update!(xw::SamplePath, t, state, save_points)
     j = searchsortedlast(save_points, t)
     i = j
 
@@ -34,7 +36,7 @@ function update!(xw::SamplePath, t, x, save_points)
 
     # fill in the data for each save point
     for k in i+1:j
-        push!(xw.u, copy(x))
+        push!(xw.u, __extract(state))
         push!(xw.t, save_points[k])
     end
 
@@ -42,75 +44,62 @@ function update!(xw::SamplePath, t, x, save_points)
 end
 
 function update!(xw::SamplePath, t, x, save_points::Nothing)
-    push!(xw.u, copy(x))
+    push!(xw.u, __extract(x))
     push!(xw.t, t)
 
     return xw
 end
 
-##### interpolation
-function get_regular_path(xw::SamplePath, tfinal, epochs) where {T1,T2}
-    max_epoch = epochs + 1
+##### extracting state
+__extract(state::Vector{T}) where T <: Int = copy(state)
+__extract(state::Lattice) = Configuration(state)
 
-    if xw.u[1] isa Number
-        x0 = [xw.u[1]]
-    else
-        x0 = xw.u[1]
-    end
+##### initializing output
+function build_output(state, model)
+    xw = SamplePath([__extract(state)], [0.0])
+    sizehint!(xw, 1_000)
 
-    ts = collect(range(0.0, stop = tfinal, length = max_epoch))
-    new_xw = SamplePath([x0], ts)
-    epoch = 2
-
-    # copy data from the sample path
-    for j in 2:length(xw)
-        @inbounds t = xw.t[j]
-        @inbounds x = xw.u[j]
-
-        while (epoch <= max_epoch) && (t >= ts[epoch])
-            push!(new_xw.u, x)
-            epoch = epoch + 1
-        end
-    end
-
-    # fill in the regular path
-    while epoch <= max_epoch
-        x = xw.u[end]
-        push!(new_xw.u, x)
-        epoch = epoch + 1
-    end
-
-    return new_xw
+    return xw
 end
 
-function get_regular_ensemble(x::Ensemble, tfinal, epochs)
-    return [get_regular_path(x[i], tfinal, epochs) for i in eachindex(x)]
+##### interpolation
+function get_regular_path(xw::SamplePath, save_points)
+    yw = SamplePath(__extract(xw.u[1]), [save_points[1]])
+
+    # copy data from the sample path
+    for j in 2:length(xw.u)
+        update!(yw, xw.t[j], xw.u[j], save_points)
+    end
+
+    return yw
+end
+
+function get_regular_ensemble(x::Ensemble, save_points)
+    return [get_regular_path(x[i], save_points) for i in eachindex(x)]
 end
 
 ##### plotting recipes #####
 
-@recipe function f(xw::SamplePath)
-    seriestype --> :steppre
-
-    xw.t, xw'
-end
-
-@recipe function f(xw::SamplePath{T,1}) where {T}
-    seriestype --> :steppre
-
-    xw.t, xw.u
-end
+# @recipe function f(xw::SamplePath{T}) where T <: AbstractVector
+#     seriestype --> :steppre
+#
+#     xw.t, xw'
+# end
+#
+# @recipe function f(xw::SamplePath{T,1}) where T <: AbstractVector
+#     seriestype --> :steppre
+#
+#     xw.t, xw.u
+# end
 
 @recipe function f(ens::Ensemble;
     summary = :mean,
-    epochs = 100,
+    save_points = 0:ens[1].t[end],
     error_style = :bars,
     timepoint = 1,
     vars = nothing)
-    # regularize the sample paths
-    tfinal = ens[1].t[end]
 
-    reg = get_regular_ensemble(ens, tfinal, epochs)
+    reg = get_regular_ensemble(ens, save_points)
 
     if summary == :mean
         # extract the series data

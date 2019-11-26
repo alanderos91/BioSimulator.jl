@@ -66,39 +66,6 @@ end
 
 ##### temporary hacks
 
-function build_output(state, model)
-    xw = SamplePath([copy(state)], [0.0])
-    sizehint!(xw, 1_000)
-
-    return xw
-end
-
-function build_output(state::Lattice, model)
-    xw = ([Configuration(state)], [0.0])
-    sizehint!(xw[1], 1_000)
-    sizehint!(xw[2], 1_000)
-
-    return xw
-end
-
-function update!(xw, t, x::Lattice, save_points)
-    i = searchsortedlast(save_points, t)
-
-    if (i > 0) && !(save_points[i] in xw[2])
-        push!(xw[1], Configuration(x))
-        push!(xw[2], save_points[i])
-    end
-
-    return xw
-end
-
-function update!(xw, t, x::Lattice, save_points::Nothing)
-    push!(xw[1], Configuration(x))
-    push!(xw[2], t)
-
-    return xw
-end
-
 initialize_datastructs!(state, model) = nothing
 
 function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSystem)
