@@ -11,7 +11,8 @@ function Lattice(coord, types::Vector;
     type_list = unique(types)
   )
   dimension = coord isa Matrix ? size(coord, 1) : length(coord[1])
-  unique_types = sort!(type_list)
+  # unique_types = sort!(type_list)
+  unique_types = type_list
   number_types = length(unique_types)
   number_neighbors = capacity(nbhood, dimension)
 
