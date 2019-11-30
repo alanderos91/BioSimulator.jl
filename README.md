@@ -41,7 +41,7 @@ Landeros A, Stutz, T, Keys, KL, Alekseyenko, A, Sinsheimer, JS, Lange, K, & Sehl
 ## Contributing
 
 [docs-latest-img]: https://img.shields.io/badge/docs-latest-blue.svg
-[docs-latest-url]: https://alanderos91.github.io/BioSimulator.jl/latest/
+[docs-latest-url]: https://alanderos91.github.io/BioSimulator.jl/dev/
 
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://alanderos91.github.io/BioSimulator.jl/stable
