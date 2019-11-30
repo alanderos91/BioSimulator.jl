@@ -4,11 +4,37 @@
 CurrentModule = BioSimulator
 ```
 
+## Exact algorithms
+
+### Direct methods
+
 ```@docs
 Direct
+EnhancedDirect
+SortingDirect
+```
+
+### First reaction methods
+
+```@docs
 FirstReaction
 NextReaction
-OptimizedDirect
-TauLeaping
+```
+
+### Rejection methods
+
+```@docs
+RejectionSSA
+```
+
+## Approximate algorithms
+
+**Note**: These implementations are a work in progress.
+The `TauLeapingDG2001` and `TauLeapingDGLP2003` methods need "hybrid" counterparts.
+
+```@docs
+TauLeapingDG2001
+TauLeapingDGLP2003
 StepAnticipation
+HybridSAL
 ```

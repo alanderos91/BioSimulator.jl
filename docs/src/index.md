@@ -20,82 +20,24 @@ BioSimulator.jl aims to provide researchers interested in such phenomena with a 
 
 ## Installation
 
-BioSimulator.jl must be installed with `Pkg.clone` in the Julia REPL:
+BioSimulator.jl can be installed with Julia's package manager at the REPL (note the capitalization in URLs):
 
-```julia
-Pkg.clone("https://github.com/alanderos91/biosimulator.jl.git", "BioSimulator")
+**Option 1**: Directly with `Pkg`
+
+```
+using Pkg
+
+Pkg.add("https://github.com/alanderos91/BioSimulator.jl.git")
+```
+
+**Option 2**: Press `]` to enter `pkg` mode and enter the following:
+
+```
+pkg> add https://github.com/alanderos91/BioSimulator.jl.git
 ```
 
 You can start using BioSimulator.jl in scripts or the REPL with the command:
 
-```julia
+```
 using BioSimulator
-```
-
-### Additional tools
-
-#### DataFrames
-
-The `SimulationSummary` returned by `simulate` can be converted into a `DataFrame` using the [DataFrames.jl](https://github.com/JuliaData/DataFrames.jl) package.
-The conversion is straightforward after installing the package with the command `Pkg.add("DataFrames")`:
-
-```julia
-# make sure the package is loaded
-using DataFrames
-
-# simulate a model and save the results
-result = simulate(model...)
-
-# returns a DataFrame
-DataFrame(result)
-```
-
-The first two columns indicate the time point and trial of a record (row).
-The remaining columns represent the species counts and are labeled using the given names.
-
-#### Plotting
-
-The plotting defaults provided by BioSimulator.jl require the [Plots.jl](https://github.com/JuliaPlots/Plots.jl) package. You can install it with
-
-```julia
-Pkg.add("Plots")
-```
-
-BioSimulator.jl does not load the Plots.jl package by default.
-Any time you need plotting functionality, simply load the package:
-
-```julia
-# if BioSimulator is already loaded
-using Plots
-
-# if you're just starting
-using BioSimulator, Plots
-```
-
-Note that Plots.jl is independent of BioSimulator.jl and can be used without BioSimulator.jl.
-Please consult the Plots.jl documentation for additional details.
-
-#### Petri nets
-
-BioSimulator.jl should install the [TikzGraphs.jl](https://github.com/sisl/TikzGraphs.jl) package by default.
-You can try generating a Petri net in a Jupyter notebook for a `model` using `visualize(model)`.
-If you want to generate the figure in a script and save it to a file, install the [TikzPictures.jl](https://github.com/sisl/TikzPictures.jl) package.
-You can then save a figure using:
-
-```
-import TikzPictures: save
-
-figure = visualize(model)
-save(PDF(filename), figure)
-```
-
-## Table of Contents
-
-```@contents
-  pages = [
-    "Home"       => "index.md",
-    "Overview"   => "man/overview.md",
-    "Algorithms" => "man/algorithms.md",
-    "Examples"   => "man/examples.md",
-  ]
 ```

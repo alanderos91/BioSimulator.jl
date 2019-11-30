@@ -1,40 +1,20 @@
 using BioSimulator
-using Test
-using Random
-using Statistics
+using Test, Statistics
 
-import BioSimulator: Algorithm
-import Random: seed!
-import Printf: @printf
-
-function run_test(
-  model :: Network,
-  alg   :: T,
-  t     :: Real,
-  n     :: Integer,
-  m     :: Integer;
-  kwargs...) where T
-  result = simulate(model, alg, time=t, epochs=n, trials=m, kwargs...)
+for model in readdir("test-models")
+  include(joinpath("test-models", model))
 end
 
-# Load test models
-include("test_models.jl")
+include(joinpath("interface", "well-mixed", "network.jl"))
 
-# List of tests
-tests = ["mass_action",
-         "time_derivatives",
-         "network",
-         "sort",
-         "summary",
-         "kendall",
-         "linear",
-         "independent",
-         "sir"]
+include(joinpath("data-structures", "dep_graph.jl"))
+include(joinpath("data-structures", "priority_queue.jl"))
 
-println("Running tests:")
+include(joinpath("model", "reaction_system.jl"))
 
-for t in tests
-  @testset "$(t)" begin
-    include("$(t).jl")
-  end
-end
+include(joinpath("simulators", "mean_convergence.jl"))
+
+##### spatial simulations
+include(joinpath("lattice.jl"))
+include(joinpath("ips-interface.jl"))
+include(joinpath("execute.jl"))
