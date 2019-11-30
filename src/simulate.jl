@@ -1,3 +1,12 @@
+"""
+```
+parse_model(network::Network)
+```
+
+Construct a `state <: Vector{Int}` and `model <: ReactionSystem` from a `Network` object.
+
+Use this in `simulate` to avoid constructing internal data structures over multiple samples.
+"""
 function parse_model(network::Network)
     state = [ x.population for (key, x) in species_list(network) ]
     model = ReactionSystem(network)
@@ -7,6 +16,23 @@ end
 
 ##### user-facing interface #####
 
+"""
+```
+simulate(network::Network, algname::SimulationAlgorithm;
+            [tfinal = 0.0],
+            [rates_cache = HasRates],
+            [save_points = nothing])
+```
+
+Simulate a `Network` of interacting populations.
+Note that simulations may terminate early if the cumulative intensity reaches `0` (that is, reaching an absorbing state).
+
+#### Keyword Arguments
+
+- `tfinal`: The final simulation time.
+- `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
+- `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
+"""
 function simulate(network::Network, algname::SimulationAlgorithm;
     tfinal=0.0,
     rates_cache = HasRates,
@@ -19,6 +45,35 @@ function simulate(network::Network, algname::SimulationAlgorithm;
     return simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
 end
 
+"""
+```
+simulate(state, model, algname::SimulationAlgorithm;
+            [tfinal = 0.0],
+            [rates_cache = HasRates],
+            [save_points = nothing])
+```
+
+Simulate a `model` with the given initial `state`.
+Note that simulations may terminate early if the cumulative intensity reaches `0` (that is, reaching an absorbing state).
+
+#### Arguments
+
+For well-mixed systems:
+
+- `state`: A `Vector{Int}` constructed by `parse_model`.
+- `model`: A `ReactionSystem` type constructed by `parse_model`.
+
+For lattice-based systems:
+
+- `state`: A `Lattice` type whose topology comptabile is compatible with `model`.
+- `model`: An `InteractingParticleSystem` type build from `@enumerate_with_sclass`.
+
+#### Keyword Arguments
+
+- `tfinal`: The final simulation time.
+- `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
+- `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
+"""
 function simulate(initial_state, model, algname::SimulationAlgorithm;
     tfinal = 0.0,
     rates_cache = HasRates,

@@ -16,9 +16,9 @@ Gillespie's Direct Method.
 
 #### References
 
-- Daniel T Gillespie. A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*, 1976. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
+- Gillespie, D.T. (1976) A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
 
-- Daniel T. Gillespie. Exact stochastic simulation of coupled chemical reactions. *The Journal of Physical Chemistry*, 1977. [https://doi.org/10.1021/j100540a008](https://doi.org/10.1021/j100540a008)
+- Gillespie, D.T. (1977) Exact stochastic simulation of coupled chemical reactions. *The Journal of Physical Chemistry*. [https://doi.org/10.1021/j100540a008](https://doi.org/10.1021/j100540a008)
 """
 struct Direct <: SimulationAlgorithm end
 
@@ -34,11 +34,11 @@ end
 EnhancedDirect()
 ```
 
-Work in progress.
+A Direct method that uses a dependency graph.
 
 #### References
 
-- TODO
+- Marchetti L., Priami C., Thanh V.H. (2017) Simulation Algorithms for Computational Systems Biology. *Texts in Theoretical Computer Science*.
 """
 struct EnhancedDirect <: SimulationAlgorithm end
 
@@ -54,11 +54,12 @@ end
 SortingDirect()
 ```
 
-Work in progress.
+The sorting direct method reorders reactions to identify frequently occurring events.
+This effectively reduces the search depth in selecting the next reaction.
 
 #### References
 
-- TODO
+- McCollum, J.M., Peterson, G.D., Cox, C.D., Simpson, M.L., Samatova, N.F. (2006). The sorting direct method for stochastic simulation of biochemical systems with varying reaction execution behavior. *Computational Biology and Chemistry*. [https://doi.org/10.1016/j.compbiolchem.2005.10.007](https://doi.org/10.1016/j.compbiolchem.2005.10.007).
 """
 struct SortingDirect <: SimulationAlgorithm end
 
@@ -74,11 +75,11 @@ end
 FirstReaction()
 ```
 
-Gillespie's First Reaction Method.
+A first reaction method that samples reaction events and times jointly.
 
 #### References
 
-- Daniel T Gillespie. A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*, 1976. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
+- Gillespie, D.T. (1976) A general method for numerically simulating the stochastic time evolution of coupled chemical reactions. *Journal of Computational Physics*. [https://doi.org/10.1016/0021-9991(76)90041-3](https://doi.org/10.1016/0021-9991(76)90041-3)
 """
 struct FirstReaction <: SimulationAlgorithm end
 
@@ -94,11 +95,12 @@ end
 NextReaction()
 ```
 
-Gibson and Bruck's Next Reaction Method.
+Gibson and Bruck's next reaction method.
+Uses a priority queue to select the next reaction event and time.
 
 #### References
 
-- Michael A. Gibson and Jehoshua Bruck. Efficient exact stochastic simulation of chemical systems with many species and many channels. *Journal of Physical Chemistry*, 1999. [https://doi.org/10.1021/jp993732q](https://doi.org/10.1021/jp993732q)
+- Gibson, M.A., Bruck, J. (1999) Efficient exact stochastic simulation of chemical systems with many species and many channels. *Journal of Physical Chemistry*. [https://doi.org/10.1021/jp993732q](https://doi.org/10.1021/jp993732q)
 """
 struct NextReaction <: SimulationAlgorithm end
 
@@ -115,11 +117,13 @@ end
 RejectionSSA()
 ```
 
-Work in progress.
+A rejection-based algorithm that operates on "virtual states" to accelerate simulation.
+
+WARNING: This *implementation* is a work in progress.
 
 #### References
 
-- TODO
+- Thahn, V.H., Priami, C., Zunino, R. (2014) Efficient rejection-based simulation of biochemical reactions with stochastic noise and delays. *Journal of Chemical Physics*. [https://doi.org/10.1063/1.4896985](https://doi.org/10.1063/1.4896985)
 """
 struct RejectionSSA <: SimulationAlgorithm end
 
@@ -143,14 +147,18 @@ end
 
 """
 ```
-TauLeapingDG2001
+TauLeapingDG2001()
 ```
+
+A pure tau-leaping method using the Equation (26a) to select tau.
+
+#### Optional Arguments
 
 Work in progress.
 
 #### References
 
-- TODO
+- Gillespie, D.T. (2001) Approximate accelerated stochastic simulation of chemically reacting systems. *Journal of Chemical Physics*. [https://doi.org/10.1063/1.1378322](https://doi.org/10.1063/1.1378322)
 """
 struct TauLeapingDG2001 <: SimulationAlgorithm end
 
@@ -182,11 +190,15 @@ end
 TauLeapingDGLP2003()
 ```
 
+A pure tau-leaping method using the Equation (6) to select tau.
+
+#### Optional Arguments
+
 Work in progress.
 
 #### References
 
-- TODO
+- Gillespie, D.T., Petzold, L.R. (2003) Improved leap-size selection for accelerated stochastic simulation. *Journal of Chemical Physics*. [https://doi.org/10.1063/1.1613254](https://doi.org/10.1063/1.1613254)
 """
 struct TauLeapingDGLP2003 <: SimulationAlgorithm end
 
@@ -223,7 +235,7 @@ end
 StepAnticipation()
 ```
 
-Step Anticipation tau-Leaping.
+A pure tau-leaping method using the Equation (15) to select tau.
 
 #### Optional Arguments
 
@@ -231,7 +243,7 @@ Work in progress.
 
 #### References
 
-- Mary E. Sehl, Alexander L. Alekseyenko, and Kenneth L. Lange. Accurate stochastic simulation via the step anticipation tau-leaping (SAL) algorithm. *Journal of Computational Biology*, 2009. [https://dx.doi.org/10.1089/cmb.2008.0249](https://dx.doi.org/10.1089/cmb.2008.0249)
+- Sehl, M.E., Alekseyenko, A.L., Lange, K.L. (2009) Accurate stochastic simulation via the step anticipation tau-leaping (SAL) algorithm. *Journal of Computational Biology*. [https://dx.doi.org/10.1089/cmb.2008.0249](https://dx.doi.org/10.1089/cmb.2008.0249)
 """
 struct StepAnticipation <: SimulationAlgorithm end
 
@@ -273,11 +285,15 @@ end
 HybridSAL()
 ```
 
+Same as `StepAnticipation()`, but defaults to `Direct()` depending on the cumulative intensity.
+
+#### Optional Arguments
+
 Work in progress.
 
 #### References
 
-- TODO
+- Sehl, M.E., Alekseyenko, A.L., Lange, K.L. (2009) Accurate stochastic simulation via the step anticipation tau-leaping (SAL) algorithm. *Journal of Computational Biology*. [https://dx.doi.org/10.1089/cmb.2008.0249](https://dx.doi.org/10.1089/cmb.2008.0249)
 """
 struct HybridSAL <: SimulationAlgorithm end
 

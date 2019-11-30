@@ -5,17 +5,31 @@ Because transition probabilities are usually unavailable and infinitesimal gener
 Two cases are handled: well-mixed and lattice-based systems.
 Here the term "well-mixed" is taken to mean that the underlying space for a chain concerns discrete quantities and/or vectors (non-spatial), whereas lattice-based systems model configurations of interacting particles (spatial).
 
-# Well-Mixed Systems
+## Well-Mixed Systems
 
 A `Network` object summarizes interactions between populations.
 Each `Species` participates in at least one `Reaction`.
+For example, the following code defines a birth-death-immigration process in BioSimulator.jl's modeling language:
 
-# Lattice/Cellular Automata
+```
+# initialize
+network = Network("BDI")
+
+# species definitions; add components with <=
+network <= Species("X", 5)
+
+# reaction definitions
+network <= Reaction("birth", 2.0, "X --> X + X")
+network <= Reaction("death", 1.0, "X --> 0")
+network <= Reaction("immigration", 0.5, "0 --> X")
+```
+
+## Lattice/Cellular Automata
 
 Interacting Particle Systems (IPSs) are defined using the `@def_reactions` macro.
 The syntax resembles chemical reaction notation but the `+` symbol implies directionality; for example:
 
-```julia
+```
 interactions = @def_reactions begin
     X + 0 --> 0 + X, α
     X + Y --> Z + 0, β
