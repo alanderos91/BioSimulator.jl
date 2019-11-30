@@ -60,7 +60,7 @@ Both `SamplePath` and `Ensemble` implement the [IterableTables.jl](https://githu
 This means that they act as *data sources* that can be converted into any supported *data sink*.
 For example, you can convert an `Ensemble` into a `DataFrame`:
 
-```
+```@example neg_autoreg
 using DataFrames
 
 DataFrame(ensemble)
@@ -69,7 +69,7 @@ DataFrame(ensemble)
 Each component of the state vector appears as a column, along with trajectory `trial` and timestamp `t` columns.
 If the conversion does not produce the expected result, one may be able to force the correct behavior using the `tablefy` function:
 
-```
+```@example neg_autoreg
 import BioSimulator: tablefy
 
 DataFrame(tablefy(sample_path)) # DataFrame(sample_path) is currently incorrect
