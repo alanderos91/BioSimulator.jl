@@ -4,3 +4,4 @@
 docs/build/
 docs/site/
 .ipynb_checkpoints
+.DS_Store
