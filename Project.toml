@@ -1,7 +1,7 @@
 name = "BioSimulator"
 uuid = "6aabf0a6-ec0e-58c4-b8bf-f645d5ac4ee8"
 authors = ["Alfonso Landeros <alanderos@ucla.edu>", "Timothy Stutz <stutztim@ucla.edu>"]
-version = "0.9.1-beta"
+version = "0.9.2-beta"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
@@ -20,6 +20,9 @@ StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 TableTraits = "3783bdb8-4a98-5b6b-af9a-565f29a5fe9c"
+
+[compat]
+RecursiveArrayTools = "1.2"
 
 [extras]
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
