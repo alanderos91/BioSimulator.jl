@@ -6,6 +6,7 @@ struct MassActionOrder0  <: KineticLaw end
 struct MassActionOrder1  <: KineticLaw end
 struct MassActionOrder2A <: KineticLaw end
 struct MassActionOrder2B <: KineticLaw end
+struct MassActionOrderN  <: KineticLaw end
 
 ##### ReactionStruct #####
 
@@ -28,6 +29,7 @@ is_compatible_law(::MassActionOrder0,  order, num_reactants) = order == 0
 is_compatible_law(::MassActionOrder1,  order, num_reactants) = order == 1
 is_compatible_law(::MassActionOrder2A, order, num_reactants) = order == 2 && num_reactants == 2
 is_compatible_law(::MassActionOrder2B, order, num_reactants) = order == 2 && num_reactants == 1
+is_compatible_law(::MassActionOrderN, order, num_reactants) = true
 
 function execute_jump!(x, r::ReactionStruct)
     net_change = r.net_change
@@ -68,13 +70,31 @@ end
     return 0.5 * x[k] * (x[k] - 1) * p[i]
 end
 
+@inline @inbounds function rate(r::ReactionStruct{MassActionOrderN}, x, p)
+    i = r.paramidx
+    total_rate = p[i]   # accumulates terms of the form (x_k - (j-1))
+    prefactor = one(total_rate) # accumulates constants 1 / m_k!
+
+    for (k, m) in r.reactants
+        for j in 1:m
+            total_rate *= (x[k] - (j-1))
+            prefactor *= j
+        end
+    end
+
+    total_rate /= prefactor
+
+    return total_rate
+end
+
 ##### type union for heterogeneous ReactionStruct arrays #####
 
 ReactionLike = Union{
 ReactionStruct{MassActionOrder0},
 ReactionStruct{MassActionOrder1},
 ReactionStruct{MassActionOrder2A},
-ReactionStruct{MassActionOrder2B}
+ReactionStruct{MassActionOrder2B},
+ReactionStruct{MassActionOrderN}
 }
 
 ##### ReactionSystem #####
@@ -166,7 +186,7 @@ function get_kinetic_law(rtuples)
     elseif order == 2 && num_reactants == 1
         MassActionOrder2B
     else
-        error("reaction is not elementary or mass action")
+        MassActionOrderN
     end
 end
 
@@ -216,4 +236,25 @@ function rate_derivative(r::ReactionStruct{MassActionOrder2B}, x, p, i)
     else
         return zero(eltype(p))
     end
+end
+
+function rate_derivative(r::ReactionStruct{MassActionOrderN}, x, p, i)
+    total_rate = p[r.paramidx]  # accumulates terms of the form (x_k - (j-1))
+    prefactor = one(total_rate) # accumulates constants 1 / m_k!
+    deriv_term = zero(total_rate)
+
+    for (k, m) in r.reactants
+        for j in 1:m
+            total_rate *= (x[k] - (j-1))
+            prefactor *= j
+
+            if k == i
+                deriv_term += 1 / (x[k] - n + k - 1)
+            end
+        end
+    end
+
+    total_rate = total_rate / prefactor * deriv_term
+
+    return total_rate
 end

@@ -1,4 +1,4 @@
-import BioSimulator: MassActionOrder0, MassActionOrder1, MassActionOrder2A, MassActionOrder2B
+import BioSimulator: MassActionOrder0, MassActionOrder1, MassActionOrder2A, MassActionOrder2B, MassActionOrderN
 import BioSimulator: ReactionStruct, ReactionLike, execute_jump!, rate
 import BioSimulator: ReactionSystem
 
@@ -46,11 +46,17 @@ end
     ([(2, 2)], [(2, -2), (1, 1)], 4) # 2 B --> A
   ]
 
+  # Order 3
+  order3a = [
+    ([(1, 1), (2, 1), (3, 1)], [(1, -1), (2, -1), (3, -1), (4, 1)], 1)
+  ]
+
   @testset "ReactionStruct" begin
     rxn0  = [ReactionStruct(MassActionOrder0(),  r, v, i) for (r, v, i) in order0]
     rxn1  = [ReactionStruct(MassActionOrder1(),  r, v, i) for (r, v, i) in order1]
     rxn2a = [ReactionStruct(MassActionOrder2A(), r, v, i) for (r, v, i) in order2a]
     rxn2b = [ReactionStruct(MassActionOrder2B(), r, v, i) for (r, v, i) in order2b]
+    rxn3a = [ReactionStruct(MassActionOrderN(), r, v, i) for (r, v, i) in order3a]
 
     @testset "fire_reaction!" begin
       result   = copy(x)
@@ -87,6 +93,11 @@ end
       expected = x + [1, -2, 0, 0, 0]
       execute_jump!(result, rxn2b[1])
       @test result == expected
+
+      result   = copy(x)
+      expected = x + [-1, -1, -1, 1, 0]
+      execute_jump!(result, rxn3a[1])
+      @test result == expected
     end
 
     @testset "rate" begin
@@ -99,6 +110,8 @@ end
 
       @test rate(rxn2a[1], x, params) ≈ x[1] * x[2] * params[3]
       @test rate(rxn2b[1], x, params) ≈ 1//2 * x[2] * (x[2] - 1) * params[4]
+
+      @test rate(rxn3a[1], x, params) ≈ x[1] * x[2] * x[3] * params[1]
     end
   end
 
@@ -126,6 +139,9 @@ end
 
     # order 2b
     model <= Reaction("R7", params[4], "2 * B --> A")
+
+    # order 3
+    model <= Reaction("R8", params[1], "A + B + C --> D")
 
     m = ReactionSystem(model)
 
@@ -171,6 +187,13 @@ end
       @test m.reactions[7].paramidx == expected.paramidx
     end
 
+    @testset "MassActionOrderN" begin
+      expected = ReactionStruct(MassActionOrderN(), order3a[1][1], order3a[1][2], 8)
+
+      @test m.reactions[8] == expected
+      @test m.reactions[8].paramidx == expected.paramidx
+    end
+
     @testset "fire_reaction!" begin
       result = copy(x); expected = x + [1, 0, 0, 0, 0]
       execute_jump!(result, m, 1)
@@ -199,6 +222,10 @@ end
       result = copy(x); expected = x + [1, -2, 0, 0, 0]
       execute_jump!(result, m, 7)
       @test result == expected
+
+      result = copy(x); expected = x + [-1, -1, -1, 1, 0]
+      execute_jump!(result, m, 8)
+      @test result == expected
     end
 
     @testset "rate" begin
@@ -211,6 +238,8 @@ end
 
       @test rate(m, x, 6) ≈ x[1] * x[2] * params[3]
       @test rate(m, x, 7) ≈ 1//2 * x[2] * (x[2] - 1) * params[4]
+
+      @test rate(m, x, 8) ≈ x[1] * x[2] * x[3] * params[1]
     end
   end
 end
