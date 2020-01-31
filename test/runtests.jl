@@ -18,3 +18,6 @@ include(joinpath("simulators", "mean_convergence.jl"))
 include(joinpath("lattice.jl"))
 include(joinpath("ips-interface.jl"))
 include(joinpath("execute.jl"))
+
+##### simulation output
+include(joinpath("output", "SamplePath.jl"))
