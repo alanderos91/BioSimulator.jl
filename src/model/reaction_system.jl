@@ -2,11 +2,7 @@
 
 abstract type KineticLaw end
 
-struct MassActionOrder0  <: KineticLaw end
-struct MassActionOrder1  <: KineticLaw end
-struct MassActionOrder2A <: KineticLaw end
-struct MassActionOrder2B <: KineticLaw end
-struct MassActionOrderN  <: KineticLaw end
+struct MassAction  <: KineticLaw end
 
 ##### ReactionStruct #####
 
@@ -25,11 +21,7 @@ struct ReactionStruct{MA <: KineticLaw}
     end
 end
 
-is_compatible_law(::MassActionOrder0,  order, num_reactants) = order == 0
-is_compatible_law(::MassActionOrder1,  order, num_reactants) = order == 1
-is_compatible_law(::MassActionOrder2A, order, num_reactants) = order == 2 && num_reactants == 2
-is_compatible_law(::MassActionOrder2B, order, num_reactants) = order == 2 && num_reactants == 1
-is_compatible_law(::MassActionOrderN, order, num_reactants) = true
+is_compatible_law(::MassAction, order, num_reactants) = true
 
 function execute_jump!(x, r::ReactionStruct)
     net_change = r.net_change
@@ -42,35 +34,7 @@ end
 
 ##### rate functions for stochastic mass action kinetics #####
 
-@inline @inbounds function rate(r::ReactionStruct{MassActionOrder0}, x, p)
-    i = r.paramidx
-
-    return p[i]
-end
-
-@inline @inbounds function rate(r::ReactionStruct{MassActionOrder1}, x, p)
-    i = r.paramidx
-    k, _ = r.reactants[1]
-
-    return p[i] * x[k]
-end
-
-@inline @inbounds function rate(r::ReactionStruct{MassActionOrder2A}, x, p)
-    i = r.paramidx
-    k1, _ = r.reactants[1]
-    k2, _ = r.reactants[2]
-
-    return p[i] * x[k1] * x[k2]
-end
-
-@inline @inbounds function rate(r::ReactionStruct{MassActionOrder2B}, x, p)
-    i = r.paramidx
-    k, _ = r.reactants[1]
-
-    return 0.5 * x[k] * (x[k] - 1) * p[i]
-end
-
-@inline @inbounds function rate(r::ReactionStruct{MassActionOrderN}, x, p)
+@inline @inbounds function rate(r::ReactionStruct{MassAction}, x, p)
     i = r.paramidx
     total_rate = p[i]   # accumulates terms of the form (x_k - (j-1))
     prefactor = one(total_rate) # accumulates constants 1 / m_k!
@@ -87,20 +51,31 @@ end
     return total_rate
 end
 
-##### type union for heterogeneous ReactionStruct arrays #####
+@inline @inbounds function rate_derivative(r::ReactionStruct{MassAction}, x, p, i)
+    total_rate = p[r.paramidx]  # accumulates terms of the form (x_k - (j-1))
+    prefactor = one(total_rate) # accumulates constants 1 / m_k!
+    deriv_term = zero(total_rate)
 
-ReactionLike = Union{
-ReactionStruct{MassActionOrder0},
-ReactionStruct{MassActionOrder1},
-ReactionStruct{MassActionOrder2A},
-ReactionStruct{MassActionOrder2B},
-ReactionStruct{MassActionOrderN}
-}
+    for (k, m) in r.reactants
+        for j in 1:m
+            total_rate *= (x[k] - (j-1))
+            prefactor *= j
+
+            if k == i
+                deriv_term += 1 / (x[k] - (j-1))
+            end
+        end
+    end
+
+    total_rate = total_rate / prefactor * deriv_term
+
+    return total_rate
+end
 
 ##### ReactionSystem #####
 
 struct ReactionSystem{R,DG<:DependencyGraph}
-    reactions::Vector{ReactionLike}
+    reactions::Vector{ReactionStruct{MassAction}}
     rxn_rates::R
     dep_graph::DG
     spc_graph::DG
@@ -110,7 +85,7 @@ end
 function ReactionSystem(model::Network)
     num_reactions = number_reactions(model)
 
-    reactions = Vector{ReactionLike}(undef, num_reactions)
+    reactions = Vector{ReactionStruct{MassAction}}(undef, num_reactions)
     rxn_rates = zeros(num_reactions)
 
     build_reactions!(reactions, rxn_rates, model)
@@ -129,6 +104,10 @@ end
 end
 
 @inline @inbounds rate(rxn::ReactionSystem, x, j) = rate(rxn.reactions[j], x, rxn.rxn_rates)
+
+@inline @inbounds function rate_derivative(rxn, x, i, j)
+    rate_derivative(rxn.reactions[j], x, rxn.rxn_rates, i)
+end
 
 function netstoichiometry(rxn::ReactionSystem, num_species, num_reactions)
     V = zeros(Int, num_species, num_reactions)
@@ -164,9 +143,9 @@ function build_reactions!(rxn_set, rxn_rates, model)
                 push!(net_change, (indexmap[s], change))
             end
         end
-        L = get_kinetic_law(rtuples)
+        klaw = get_kinetic_law(rtuples)
 
-        rxn_set[j] = ReactionStruct(L(), rtuples, net_change, j)
+        rxn_set[j] = ReactionStruct(klaw, rtuples, net_change, j)
         rxn_rates[j] = rxn_rate
     end
 
@@ -174,85 +153,13 @@ function build_reactions!(rxn_set, rxn_rates, model)
 end
 
 function get_kinetic_law(rtuples)
-    num_reactants = length(rtuples)
-    order = num_reactants > 0 ? sum(c for (_, c) in rtuples) : 0
-
-    if order == 0
-        MassActionOrder0
-    elseif order == 1
-        MassActionOrder1
-    elseif order == 2 && num_reactants == 2
-        MassActionOrder2A
-    elseif order == 2 && num_reactants == 1
-        MassActionOrder2B
-    else
-        MassActionOrderN
-    end
+    # num_reactants = length(rtuples)
+    # order = num_reactants > 0 ? sum(c for (_, c) in rtuples) : 0
+    return MassAction()
 end
 
 ##### extras #####
 
 function execute_leap!(state, stoichiometry, number_jumps)
     state += stoichiometry * number_jumps
-end
-
-function rate_derivative(rxn, x, i, j)
-    rate_derivative(rxn.reactions[j], x, rxn.rxn_rates, i)
-end
-
-function rate_derivative(r::ReactionStruct{MassActionOrder0}, x, p, i)
-    return zero(eltype(p))
-end
-
-function rate_derivative(r::ReactionStruct{MassActionOrder1}, x, p, i)
-    idx = r.paramidx
-    k, _ = r.reactants[1]
-
-    return i == k ? p[idx] : zero(eltype(p))
-end
-
-function rate_derivative(r::ReactionStruct{MassActionOrder2A}, x, p, i)
-    idx = r.paramidx
-    k1, _ = r.reactants[1]
-    k2, _ = r.reactants[2]
-
-    if i == k1
-        return p[idx] * x[k2]
-    elseif i == k2
-        return p[idx] * x[k1]
-    else
-        return zero(p[idx])
-    end
-end
-
-function rate_derivative(r::ReactionStruct{MassActionOrder2B}, x, p, i)
-    idx = r.paramidx
-    k, _ = r.reactants[1]
-
-    if i == k
-        return p[idx] * (x[k] - 0.5)
-    else
-        return zero(eltype(p))
-    end
-end
-
-function rate_derivative(r::ReactionStruct{MassActionOrderN}, x, p, i)
-    total_rate = p[r.paramidx]  # accumulates terms of the form (x_k - (j-1))
-    prefactor = one(total_rate) # accumulates constants 1 / m_k!
-    deriv_term = zero(total_rate)
-
-    for (k, m) in r.reactants
-        for j in 1:m
-            total_rate *= (x[k] - (j-1))
-            prefactor *= j
-
-            if k == i
-                deriv_term += 1 / (x[k] - (j-1))
-            end
-        end
-    end
-
-    total_rate = total_rate / prefactor * deriv_term
-
-    return total_rate
 end
