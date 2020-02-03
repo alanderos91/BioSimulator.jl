@@ -1,5 +1,5 @@
-import BioSimulator: MassActionOrder0, MassActionOrder1, MassActionOrder2A, MassActionOrder2B, MassActionOrderN
-import BioSimulator: ReactionStruct, ReactionLike, execute_jump!, rate, rate_derivative
+import BioSimulator: MassAction
+import BioSimulator: ReactionStruct, execute_jump!, rate, rate_derivative
 import BioSimulator: ReactionSystem
 
 # define notion of equality for ReactionStruct
@@ -51,18 +51,19 @@ end
   order3a = [
     ([(1, 1), (2, 1), (3, 1)], [(1, -1), (2, -1), (3, -1), (4, 1)], 1)
   ]
+
   # 3 * A + B + 2 * C --> D
   order3b = [
     ([(1, 3), (2, 1), (3, 2)], [(1, -3), (2, -1), (3, -2), (4, 1)], 1)
   ]
 
   @testset "ReactionStruct" begin
-    rxn0  = [ReactionStruct(MassActionOrder0(),  r, v, i) for (r, v, i) in order0]
-    rxn1  = [ReactionStruct(MassActionOrder1(),  r, v, i) for (r, v, i) in order1]
-    rxn2a = [ReactionStruct(MassActionOrder2A(), r, v, i) for (r, v, i) in order2a]
-    rxn2b = [ReactionStruct(MassActionOrder2B(), r, v, i) for (r, v, i) in order2b]
-    rxn3a = [ReactionStruct(MassActionOrderN(), r, v, i) for (r, v, i) in order3a]
-    rxn3b = [ReactionStruct(MassActionOrderN(), r, v, i) for (r, v, i) in order3b]
+    rxn0  = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order0]
+    rxn1  = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order1]
+    rxn2a = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order2a]
+    rxn2b = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order2b]
+    rxn3a = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order3a]
+    rxn3b = [ReactionStruct(MassAction(), r, v, i) for (r, v, i) in order3b]
 
     @testset "fire_reaction!" begin
       result   = copy(x)
@@ -159,54 +160,54 @@ end
     m = ReactionSystem(model)
 
     @testset "MassActionOrder0" begin
-      expected = ReactionStruct(MassActionOrder0(), order0[1][1], order0[1][2], 1)
+      expected = ReactionStruct(MassAction(), order0[1][1], order0[1][2], 1)
 
       @test m.reactions[1] == expected
       @test m.reactions[1].paramidx == expected.paramidx
 
-      expected = ReactionStruct(MassActionOrder0(), order0[2][1], order0[2][2], 2)
+      expected = ReactionStruct(MassAction(), order0[2][1], order0[2][2], 2)
       @test m.reactions[2] == expected
       @test m.reactions[2].paramidx == expected.paramidx
     end
 
     @testset "MassActionOrder1" begin
-      expected = ReactionStruct(MassActionOrder1(), order1[1][1], order1[1][2], 3)
+      expected = ReactionStruct(MassAction(), order1[1][1], order1[1][2], 3)
 
       @test m.reactions[3] == expected
       @test m.reactions[3].paramidx == expected.paramidx
 
-      expected = ReactionStruct(MassActionOrder1(), order1[2][1], order1[2][2], 4)
+      expected = ReactionStruct(MassAction(), order1[2][1], order1[2][2], 4)
 
       @test m.reactions[4] == expected
       @test m.reactions[4].paramidx == expected.paramidx
 
-      expected = ReactionStruct(MassActionOrder1(), order1[3][1], order1[3][2], 5)
+      expected = ReactionStruct(MassAction(), order1[3][1], order1[3][2], 5)
 
       @test m.reactions[5] == expected
       @test m.reactions[5].paramidx == expected.paramidx
     end
 
     @testset "MassActionOrder2A" begin
-      expected = ReactionStruct(MassActionOrder2A(), order2a[1][1], order2a[1][2], 6)
+      expected = ReactionStruct(MassAction(), order2a[1][1], order2a[1][2], 6)
 
       @test m.reactions[6] == expected
       @test m.reactions[6].paramidx == expected.paramidx
     end
 
     @testset "MassActionOrder2B" begin
-      expected = ReactionStruct(MassActionOrder2B(), order2b[1][1], order2b[1][2], 7)
+      expected = ReactionStruct(MassAction(), order2b[1][1], order2b[1][2], 7)
 
       @test m.reactions[7] == expected
       @test m.reactions[7].paramidx == expected.paramidx
     end
 
     @testset "MassActionOrderN" begin
-      expected = ReactionStruct(MassActionOrderN(), order3a[1][1], order3a[1][2], 8)
+      expected = ReactionStruct(MassAction(), order3a[1][1], order3a[1][2], 8)
 
       @test m.reactions[8] == expected
       @test m.reactions[8].paramidx == expected.paramidx
 
-      expected = ReactionStruct(MassActionOrderN(), order3b[1][1], order3b[1][2], 9)
+      expected = ReactionStruct(MassAction(), order3b[1][1], order3b[1][2], 9)
       @test m.reactions[9] == expected
       @test m.reactions[9].paramidx == expected.paramidx
     end
