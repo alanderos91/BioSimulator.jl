@@ -229,10 +229,8 @@ function rate_derivative(r::ReactionStruct{MassActionOrder2B}, x, p, i)
     idx = r.paramidx
     k, _ = r.reactants[1]
 
-    return 0.5 * x[k] * (x[k] - 1) * p[i]
-
     if i == k
-        return p[idx] * (x - 0.5)
+        return p[idx] * (x[k] - 0.5)
     else
         return zero(eltype(p))
     end
@@ -249,7 +247,7 @@ function rate_derivative(r::ReactionStruct{MassActionOrderN}, x, p, i)
             prefactor *= j
 
             if k == i
-                deriv_term += 1 / (x[k] - n + k - 1)
+                deriv_term += 1 / (x[k] - (j-1))
             end
         end
     end

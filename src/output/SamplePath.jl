@@ -27,10 +27,12 @@ end
 ##### update! logic
 function update!(xw::SamplePath, t, state, save_points)
     j = searchsortedlast(save_points, t)
-    i = j
 
+    j == 0 && return xw
+
+    i = j
     # backtrack in case the last event jumped over save points
-    while (i > 1) && !(save_points[i] in xw.t)
+    while (i ≥ 1) && !(save_points[i] in xw.t)
         i -= 1
     end
 

@@ -14,7 +14,10 @@ include(joinpath("model", "reaction_system.jl"))
 
 include(joinpath("simulators", "mean_convergence.jl"))
 
-##### spatial simulations
+#### spatial simulations
 include(joinpath("lattice.jl"))
 include(joinpath("ips-interface.jl"))
 include(joinpath("execute.jl"))
+
+#### simulation output
+include(joinpath("output", "SamplePath.jl"))

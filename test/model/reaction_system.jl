@@ -1,5 +1,5 @@
 import BioSimulator: MassActionOrder0, MassActionOrder1, MassActionOrder2A, MassActionOrder2B, MassActionOrderN
-import BioSimulator: ReactionStruct, ReactionLike, execute_jump!, rate
+import BioSimulator: ReactionStruct, ReactionLike, execute_jump!, rate, rate_derivative
 import BioSimulator: ReactionSystem
 
 # define notion of equality for ReactionStruct
@@ -47,8 +47,13 @@ end
   ]
 
   # Order 3
+  # A + B + C --> D
   order3a = [
     ([(1, 1), (2, 1), (3, 1)], [(1, -1), (2, -1), (3, -1), (4, 1)], 1)
+  ]
+  # 3 * A + B + 2 * C --> D
+  order3b = [
+    ([(1, 3), (2, 1), (3, 2)], [(1, -3), (2, -1), (3, -2), (4, 1)], 1)
   ]
 
   @testset "ReactionStruct" begin
@@ -57,6 +62,7 @@ end
     rxn2a = [ReactionStruct(MassActionOrder2A(), r, v, i) for (r, v, i) in order2a]
     rxn2b = [ReactionStruct(MassActionOrder2B(), r, v, i) for (r, v, i) in order2b]
     rxn3a = [ReactionStruct(MassActionOrderN(), r, v, i) for (r, v, i) in order3a]
+    rxn3b = [ReactionStruct(MassActionOrderN(), r, v, i) for (r, v, i) in order3b]
 
     @testset "fire_reaction!" begin
       result   = copy(x)
@@ -98,6 +104,11 @@ end
       expected = x + [-1, -1, -1, 1, 0]
       execute_jump!(result, rxn3a[1])
       @test result == expected
+
+      result   = copy(x)
+      expected = x + [-3, -1, -2, 1, 0]
+      execute_jump!(result, rxn3b[1])
+      @test result == expected
     end
 
     @testset "rate" begin
@@ -112,6 +123,7 @@ end
       @test rate(rxn2b[1], x, params) ≈ 1//2 * x[2] * (x[2] - 1) * params[4]
 
       @test rate(rxn3a[1], x, params) ≈ x[1] * x[2] * x[3] * params[1]
+      @test rate(rxn3b[1], x, params) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[2] * x[3] * (x[3] - 1) * params[1] / 12
     end
   end
 
@@ -142,6 +154,7 @@ end
 
     # order 3
     model <= Reaction("R8", params[1], "A + B + C --> D")
+    model <= Reaction("R9", params[1], "3 * A + B + 2 * C --> D")
 
     m = ReactionSystem(model)
 
@@ -192,6 +205,10 @@ end
 
       @test m.reactions[8] == expected
       @test m.reactions[8].paramidx == expected.paramidx
+
+      expected = ReactionStruct(MassActionOrderN(), order3b[1][1], order3b[1][2], 9)
+      @test m.reactions[9] == expected
+      @test m.reactions[9].paramidx == expected.paramidx
     end
 
     @testset "fire_reaction!" begin
@@ -226,6 +243,10 @@ end
       result = copy(x); expected = x + [-1, -1, -1, 1, 0]
       execute_jump!(result, m, 8)
       @test result == expected
+
+      result = copy(x); expected = x + [-3, -1, -2, 1, 0]
+      execute_jump!(result, m, 9)
+      @test result == expected
     end
 
     @testset "rate" begin
@@ -237,9 +258,40 @@ end
       @test rate(m, x, 5) ≈ x[1] * params[2]
 
       @test rate(m, x, 6) ≈ x[1] * x[2] * params[3]
-      @test rate(m, x, 7) ≈ 1//2 * x[2] * (x[2] - 1) * params[4]
+      @test rate(m, x, 7) ≈ 0.5 * x[2] * (x[2] - 1) * params[4]
 
       @test rate(m, x, 8) ≈ x[1] * x[2] * x[3] * params[1]
+      @test rate(m, x, 9) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[2] * x[3] * (x[3] - 1) * params[1] / 12
+    end
+
+    @testset "rate_derivative" begin
+      # Order 0:
+      @test rate_derivative(m, x, 1, 1) == 0
+
+      # Order 1: A --> B
+      @test rate_derivative(m, x, 1, 3) ≈ params[2]
+      @test rate_derivative(m, x, 2, 3) == 0
+
+      # Order 2A: A + B --> C
+      @test rate_derivative(m, x, 1, 6) ≈ x[2] * params[3]
+      @test rate_derivative(m, x, 2, 6) ≈ x[1] * params[3]
+      @test rate_derivative(m, x, 3, 6) == 0
+
+      # Order 2B: 2*B --> A
+      @test rate_derivative(m, x, 2, 7) ≈ (x[2] - 0.5) * params[4]
+      @test rate_derivative(m, x, 3, 7) == 0
+
+      # Order 3: A + B + C --> D
+      @test rate_derivative(m, x, 1, 8) ≈ x[2] * x[3] * params[1]
+      @test rate_derivative(m, x, 2, 8) ≈ x[1] * x[3] * params[1]
+      @test rate_derivative(m, x, 3, 8) ≈ x[1] * x[2] * params[1]
+      @test rate_derivative(m, x, 4, 8) == 0
+
+      # Order 3: 3 * A + B + 2 * C --> D
+      @test rate_derivative(m, x, 1, 9) ≈ (0.5*x[1]^2 - x[1] + 1/3) * x[2] * x[3] * (x[3] - 1) * params[1] / 2
+      @test rate_derivative(m, x, 2, 9) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[3] * (x[3] - 1) * params[1] / 12
+      @test rate_derivative(m, x, 3, 9) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[2] * (x[3] - 0.5) * params[1] / 6
+      @test rate_derivative(m, x, 4, 9) == 0
     end
   end
 end
