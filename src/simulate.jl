@@ -21,7 +21,8 @@ end
 simulate(network::Network, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
-            [save_points = nothing])
+            [save_points = nothing],
+            [save_function = __extract])
 ```
 
 Simulate a `Network` of interacting populations.
@@ -32,6 +33,7 @@ Note that simulations may terminate early if the cumulative intensity reaches `0
 - `tfinal`: The final simulation time.
 - `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
 - `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
+- `save_function`: A three argument function that maps the three arguments `(simulator, state, model)` to data recorded in a `SamplePath`. Default behavior is to record each species.
 """
 function simulate(network::Network, algname::SimulationAlgorithm;
     tfinal=0.0,
@@ -51,7 +53,8 @@ end
 simulate(state, model, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
-            [save_points = nothing])
+            [save_points = nothing],
+            [save_function = __extract])
 ```
 
 Simulate a `model` with the given initial `state`.
@@ -67,13 +70,14 @@ For well-mixed systems:
 For lattice-based systems:
 
 - `state`: A `Lattice` type whose topology comptabile is compatible with `model`.
-- `model`: An `InteractingParticleSystem` type build from `@enumerate_with_sclass`.
+- `model`: An `InteractingParticleSystem` type built from `@enumerate_with_sclass`.
 
 #### Keyword Arguments
 
 - `tfinal`: The final simulation time.
 - `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
 - `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
+- `save_function`: A three argument function that maps the three arguments `(simulator, state, model)` to data recorded in a `SamplePath`. Default behavior is to store population counts for well-mixed systems or `Configuration` objects for lattice-based systems.
 """
 function simulate(initial_state, model, algname::SimulationAlgorithm;
     tfinal = 0.0,
