@@ -36,13 +36,14 @@ Note that simulations may terminate early if the cumulative intensity reaches `0
 function simulate(network::Network, algname::SimulationAlgorithm;
     tfinal=0.0,
     rates_cache = HasRates,
-    save_points = nothing
-    )
+    save_points = nothing,
+    save_function::funcT = __extract
+    ) where funcT <: Function
     # build the internal representation of our stochastic process
     initial_state, model = parse_model(network)
 
     # feedforward down the chain...
-    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
+    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
 end
 
 """
@@ -77,15 +78,16 @@ For lattice-based systems:
 function simulate(initial_state, model, algname::SimulationAlgorithm;
     tfinal = 0.0,
     rates_cache = HasRates,
-    save_points = nothing
-    )
+    save_points = nothing,
+    save_function::funcT = __extract
+    ) where funcT <: Function
     # feedforward down the chain...
-    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
+    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
 end
 
 ##### internals #####
 
-function simulate(initial_state, model, algname, tfinal, rates_cache, save_points)
+function simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
     # copy state
     state = copy(initial_state)
 
@@ -93,15 +95,15 @@ function simulate(initial_state, model, algname, tfinal, rates_cache, save_point
     simulator = build_simulator(algname, state, model, rates_cache)
 
     # build the output data
-    output = build_output(state, model)
+    output = build_output(save_function, simulator, state, model)
 
     initialize_datastructs!(state, model)
 
     # feedforward down the chain...
-    simulate!(simulator, state, model, tfinal, output, save_points)
+    simulate!(simulator, state, model, tfinal, output, save_points, save_function)
 end
 
-function simulate!(simulator, state, model, tfinal, output, save_points)
+function simulate!(simulator, state, model, tfinal, output, save_points, save_function)
     initialize!(simulator, state, model, tfinal)
 
     while simulator.t < tfinal && cumulative_intensity(simulator) > 0
@@ -112,8 +114,8 @@ function simulate!(simulator, state, model, tfinal, output, save_points)
         else
             simulator.t = tfinal
         end
-
-        update!(output, simulator.t, state, save_points)
+        t = simulator.t
+        update_samplepath!(save_function, output, simulator, t, state, model, save_points)
     end
 
     return output
