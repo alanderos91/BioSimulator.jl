@@ -52,6 +52,27 @@ function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_
     return xw
 end
 
+# this just appends (t, state) to a SamplePath
+function copy_to_samplepath!(xw::SamplePath, t, state, save_points)
+    j = searchsortedlast(save_points, t)
+
+    j == 0 && return xw
+
+    i = j
+    # backtrack in case the last event jumped over save points
+    while (i ≥ 1) && !(save_points[i] in xw.t)
+        i -= 1
+    end
+
+    # fill in the data for each save point
+    for k in i+1:j
+        push!(xw.u, state)
+        push!(xw.t, save_points[k])
+    end
+
+    return xw
+end
+
 ##### extracting state
 __extract(simulator, state::Vector{T}, model) where T <: Int = copy(state)
 __extract(simulator, state::Lattice, model) = Configuration(state)
@@ -73,7 +94,7 @@ function get_regular_path(xw::SamplePath, save_points)
 
     # copy data from the sample path
     for j in 2:length(xw.u)
-        update_samplepath!(identity, yw, t[j], u[j], save_points)
+        copy_to_samplepath!(yw, t[j], u[j], save_points)
     end
 
     return yw
