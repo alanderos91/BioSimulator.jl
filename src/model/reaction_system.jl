@@ -7,19 +7,17 @@ struct MassAction  <: KineticLaw end
 ##### ReactionStruct #####
 
 struct ReactionStruct{MA <: KineticLaw}
-    name::Symbol
-    formula::Expr
     reactants :: Vector{Tuple{Int,Int}}
     net_change :: Vector{Tuple{Int,Int}}
     paramidx :: Int
 
-    function ReactionStruct(law::MA, name, formula, reactants, net_change, paramidx) where MA <: KineticLaw
+    function ReactionStruct(law::MA, reactants, net_change, paramidx) where MA <: KineticLaw
         num_reactants = length(reactants)
         order = num_reactants > 0 ? sum(c for (_, c) in reactants) : 0
 
         !is_compatible_law(law, order, num_reactants) && throw(ArgumentError("reaction is not compatible with $(law) law"))
 
-        return new{MA}(name, formula, reactants, net_change, paramidx)
+        return new{MA}(reactants, net_change, paramidx)
     end
 end
 
@@ -168,7 +166,7 @@ function build_reactions!(rxn_set, rxn_rates, model)
         end
         klaw = get_kinetic_law(rtuples)
 
-        rxn_set[j] = ReactionStruct(klaw, name, formula, rtuples, net_change, j)
+        rxn_set[j] = ReactionStruct(klaw, rtuples, net_change, j)
         rxn_rates[j] = rxn_rate
     end
 
