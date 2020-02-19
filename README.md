@@ -46,8 +46,8 @@ Landeros A, Stutz, T, Keys, KL, Alekseyenko, A, Sinsheimer, JS, Lange, K, & Sehl
 [docs-stable-img]: https://img.shields.io/badge/docs-stable-blue.svg
 [docs-stable-url]: https://alanderos91.github.io/BioSimulator.jl/stable
 
-[travis-img]: https://travis-ci.org/alanderos91/BioSimulator.jl.svg?branch=master
-[travis-url]: https://travis-ci.org/alanderos91/BioSimulator.jl
+[travis-img]: https://travis-ci.com/alanderos91/BioSimulator.jl.svg?branch=master
+[travis-url]: https://travis-ci.com/alanderos91/BioSimulator.jl
 
 [appveyor-img]: https://ci.appveyor.com/api/projects/status/xnug0ey8xpx8we48?svg=true
 [appveyor-url]: https://ci.appveyor.com/project/alanderos91/biosimulator-jl
