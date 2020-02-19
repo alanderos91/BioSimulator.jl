@@ -21,6 +21,14 @@ struct ReactionStruct{MA <: KineticLaw}
     end
 end
 
+function Base.show(io::IO, r::ReactionStruct{law}) where law <: KineticLaw
+    formula = r.formula
+    lhs = formula.args[1]
+    rhs = formula.args[2]
+
+    print(io, string("  ", r.name, ": ", lhs, " -> ", rhs))
+end
+
 is_compatible_law(::MassAction, order, num_reactants) = true
 
 function execute_jump!(x, r::ReactionStruct)
@@ -97,6 +105,17 @@ function ReactionSystem(model::Network)
     return ReactionSystem(reactions, rxn_rates, dep_graph, spc_graph, rxn_graph)
 end
 
+function Base.summary(io::IO, r::ReactionSystem)
+    print(io, "Well-Mixed Reaction System")
+end
+
+function Base.show(io::IO, r::ReactionSystem)
+    summary(io, r)
+    for (j, reaction) in enumerate(r.reactions)
+        print(io, "\n", reaction)
+    end
+end
+
 ##### convenience functions #####
 
 @inline function execute_jump!(x, rxn::ReactionSystem, j)
@@ -130,6 +149,8 @@ function build_reactions!(rxn_set, rxn_rates, model)
     indexmap = OrderedDict(key => i for (i, key) in enumerate(keys(species)))
 
     for (j, r) in enumerate(values(reactions))
+        name = r.identifier
+        formula = r.origex
         reactants = r.reactants
         products  = r.products
         rxn_rate  = r.rate

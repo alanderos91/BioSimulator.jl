@@ -1,10 +1,10 @@
-import BioSimulator: build_output, update!
+import BioSimulator: build_output, update_samplepath!, __extract, get_regular_path
 
-function make_sample_path(x_initial, tdata, states, save_points)
-    xw = build_output(x_initial, nothing)
+function make_sample_path(f, x_initial, tdata, states, save_points)
+    xw = build_output(f, nothing, x_initial, nothing)
 
     for (t, state) in zip(tdata, states)
-        update!(xw, t, state, save_points)
+        update_samplepath!(f, xw, nothing, t, state, nothing, save_points)
     end
 
     return xw
@@ -23,6 +23,10 @@ function check_sample_path(xw, ts, states)
     end
 end
 
+function save_ones(simulator, state, model)
+    return ones(length(state))
+end
+
 @testset "SamplePath" begin
     n = 50
     d = 3
@@ -32,11 +36,8 @@ end
     # initialization
     x_initial = zeros(Int, d)
 
-    xw = build_output(x_initial, nothing)
-    # @test eltype(xw) == typeof(x_initial)
-
     @testset "save_points = nothing" begin
-        xw = make_sample_path(x_initial, tdata, states, nothing)
+        xw = make_sample_path(__extract, x_initial, tdata, states, nothing)
         check_sample_path(xw, tdata, states)
     end
 
@@ -51,8 +52,32 @@ end
         @testset "$(Base.typename(typeof(stops)))" for stops in cases
             ts = filter(!isequal(0), stops)
             idxs = [searchsortedlast(tdata, t)+1 for t in ts]
-            xw = make_sample_path(x_initial, tdata, states, stops)
+            xw = make_sample_path(__extract, x_initial, tdata, states, stops)
             check_sample_path(xw, ts, states[idxs])
         end
+    end
+
+    @testset "save_function" begin
+        xw = make_sample_path(save_ones, x_initial, tdata, states, nothing)
+        # not happy with this test
+        expected = save_ones.(nothing, states, nothing)
+        check_sample_path(xw, tdata, expected)
+    end
+
+    @testset "regular paths" begin
+        stops = 0.0:0.5:5
+        ts = filter(!isequal(0), stops)
+        idxs = [searchsortedlast(tdata, t)+1 for t in ts]
+
+        # make SamplePath from full observations
+        xw = make_sample_path(__extract, x_initial, tdata, states, nothing)
+
+        # make SamplePath from partial observations
+        yw = make_sample_path(__extract, x_initial, tdata, states, stops)
+
+        # transform full SamplePath to 'regular' path
+        zw = get_regular_path(xw, stops)
+
+        @test yw == zw
     end
 end

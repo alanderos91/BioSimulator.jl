@@ -25,7 +25,7 @@ function Base.show(io::IO, m::MIME"text/plain", xw::SamplePath)
 end
 
 ##### update! logic
-function update!(xw::SamplePath, t, state, save_points)
+function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_points)
     j = searchsortedlast(save_points, t)
 
     j == 0 && return xw
@@ -38,27 +38,49 @@ function update!(xw::SamplePath, t, state, save_points)
 
     # fill in the data for each save point
     for k in i+1:j
-        push!(xw.u, __extract(state))
+        push!(xw.u, f(simulator, state, model))
         push!(xw.t, save_points[k])
     end
 
     return xw
 end
 
-function update!(xw::SamplePath, t, x, save_points::Nothing)
-    push!(xw.u, __extract(x))
+function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_points::Nothing)
+    push!(xw.u, f(simulator, state, model))
     push!(xw.t, t)
 
     return xw
 end
 
+# this just appends (t, state) to a SamplePath
+function copy_to_samplepath!(xw::SamplePath, t, state, save_points)
+    j = searchsortedlast(save_points, t)
+
+    j == 0 && return xw
+
+    i = j
+    # backtrack in case the last event jumped over save points
+    while (i ≥ 1) && !(save_points[i] in xw.t)
+        i -= 1
+    end
+
+    # fill in the data for each save point
+    for k in i+1:j
+        push!(xw.u, state)
+        push!(xw.t, save_points[k])
+    end
+
+    return xw
+end
+
 ##### extracting state
-__extract(state::Vector{T}) where T <: Int = copy(state)
-__extract(state::Lattice) = Configuration(state)
+__extract(simulator, state::Vector{T}, model) where T <: Int = copy(state)
+__extract(simulator, state::Lattice, model) = Configuration(state)
 
 ##### initializing output
-function build_output(state, model)
-    xw = SamplePath([__extract(state)], [0.0])
+function build_output(f, simulator, state, model)
+
+    xw = SamplePath([f(simulator, state, model)], [0.0])
     sizehint!(xw, 1_000)
 
     return xw
@@ -66,11 +88,13 @@ end
 
 ##### interpolation
 function get_regular_path(xw::SamplePath, save_points)
-    yw = SamplePath([__extract(xw.u[1])], [save_points[1]])
+    yw = SamplePath([xw.u[1]], [save_points[1]])
+    t = xw.t
+    u = xw.u
 
     # copy data from the sample path
     for j in 2:length(xw.u)
-        update!(yw, xw.t[j], xw.u[j], save_points)
+        copy_to_samplepath!(yw, t[j], u[j], save_points)
     end
 
     return yw

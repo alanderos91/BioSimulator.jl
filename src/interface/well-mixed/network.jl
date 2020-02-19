@@ -38,7 +38,7 @@ get_species(m::Network, key::AbstractString) = get_species(m, Symbol(key))
 get_species(m::Network, key::Symbol) = get(m.species_list, key, nothing)
 
 get_reaction(m::Network, key::AbstractString) = get_reaction(m, Symbol(key))
-get_Reaction(m::Network, key::Symbol) = get(m.reactioN_list, key, nothing)
+get_reaction(m::Network, key::Symbol) = get(m.reaction_list, key, nothing)
 
 number_species(x::Network)   = length(species_list(x))
 number_reactions(x::Network) = length(reaction_list(x))
@@ -120,13 +120,13 @@ function update_dep_graph!(model, rj)
   id = Symbol(rj.identifier)
 
   rj_affects    = rj.affects
-  rj_affectedby = rj.affectedby 
+  rj_affectedby = rj.affectedby
 
   for (key, rk) in reaction_list(model)
     rk_affects    = rk.affects
     rk_affectedby = rk.affectedby
 
-    
+
     # add edge R_j --> R_k
     if !isempty(intersect(rj_affectedby, rk_affects))
       push!(model.dep_graph[id], key)
