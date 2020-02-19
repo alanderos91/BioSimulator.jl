@@ -24,7 +24,4 @@ makedocs(
 
 deploydocs(
   repo   = "github.com/alanderos91/BioSimulator.jl.git",
-  target = "build",
-  deps   = nothing,
-  make   = nothing
 )
