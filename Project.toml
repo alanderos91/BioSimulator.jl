@@ -1,7 +1,7 @@
 name = "BioSimulator"
 uuid = "6aabf0a6-ec0e-58c4-b8bf-f645d5ac4ee8"
 authors = ["Alfonso Landeros <alanderos@ucla.edu>", "Timothy Stutz <stutztim@ucla.edu>"]
-version = "0.9.3-beta"
+version = "0.9.3"
 
 [deps]
 BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
