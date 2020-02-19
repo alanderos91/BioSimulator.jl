@@ -22,11 +22,12 @@ struct ReactionStruct{MA <: KineticLaw}
 end
 
 function Base.show(io::IO, r::ReactionStruct{law}) where law <: KineticLaw
-    formula = r.formula
-    lhs = formula.args[1]
-    rhs = formula.args[2]
-
-    print(io, string("  ", r.name, ": ", lhs, " -> ", rhs))
+    # formula = r.formula
+    # lhs = formula.args[1]
+    # rhs = formula.args[2]
+    #
+    # print(io, string("  ", r.name, ": ", lhs, " -> ", rhs))
+    print(io, "ReactionStruct")
 end
 
 is_compatible_law(::MassAction, order, num_reactants) = true
