@@ -1,4 +1,4 @@
-struct SamplePath{T,N,A,B} <: AbstractDiffEqArray{T, N}
+struct SamplePath{T,N,A,B} <: AbstractDiffEqArray{T, N, A}
     u::A # A <: AbstractVector{<: AbstractArray{T, N - 1}}
     t::B
 end
