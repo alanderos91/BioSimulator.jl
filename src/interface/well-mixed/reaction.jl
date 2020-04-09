@@ -8,20 +8,24 @@ Define a `Reaction` with a `name`, a stochastic `rate` constant, and a `formula`
 The `formula` should use `Species` from a `Network`. Multiple reactants are separated by a `+` symbol; similarly for products. Reactants and products are separated by a `-->` symbol. Refer to the examples below:
 
 # Examples
-- Reaction("birth", 1.0, "X --> X + X")
-- Reaction("death", 0.5, "X --> 0") # no products
-- Reaction("immigration", 0.5, "0 --> X") # no reactants
+
+```
+Reaction("birth", 1.0, "X --> X + X")   # equiv. X --> 2*X
+Reaction("death", 0.5, "X --> 0")       # no products
+Reaction("immigration", 0.5, "0 --> X") # no reactants
+```
+
 """
 struct Reaction
     identifier :: Symbol
     rate :: Float64
-    
+
     reactants :: OrderedDict{Symbol,Int}
     products  :: OrderedDict{Symbol,Int}
-    
+
     affectedby :: Vector{Symbol}
     affects    :: Vector{Symbol}
-    
+
     origex :: Expr
 
     function Reaction(name, rate, formula)
@@ -34,10 +38,10 @@ struct Reaction
         if any(x -> x < 0, values(reactants)) || any(x -> x < 0, values(products))
             error("Coefficients must be positive.")
         end
-        
+
         affectedby = Symbol[]
         affects = collect(keys(reactants))
-        
+
         for s in union(keys(reactants), keys(products))
           vm = get(reactants, s, 0)
           vp = get(products, s, 0)
@@ -46,7 +50,7 @@ struct Reaction
 
           v != 0 && push!(affectedby, s)
         end
-    
+
         return new(Symbol(replace(name, " " => "_")), rate, reactants, products, affectedby, affects, origex)
     end
 end

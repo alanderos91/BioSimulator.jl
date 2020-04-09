@@ -8,7 +8,7 @@ Construct an empty `Network` representing a system of interacting particles. A p
 Add a `Species` or `Reaction` using `<=`:
 
 ```
-m <= Species("X", 100) # Adds a Species
+m <= Species("X", 100)
 m <= Reaction("birth", 2.0, "X --> X + X")
 ```
 """
@@ -28,10 +28,22 @@ struct Network
   end
 end
 
-"Retrieve `Species` from a `Network`."
+"""
+```
+species_list(x::Network)
+```
+
+Retrieve `Species` from a `Network`.
+"""
 species_list(x::Network) = x.species_list
 
-"Retrieve `Reaction`s from a `Network`."
+"""
+```
+reaction_list(x::Network)
+```
+
+Retrieve `Reaction`s from a `Network`.
+"""
 reaction_list(x::Network) = x.reaction_list
 
 get_species(m::Network, key::AbstractString) = get_species(m, Symbol(key))

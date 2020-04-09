@@ -13,11 +13,19 @@ end
 ##### accessors #####
 
 """
+```
+cumulative_intensity(simulator::ExactSimulator)
+```
+
 Retrieve the cumulative intensity of the process.
 """
 @inline cumulative_intensity(simulator::ExactSimulator) = first(simulator.algorithm.total_rate)
 
 """
+```
+jump_rates(simulator::ExactSimulator)
+```
+
 Retrieve the current rates for each jump.
 
 If the cache type is `HasRates()`, then `rate[j]` is the rate for reaction channel `j`.
@@ -27,11 +35,19 @@ Otherwise if the cache type is `HasSums()`, then `rate[j]` is the cumulative `su
 # TODO: Fix this for FirstReactionMethod
 
 """
+```
+next_jump_index(simulator::ExactSimulator)
+```
+
 Retrieve the index of the next jump.
 """
 @inline next_jump_index(simulator::ExactSimulator) = simulator.next_jump_index
 
 """
+```
+next_jump_time(simulator::ExactSimulator)
+```
+
 Retrieve the time to the next jump.
 """
 @inline next_jump_time(simulator::ExactSimulator) = simulator.next_jump_time

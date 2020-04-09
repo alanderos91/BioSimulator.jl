@@ -10,7 +10,7 @@
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/alanderos91/BioSimulator.jl.git", "BioSimulator")
+Pkg.add("https://github.com/alanderos91/BioSimulator.jl.git")
 ```
 
 ## Documentation

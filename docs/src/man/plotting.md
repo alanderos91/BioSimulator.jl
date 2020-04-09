@@ -1,4 +1,4 @@
-# Basics
+## Basics
 
 ```@setup neg_autoreg
 ENV["GKSwstype"] = "nul"
@@ -48,7 +48,7 @@ The available options include:
 
 See the following examples on how to use the default recipes.
 
-### Sample trajectories
+## Sample trajectories
 
 ```@example neg_autoreg
 # `result` is an `Ensemble` of 100 trajectories
@@ -57,7 +57,7 @@ plot(result[1], summary = :trajectory,
     label = ["gene" "P2_gene" "mRNA" "P" "P2"])
 ```
 
-### Mean trajectories
+## Mean trajectories
 
 ```@example neg_autoreg
 # select data for protein `P` and dimer `P2` with their indices
@@ -66,7 +66,7 @@ plot(result, summary = :mean,
     vars = [4,5], label = ["P" "P2"])
 ```
 
-### Distributions
+## Distributions
 
 ```@example neg_autoreg
 # 3 figures on top row, 2 on the bottom
@@ -80,7 +80,7 @@ plot(result, summary = :histogram,
     label = ["gene" "P2_gene" "mRNA" "P" "P2"])
 ```
 
-### Phase plots
+## Phase plots
 
 For a `SamplePath`:
 
@@ -96,7 +96,7 @@ plot(result, summary = :phase,
     vars = (4,5), xlabel = "P", ylabel = "P2", colorbar = true)
 ```
 
-### Configurations (Lattice-based models)
+## Configurations (Lattice-based models)
 
 You can visualize individual configurations in 2D or 3D:
 
@@ -110,7 +110,8 @@ A `SamplePath` is visualized by plotting the initial and final configuration:
 plot(result)
 ```
 
-### General tips
+## General tips
 
 - The components of a `SamplePath` follow the same order in the `Network` definition. For example, if we define `X`, `Y`, and `Z` in our model, then their indices are `1`, `2`, and `3`, respectively.
+
 - By default, *every* variable will appear in a plot (except for phase portraits). You can select a few variables using the `var` keyword argument.

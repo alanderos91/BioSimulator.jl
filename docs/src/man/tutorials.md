@@ -78,10 +78,7 @@ DataFrame(tablefy(sample_path)) # DataFrame(sample_path) is currently incorrect
 ## Saving simulation results
 
 Because `SamplePath` and `Ensemble` support iteration, you can save simulation data directly using Julia's I/O interface.
-
-> Example here
-
-The easiest approach takes advantage of IterableTables.jl:
+Alternatively, you can use existing packages such as CSV.jl:
 
 ```
 using CSV
@@ -100,3 +97,51 @@ mean(ensemble)
 std(result)
 var(result)
 ```
+
+## Customizing output
+
+It is possible to customize the data stored in a `SamplePath` with the keyword argument `save_function` in [`simulate`](@ref).
+This function must accept exactly three arguments:
+
+```
+function myfunction(simulator, state, model)
+    # your code here
+end
+```
+
+It has access to data stored in a `simulator` object, the process's `state`, and the underlying `model`.
+This customized function should return the data to be stored in a `SamplePath`.
+Data can be any object, including custom Julia types.
+As an example, the function `save_state` is one of the default options that simply saves a copy of the system state at a given time.
+Note the use of annotations to dispatch on the type of `state`
+
+```
+# this gets called for well-mixed simulations
+save_state(simulator, state::Vector{T}, model) where T <: Int = copy(state)
+
+# this gets called for interacting particle systems
+save_state(simulator, state::Lattice, model) = Configuration(state)
+```
+
+Another option is `save_rates` which copies the rates for each possible jump
+
+```
+save_rates(simulator, state, model) = copy(jump_rates(simulator))
+```
+
+BioSimulator provides the following high-level interface for accessing data:
+
+```@docs
+cumulative_intensity
+jump_rates
+next_jump_index
+next_jump_time
+```
+
+!!! tip
+
+    1. Avoid heavy computations inside a save function. It is usually better to store the data needed and do the work outside the simulation loop. Benchmark different implementations to see what approach works best for your application.
+
+    2. Some data, such as `jump_rates(simulator)` and `state` are stored as numerical arrays. These objects are *mutable* so you should generally return copies rather than the object itself.
+
+    3. The generated `SamplePath` object will support multi-dimensional indexing provided its data is stored as an array. For example, if we set `save_function = save_rates`, then `trajectory[k,j]` will return `rate[j]` at time `trajectory.t[k]`.

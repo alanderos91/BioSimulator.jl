@@ -27,10 +27,16 @@ NextReaction
 RejectionSSA
 ```
 
+!!! warning
+
+    This implementation needs additional testing and is not guaranteed to be optimized.
+
 ## Approximate algorithms
 
-**Note**: These implementations are a work in progress.
-The `TauLeapingDG2001` and `TauLeapingDGLP2003` methods need "hybrid" counterparts.
+!!! warning
+
+    These implementations are a work in progress.
+    The `TauLeapingDG2001` and `TauLeapingDGLP2003` methods need "hybrid" counterparts.
 
 ```@docs
 TauLeapingDG2001
