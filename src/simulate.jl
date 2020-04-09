@@ -22,7 +22,7 @@ simulate(network::Network, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
             [save_points = nothing],
-            [save_function = __extract])
+            [save_function = save_state])
 ```
 
 Simulate a `Network` of interacting populations.
@@ -39,7 +39,7 @@ function simulate(network::Network, algname::SimulationAlgorithm;
     tfinal=0.0,
     rates_cache = HasRates,
     save_points = nothing,
-    save_function::funcT = __extract
+    save_function::funcT = save_state
     ) where funcT <: Function
     # build the internal representation of our stochastic process
     initial_state, model = parse_model(network)
@@ -54,7 +54,7 @@ simulate(state, model, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
             [save_points = nothing],
-            [save_function = __extract])
+            [save_function = save_state])
 ```
 
 Simulate a `model` with the given initial `state`.
@@ -83,7 +83,7 @@ function simulate(initial_state, model, algname::SimulationAlgorithm;
     tfinal = 0.0,
     rates_cache = HasRates,
     save_points = nothing,
-    save_function::funcT = __extract
+    save_function::funcT = save_state
     ) where funcT <: Function
     # feedforward down the chain...
     return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
@@ -97,6 +97,8 @@ function simulate(initial_state, model, algname, tfinal, rates_cache, save_point
 
     # build the simulator
     simulator = build_simulator(algname, state, model, rates_cache)
+    # TODO: figure out a way of initializing so that output is built correctly
+    initialize!(simulator, state, model, tfinal)
 
     # build the output data
     output = build_output(save_function, simulator, state, model)

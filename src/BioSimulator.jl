@@ -87,11 +87,15 @@ export FirstReaction, NextReaction, RejectionSSA
 export TauLeapingDG2001, TauLeapingDGLP2003, StepAnticipation
 export HybridSAL
 
+export cumulative_intensity, jump_rates, next_jump_index, next_jump_time
+
+## simulation + output
 include("simulate.jl")
 include(joinpath("output", "SamplePath.jl"))
 include(joinpath("output", "Configuration.jl"))
 include(joinpath("output", "tabletraits.jl"))
 
 export simulate, parse_model, SamplePath, Ensemble, Configuration
+export save_state, save_rates
 
 end # module

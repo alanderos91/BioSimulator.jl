@@ -1,4 +1,4 @@
-import BioSimulator: build_output, update_samplepath!, __extract, get_regular_path
+import BioSimulator: build_output, update_samplepath!, save_state, get_regular_path
 
 function make_sample_path(f, x_initial, tdata, states, save_points)
     xw = build_output(f, nothing, x_initial, nothing)
@@ -37,7 +37,7 @@ end
     x_initial = zeros(Int, d)
 
     @testset "save_points = nothing" begin
-        xw = make_sample_path(__extract, x_initial, tdata, states, nothing)
+        xw = make_sample_path(save_state, x_initial, tdata, states, nothing)
         check_sample_path(xw, tdata, states)
     end
 
@@ -52,7 +52,7 @@ end
         @testset "$(Base.typename(typeof(stops)))" for stops in cases
             ts = filter(!isequal(0), stops)
             idxs = [searchsortedlast(tdata, t)+1 for t in ts]
-            xw = make_sample_path(__extract, x_initial, tdata, states, stops)
+            xw = make_sample_path(save_state, x_initial, tdata, states, stops)
             check_sample_path(xw, ts, states[idxs])
         end
     end
@@ -70,10 +70,10 @@ end
         idxs = [searchsortedlast(tdata, t)+1 for t in ts]
 
         # make SamplePath from full observations
-        xw = make_sample_path(__extract, x_initial, tdata, states, nothing)
+        xw = make_sample_path(save_state, x_initial, tdata, states, nothing)
 
         # make SamplePath from partial observations
-        yw = make_sample_path(__extract, x_initial, tdata, states, stops)
+        yw = make_sample_path(save_state, x_initial, tdata, states, stops)
 
         # transform full SamplePath to 'regular' path
         zw = get_regular_path(xw, stops)

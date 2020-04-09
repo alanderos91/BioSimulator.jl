@@ -10,9 +10,31 @@ function ExactSimulator(algorithm::M) where M
   return ExactSimulator{M}(algorithm, 0, 0.0, 0.0)
 end
 
-##### main simulation routines #####
+##### accessors #####
 
+"""
+Retrieve the cumulative intensity of the process.
+"""
 @inline cumulative_intensity(simulator::ExactSimulator) = first(simulator.algorithm.total_rate)
+
+"""
+Retrieve the current rates for each jump.
+
+If the cache type is `HasRates()`, then `rate[j]` is the rate for reaction channel `j`.
+Otherwise if the cache type is `HasSums()`, then `rate[j]` is the cumulative `sum(rate[1:j])`.
+"""
+@inline jump_rates(simulator::ExactSimulator) = simulator.algorithm.rates
+# TODO: Fix this for FirstReactionMethod
+
+"""
+Retrieve the index of the next jump.
+"""
+@inline next_jump_index(simulator::ExactSimulator) = simulator.next_jump_index
+
+"""
+Retrieve the time to the next jump.
+"""
+@inline next_jump_time(simulator::ExactSimulator) = simulator.next_jump_time
 
 # start a new simulation and initialize the stepper with the next event
 @inline function initialize!(simulator::ExactSimulator, state, model, tfinal)

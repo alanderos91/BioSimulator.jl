@@ -73,9 +73,10 @@ function copy_to_samplepath!(xw::SamplePath, t, state, save_points)
     return xw
 end
 
-##### extracting state
-__extract(simulator, state::Vector{T}, model) where T <: Int = copy(state)
-__extract(simulator, state::Lattice, model) = Configuration(state)
+##### extracting save data
+save_state(simulator, state::Vector{T}, model) where T <: Int = copy(state)
+save_state(simulator, state::Lattice, model) = Configuration(state)
+save_rates(simulator, state, model) = copy(jump_rates(simulator))
 
 ##### initializing output
 function build_output(f, simulator, state, model)
