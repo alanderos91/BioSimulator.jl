@@ -35,10 +35,34 @@ species_list(x::Network) = x.species_list
 reaction_list(x::Network) = x.reaction_list
 
 get_species(m::Network, key::AbstractString) = get_species(m, Symbol(key))
-get_species(m::Network, key::Symbol) = get(m.species_list, key, nothing)
+
+function get_species(m::Network, key::Symbol)
+  s = get(m.species_list, key, nothing)
+
+  if isnothing(s)
+    error("""
+    Species $(key) not defined.
+    Add it with `m <= Species("$(key)")`.
+    """)
+  end
+
+  return s
+end
 
 get_reaction(m::Network, key::AbstractString) = get_reaction(m, Symbol(key))
-get_reaction(m::Network, key::Symbol) = get(m.reaction_list, key, nothing)
+
+function get_reaction(m::Network, key::Symbol)
+  r = get(m.reaction_list, key, nothing)
+
+  if isnothing(r)
+    error("""
+    Reaction $(key) not defined.
+    Add it with `m <= Reaction("$(key)", rate, formula)`.
+    """)
+  end
+
+  return r
+end
 
 number_species(x::Network)   = length(species_list(x))
 number_reactions(x::Network) = length(reaction_list(x))
