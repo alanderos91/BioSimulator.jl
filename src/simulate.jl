@@ -172,13 +172,19 @@ initialize_datastructs!(state, initial_state, model) = copyto!(state, initial_st
 function initialize_datastructs!(lattice::Lattice, initial_lattice::Lattice, model::InteractingParticleSystem)
     # copy fields for lattice...
     empty!(lattice.site)
-    copyto!(lattice.site, initial_lattice.site)
+    for s in initial_lattice.site
+        new_site = Site(s.label, State(s.state.ptype), tuple(s.coord...))
+        push!(lattice.site, new_site)
+    end
 
     empty!(lattice.coord_order)
-    copyto!(lattice.coord_order, initial_lattice.coord_order)
+    foreach(s -> push!(lattice.coord_order, s), lattice.site)
+    sort!(lattice.coord_order,
+    alg = Base.Sort.DEFAULT_STABLE,
+    by = coordinates,
+    lt = <)
 
-    empty!(lattice.neighbors)
-    copyto!(lattice.neighbors, initial_lattice.neighbors)
+    foreach(nb -> empty!(nb), lattice.neighbors)
 
     # unpack information
     number_init = number_sites(lattice)
@@ -191,9 +197,7 @@ function initialize_datastructs!(lattice::Lattice, initial_lattice::Lattice, mod
     dummy_composition = enum.dummy_composition
 
     # make sure sample classes are empty
-    for s in eachindex(class)
-        empty!(class[s])
-    end
+    foreach(c -> empty!(c), class)
 
     # add missing open sites
     for i in 1:number_init
