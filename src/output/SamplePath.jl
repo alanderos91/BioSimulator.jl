@@ -79,12 +79,20 @@ save_state(simulator, state::Lattice, model) = Configuration(state)
 save_rates(simulator, state, model) = copy(jump_rates(simulator))
 
 ##### initializing output
-function build_output(f, simulator, state, model)
+function build_output(f, simulator, state, model, ::Nothing)
 
     xw = SamplePath([f(simulator, state, model)], [0.0])
     sizehint!(xw, 1_000)
 
     return xw
+end
+
+function build_output(f, simulator, state, model, ntrials::Integer)
+
+    ensemble = [SamplePath([f(simulator, state, model)], [0.0]) for k in 1:ntrials]
+    foreach(xw -> sizehint!(xw, 1000), ensemble)
+
+    return ensemble
 end
 
 ##### interpolation

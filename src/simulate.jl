@@ -22,7 +22,8 @@ simulate(network::Network, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
             [save_points = nothing],
-            [save_function = save_state])
+            [save_function = save_state],
+            [ntrials = nothing])
 ```
 
 Simulate a `Network` of interacting populations.
@@ -34,18 +35,20 @@ Note that simulations may terminate early if the cumulative intensity reaches `0
 - `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
 - `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
 - `save_function`: A three argument function that maps the three arguments `(simulator, state, model)` to data recorded in a `SamplePath`. Default behavior is to record each species.
+- `ntrials`: Specifies the number of times to simulate the given model. The default `nothing` generates a single sample path.
 """
 function simulate(network::Network, algname::SimulationAlgorithm;
     tfinal=0.0,
     rates_cache = HasRates,
     save_points = nothing,
-    save_function::funcT = save_state
+    save_function::funcT = save_state,
+    ntrials = nothing
     ) where funcT <: Function
     # build the internal representation of our stochastic process
     initial_state, model = parse_model(network)
 
     # feedforward down the chain...
-    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
+    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function, ntrials)
 end
 
 """
@@ -54,7 +57,8 @@ simulate(state, model, algname::SimulationAlgorithm;
             [tfinal = 0.0],
             [rates_cache = HasRates],
             [save_points = nothing],
-            [save_function = save_state])
+            [save_function = save_state],
+            [ntrials = nothing])
 ```
 
 Simulate a `model` with the given initial `state`.
@@ -78,20 +82,22 @@ For lattice-based systems:
 - `rates_cache`: Indicates the type of information stored in a `rates` cache. If `HasRates` is chosen, store the actual rates. If `HasSums` is chosen, store partial sums of the `rates`. This effectively toggles between linear and binary searches, provided the algorithm supports the option.
 - `save_points`: An indexable collection indicating time points to sample and record system state. The default `nothing` forces saving after every reaction event.
 - `save_function`: A three argument function that maps the three arguments `(simulator, state, model)` to data recorded in a `SamplePath`. Default behavior is to store population counts for well-mixed systems or `Configuration` objects for lattice-based systems.
+- `ntrials`: Specifies the number of times to simulate the given model. The default `nothing` generates a single sample path.
 """
 function simulate(initial_state, model, algname::SimulationAlgorithm;
     tfinal = 0.0,
     rates_cache = HasRates,
     save_points = nothing,
-    save_function::funcT = save_state
+    save_function::funcT = save_state,
+    ntrials = nothing
     ) where funcT <: Function
     # feedforward down the chain...
-    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
+    return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function, ntrials)
 end
 
 ##### internals #####
 
-function simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function)
+function simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function, ntrials)
     # copy state
     state = copy(initial_state)
 
@@ -101,12 +107,29 @@ function simulate(initial_state, model, algname, tfinal, rates_cache, save_point
     initialize!(simulator, state, model, tfinal)
 
     # build the output data
-    output = build_output(save_function, simulator, state, model)
-
-    initialize_datastructs!(state, model)
+    output = build_output(save_function, simulator, state, model, ntrials)
 
     # feedforward down the chain...
+    simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function, ntrials)
+end
+
+# case: single trajectory
+function simulate!(simulator, state::Vector, initial_state::Vector, model, tfinal, output, save_points, save_function, ::Nothing)
+    initialize_datastructs!(state, initial_state, model)
     simulate!(simulator, state, model, tfinal, output, save_points, save_function)
+
+    return output
+end
+
+# case: ensemble simulation
+function simulate!(simulator, state::Vector, initial_state::Vector, model, tfinal, output, save_points, save_function, ntrials::Integer)
+    for k in 1:ntrials
+        initialize_datastructs!(state, initial_state, model)
+        sample_path = output[k]
+        simulate!(simulator, state, model, tfinal, sample_path, save_points, save_function)
+    end
+
+    return output
 end
 
 function simulate!(simulator, state, model, tfinal, output, save_points, save_function)
@@ -144,9 +167,19 @@ end
 
 ##### temporary hacks
 
-initialize_datastructs!(state, model) = nothing
+initialize_datastructs!(state, initial_state, model) = copyto!(state, initial_state)
 
-function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSystem)
+function initialize_datastructs!(lattice::Lattice, initial_lattice::Lattice, model::InteractingParticleSystem)
+    # copy fields for lattice...
+    empty!(lattice.site)
+    copyto!(lattice.site, initial_lattice.site)
+
+    empty!(lattice.coord_order)
+    copyto!(lattice.coord_order, initial_lattice.coord_order)
+
+    empty!(lattice.neighbors)
+    copyto!(lattice.neighbors, initial_lattice.neighbors)
+
     # unpack information
     number_init = number_sites(lattice)
     site = lattice.site
@@ -157,6 +190,7 @@ function initialize_datastructs!(lattice::Lattice, model::InteractingParticleSys
     pair_to_classes = enum.pair_to_classes
     dummy_composition = enum.dummy_composition
 
+    # make sure sample classes are empty
     for s in eachindex(class)
         empty!(class[s])
     end
