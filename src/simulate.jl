@@ -112,7 +112,11 @@ end
 function simulate!(simulator, state, model, tfinal, output, save_points, save_function)
     initialize!(simulator, state, model, tfinal)
 
-    while simulator.t < tfinal && cumulative_intensity(simulator) > 0
+    in_timespan = simulator.t < tfinal
+    transient = cumulative_intensity(simulator) > 0
+    running = in_timespan && transient
+
+    while running
         tnew = get_new_time(simulator)
 
         if tnew <= tfinal
@@ -120,8 +124,19 @@ function simulate!(simulator, state, model, tfinal, output, save_points, save_fu
         else
             simulator.t = tfinal
         end
+        # update output
         t = simulator.t
         update_samplepath!(save_function, output, simulator, t, state, model, save_points)
+
+        # update flags
+        in_timespan = simulator.t < tfinal
+        transient = cumulative_intensity(simulator) > 0
+        running = in_timespan && transient
+    end
+
+    # add end point in case of extinction
+    if !transient
+        update_samplepath!(save_function, output, simulator, tfinal, state, model, save_points)
     end
 
     return output

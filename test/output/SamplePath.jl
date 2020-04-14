@@ -80,4 +80,17 @@ end
 
         @test yw == zw
     end
+
+    @testset "simulate" begin
+        network = Network("extinction test")
+        network <= Species("X", 1)
+        network <= Reaction("birth", 1e-6, "X --> X + X")
+        network <= Reaction("death", 1e2, "X --> 0")
+
+        # case: save_points = nothing
+        # expected behavior: tfinal is included
+        trajectory = simulate(network, Direct(), tfinal = 10.0)
+
+        @test trajectory.t[end] == 10.0
+    end
 end
