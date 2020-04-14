@@ -114,7 +114,7 @@ function simulate(initial_state, model, algname, tfinal, rates_cache, save_point
 end
 
 # case: single trajectory
-function simulate!(simulator, state::Vector, initial_state::Vector, model, tfinal, output, save_points, save_function, ::Nothing)
+function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function, ::Nothing)
     initialize_datastructs!(state, initial_state, model)
     simulate!(simulator, state, model, tfinal, output, save_points, save_function)
 
@@ -122,7 +122,7 @@ function simulate!(simulator, state::Vector, initial_state::Vector, model, tfina
 end
 
 # case: ensemble simulation
-function simulate!(simulator, state::Vector, initial_state::Vector, model, tfinal, output, save_points, save_function, ntrials::Integer)
+function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function, ntrials::Integer)
     for k in 1:ntrials
         initialize_datastructs!(state, initial_state, model)
         sample_path = output[k]
