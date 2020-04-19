@@ -1,10 +1,9 @@
 name = "BioSimulator"
 uuid = "6aabf0a6-ec0e-58c4-b8bf-f645d5ac4ee8"
 authors = ["Alfonso Landeros <alanderos@ucla.edu>", "Timothy Stutz <stutztim@ucla.edu>"]
-version = "0.9.3"
+version = "1.0.0"
 
 [deps]
-BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 IteratorInterfaceExtensions = "82899510-4779-5014-852e-03e436cf321d"
