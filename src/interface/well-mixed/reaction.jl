@@ -18,7 +18,8 @@ Reaction("immigration", 0.5, "0 --> X") # no reactants
 """
 struct Reaction
     identifier :: Symbol
-    rate :: Float64
+    law :: Symbol
+    rate :: Vector{Float64}
 
     reactants :: OrderedDict{Symbol,Int}
     products  :: OrderedDict{Symbol,Int}
@@ -28,7 +29,7 @@ struct Reaction
 
     origex :: Expr
 
-    function Reaction(name, rate, formula)
+    function Reaction(name, law, rate, formula)
         reactants, products, origex = parse_reaction(formula)
 
         if isempty(reactants) && isempty(products)
@@ -51,8 +52,20 @@ struct Reaction
           v != 0 && push!(affectedby, s)
         end
 
-        return new(Symbol(replace(name, " " => "_")), rate, reactants, products, affectedby, affects, origex)
+        return new(Symbol(replace(name, " " => "_")), law, rate, reactants, products, affectedby, affects, origex)
     end
+end
+
+Reaction(name, rate::Real, formula) = Reaction(name, :mass_action, [rate], formula)
+
+function Reaction(name, rate::Vector, formula)
+  if length(rate) == 1
+    r = Reaction(name, :mass_action, rate, formula)
+  else
+    r = Reaction(name, :michaelis_menten, rate, formula)
+  end
+
+  return r
 end
 
 function Base.show(io::IO, x::Reaction)

@@ -3,15 +3,16 @@
 abstract type KineticLaw end
 
 struct MassAction  <: KineticLaw end
+struct MichaelisMenten <: KineticLaw end
 
 ##### ReactionStruct #####
 
 struct ReactionStruct{MA <: KineticLaw}
     reactants :: Vector{Tuple{Int,Int}}
     net_change :: Vector{Tuple{Int,Int}}
-    paramidx :: Int
+    paramidx :: Vector{Int}
 
-    function ReactionStruct(law::MA, reactants, net_change, paramidx) where MA <: KineticLaw
+    function ReactionStruct(law::MA, reactants, net_change, paramidx::Vector) where MA <: KineticLaw
         num_reactants = length(reactants)
         order = num_reactants > 0 ? sum(c for (_, c) in reactants) : 0
 
@@ -20,6 +21,9 @@ struct ReactionStruct{MA <: KineticLaw}
         return new{MA}(reactants, net_change, paramidx)
     end
 end
+
+# for test compatibility
+ReactionStruct(law, reactants, net_change, paramidx::Real) = ReactionStruct(law, reactants, net_change, [paramidx])
 
 function Base.show(io::IO, r::ReactionStruct{law}) where law <: KineticLaw
     # formula = r.formula
@@ -31,6 +35,7 @@ function Base.show(io::IO, r::ReactionStruct{law}) where law <: KineticLaw
 end
 
 is_compatible_law(::MassAction, order, num_reactants) = true
+is_compatible_law(::MichaelisMenten, order, num_reactants) = (order ≤ 1)
 
 function execute_jump!(x, r::ReactionStruct)
     net_change = r.net_change
@@ -44,7 +49,7 @@ end
 ##### rate functions for stochastic mass action kinetics #####
 
 @inline @inbounds function rate(r::ReactionStruct{MassAction}, x, p)
-    i = r.paramidx
+    i = r.paramidx[1]
     total_rate = p[i]   # accumulates terms of the form (x_k - (j-1))
     prefactor = one(total_rate) # accumulates constants 1 / m_k!
 
@@ -61,7 +66,7 @@ end
 end
 
 @inline @inbounds function rate_derivative(r::ReactionStruct{MassAction}, x, p, i)
-    total_rate = p[r.paramidx]  # accumulates terms of the form (x_k - (j-1))
+    total_rate = p[r.paramidx[1]]  # accumulates terms of the form (x_k - (j-1))
     prefactor = one(total_rate) # accumulates constants 1 / m_k!
     deriv_term = zero(total_rate)
 
@@ -81,10 +86,25 @@ end
     return total_rate
 end
 
+##### rate functions for stochastic Michaelis-Menten kinetics #####
+@inline @inbounds function rate(r::ReactionStruct{MichaelisMenten}, x, p)
+    i1 = r.paramidx[1]
+    i2 = r.paramidx[2]
+
+    V = p[i1]
+    K = p[i2]
+    k = r.reactants[1][1]
+
+    total_rate = V * x[k] / (K + x[k])
+
+    return total_rate
+end
+
 ##### ReactionSystem #####
+ReactionLike = Union{ReactionStruct{MassAction},ReactionStruct{MichaelisMenten}}
 
 struct ReactionSystem{R,DG<:DependencyGraph}
-    reactions::Vector{ReactionStruct{MassAction}}
+    reactions::Vector{ReactionLike}
     rxn_rates::R
     dep_graph::DG
     spc_graph::DG
@@ -94,8 +114,8 @@ end
 function ReactionSystem(model::Network)
     num_reactions = number_reactions(model)
 
-    reactions = Vector{ReactionStruct{MassAction}}(undef, num_reactions)
-    rxn_rates = zeros(num_reactions)
+    reactions = Vector{ReactionLike}(undef, num_reactions)
+    rxn_rates = Float64[]
 
     build_reactions!(reactions, rxn_rates, model)
 
@@ -149,6 +169,7 @@ function build_reactions!(rxn_set, rxn_rates, model)
 
     indexmap = OrderedDict(key => i for (i, key) in enumerate(keys(species)))
 
+    pidx = 1
     for (j, r) in enumerate(values(reactions))
         name = r.identifier
         formula = r.origex
@@ -165,10 +186,23 @@ function build_reactions!(rxn_set, rxn_rates, model)
                 push!(net_change, (indexmap[s], change))
             end
         end
-        klaw = get_kinetic_law(rtuples)
 
-        rxn_set[j] = ReactionStruct(klaw, rtuples, net_change, j)
-        rxn_rates[j] = rxn_rate
+        if r.law == :mass_action
+            klaw = MassAction()
+            paramidx = [pidx]
+            pidx += 1
+            push!(rxn_rates, rxn_rate[1])
+        elseif r.law == :michaelis_menten
+            klaw = MichaelisMenten()
+            paramidx = [pidx, pidx+1]
+            pidx += 2
+            push!(rxn_rates, rxn_rate[1])
+            push!(rxn_rates, rxn_rate[2])
+        else
+            error("unknown kinetic law $(r.law)")
+        end
+
+        rxn_set[j] = ReactionStruct(klaw, rtuples, net_change, paramidx)
     end
 
     return rxn_set
