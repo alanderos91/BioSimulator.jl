@@ -1,7 +1,7 @@
 import BioSimulator: build_output, update_samplepath!, save_state, get_regular_path
 
 function make_sample_path(f, x_initial, tdata, states, save_points)
-    xw = build_output(f, nothing, x_initial, nothing)
+    xw = build_output(f, nothing, x_initial, nothing, nothing)
 
     for (t, state) in zip(tdata, states)
         update_samplepath!(f, xw, nothing, t, state, nothing, save_points)
