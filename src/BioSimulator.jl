@@ -18,6 +18,7 @@ import Base.Order: Ordering, ForwardOrdering, ReverseOrdering, Forward, Reverse
 ## load order
 
 ## interface
+include(joinpath("interface", "kineticlaw.jl"))
 
 #### well-mixed
 include(joinpath("interface", "well-mixed", "species.jl"))

@@ -6,11 +6,12 @@ struct IPSReactionStruct
   output2  :: Int # adjacent
   class    :: Int
   rate     :: Float64
+  klaw     :: KineticLaw
   # formula    :: Expr
   # parameter  :: Symbol
   # paramidx   :: Int
 
-  function IPSReactionStruct(pairwise, i1, i2, o1, o2, class, rate)
+  function IPSReactionStruct(pairwise, i1, i2, o1, o2, class, rate, klaw)
     if has_invalid_type(pairwise, i1, i2, o1, o2)
       throw(ErrorException("""
       Particle types must be positive integers. Non-pairwise reactions must have the adjacent types be zero.
@@ -39,7 +40,7 @@ struct IPSReactionStruct
       throw(ErrorException("Reaction rate must be a non-negative real number; rate = $rate"))
     end
 
-    return new(pairwise, i1, i2, o1, o2, class, rate)
+    return new(pairwise, i1, i2, o1, o2, class, rate, klaw)
   end
 end
 
@@ -252,11 +253,19 @@ function execute_onsite!(lattice, reaction, enumeration)
 
   return nothing
 end
+
+# dispatch to select reaction
 function rate(model::InteractingParticleSystem, lattice, j)
   rate(model.reactions[j], lattice, model.enumeration)
 end
 
+# dispatch on rate law; reaction.klaw introduces type instability
 function rate(reaction::IPSReactionStruct, lattice, enumeration)
+  rate(reaction.klaw, reaction, lattice, enumeration)
+end
+
+# default implementation for rate
+function rate(::DefaultIPSLaw, reaction::IPSReactionStruct, lattice, enumeration)
   # grab reactant indices
   class = enumeration.class
   s = reaction.class

@@ -6,6 +6,7 @@ struct IPSReactionIR
   output2    :: Int # adjacent
   label      :: Int # reaction index
   p_index    :: Int # parameter index
+  klaw       :: KineticLaw # dispatch information for rate(...)
 end
 
 function Base.show(io::IO, x::IPSReactionIR)
@@ -134,7 +135,14 @@ function encode_reaction_struct(ex::Expr, species_dict, params_dict)
     type1, type2 = get_species_types(input, species_dict)
     type3, type4 = get_species_types(output, species_dict)
 
-    reaction = IPSReactionIR(is_pairwise, type1, type2, type3, type4, j, params_dict[parameter])
+    # check for rate law
+    if length(formula.args) > 2
+      klaw = formula.args[3]()
+    else
+      klaw = DefaultIPSLaw()
+    end
+
+    reaction = IPSReactionIR(is_pairwise, type1, type2, type3, type4, j, params_dict[parameter], klaw)
 
     push!(reactions, reaction)
   end
@@ -310,7 +318,9 @@ function __reactions_sclass(initial, nbhood, d, params)
         # need to shift index based on dimension
         sampleidx + number_reactants - 1,
         # total rate at which a particle in this class undergoes this reaction
-        number_reactants * rate)
+        number_reactants * rate,
+        # pass dispatch information for rate law
+        reaction.klaw)
         )
       end
     else
@@ -325,7 +335,8 @@ function __reactions_sclass(initial, nbhood, d, params)
         reaction.output1,
         reaction.output2,
         sampleidx,
-        rate # total rate at which a particle in this class undergoes this reaction
+        rate, # total rate at which a particle in this class undergoes this reaction
+        reaction.klaw
       ) )
     end
   end

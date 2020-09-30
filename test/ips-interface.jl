@@ -1,45 +1,45 @@
-import BioSimulator: IPSReactionStruct
+import BioSimulator: IPSReactionStruct, DefaultIPSLaw
 
 @testset "IPS" begin
   @testset "IPSReactionStruct" begin
     @testset "bad inputs" begin
       @testset "pairwise" begin
         # particle types cannot all be the same
-        @test_throws ErrorException IPSReactionStruct(true, 1, 1, 1, 1, 2, 1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 1, 1, 1, 1, 2, 1.0, DefaultIPSLaw())
 
         # particle types must be positive
-        @test_throws ErrorException IPSReactionStruct(true, 0, 1, 2, 3, 2, 1.0)
-        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 3, 2, 1.0)
-        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 0, 3, 2, 1.0)
-        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 0, 2, 1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 0, 1, 2, 3, 2, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 3, 2, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 0, 3, 2, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 0, 2, 1.0, DefaultIPSLaw())
 
         # class must be a positive number
-        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, 0, 1.0)
-        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, -1, 1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, 0, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, -1, 1.0, DefaultIPSLaw())
 
         # rate must be non-negative
-        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, 5, -1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 1, 2, 3, 4, 5, -1.0, DefaultIPSLaw())
       end
 
       @testset "non-pairwise" begin
         # particle types cannot all be the same
-        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 1, 0, 2, 1.0)
+        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 1, 0, 2, 1.0, DefaultIPSLaw())
 
         # particle types must be positive
-        @test_throws ErrorException IPSReactionStruct(false, 0, 0, 1, 0, 5, 1.0)
-        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 0, 0, 5, 1.0)
+        @test_throws ErrorException IPSReactionStruct(false, 0, 0, 1, 0, 5, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 0, 0, 5, 1.0, DefaultIPSLaw())
 
         # adjacent types must be zero
-        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 2, 1, 3, 1.0)
-        @test_throws ErrorException IPSReactionStruct(false, 1, 2, 2, 0, 3, 1.0)
-        @test_throws ErrorException IPSReactionStruct(false, 1, 2, 2, 1, 3, 1.0)
+        @test_throws ErrorException IPSReactionStruct(false, 1, 0, 2, 1, 3, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(false, 1, 2, 2, 0, 3, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(false, 1, 2, 2, 1, 3, 1.0, DefaultIPSLaw())
 
         # class must be a positive number
-        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, 0, 1.0)
-        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, -1, 1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, 0, 1.0, DefaultIPSLaw())
+        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, -1, 1.0, DefaultIPSLaw())
 
         # rate must be non-negative
-        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, 3, -1.0)
+        @test_throws ErrorException IPSReactionStruct(true, 1, 0, 2, 0, 3, -1.0, DefaultIPSLaw())
       end
     end
     # need tests for checking that rates are computed correctly
@@ -83,8 +83,8 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 2" begin
@@ -92,10 +92,10 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0)
-        @test rxn[3] == IPSReactionStruct(true, 2, 1, 2, 2, 3, 3.0)
-        @test rxn[4] == IPSReactionStruct(true, 2, 1, 2, 2, 4, 4.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0, DefaultIPSLaw())
+        @test rxn[3] == IPSReactionStruct(true, 2, 1, 2, 2, 3, 3.0, DefaultIPSLaw())
+        @test rxn[4] == IPSReactionStruct(true, 2, 1, 2, 2, 4, 4.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 3" begin
@@ -103,12 +103,12 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0)
-        @test rxn[3] == IPSReactionStruct(true, 2, 1, 2, 2, 3, 3.0)
-        @test rxn[4] == IPSReactionStruct(true, 2, 1, 2, 2, 4, 4.0)
-        @test rxn[5] == IPSReactionStruct(true, 2, 1, 2, 2, 5, 5.0)
-        @test rxn[6] == IPSReactionStruct(true, 2, 1, 2, 2, 6, 6.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 2, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 2, 2, 2, 2.0, DefaultIPSLaw())
+        @test rxn[3] == IPSReactionStruct(true, 2, 1, 2, 2, 3, 3.0, DefaultIPSLaw())
+        @test rxn[4] == IPSReactionStruct(true, 2, 1, 2, 2, 4, 4.0, DefaultIPSLaw())
+        @test rxn[5] == IPSReactionStruct(true, 2, 1, 2, 2, 5, 5.0, DefaultIPSLaw())
+        @test rxn[6] == IPSReactionStruct(true, 2, 1, 2, 2, 6, 6.0, DefaultIPSLaw())
       end
     end
 
@@ -124,7 +124,7 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0)
+        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 2" begin
@@ -132,7 +132,7 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0)
+        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 3" begin
@@ -140,7 +140,7 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0)
+        @test rxn[1] == IPSReactionStruct(false, 2, 0, 1, 0, 1, 1.0, DefaultIPSLaw())
       end
     end
 
@@ -156,8 +156,8 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 2" begin
@@ -165,10 +165,10 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0)
-        @test rxn[3] == IPSReactionStruct(true, 2, 1, 1, 2, 3, 3.0)
-        @test rxn[4] == IPSReactionStruct(true, 2, 1, 1, 2, 4, 4.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0, DefaultIPSLaw())
+        @test rxn[3] == IPSReactionStruct(true, 2, 1, 1, 2, 3, 3.0, DefaultIPSLaw())
+        @test rxn[4] == IPSReactionStruct(true, 2, 1, 1, 2, 4, 4.0, DefaultIPSLaw())
       end
 
       @testset "dimension = 3" begin
@@ -176,12 +176,12 @@ import BioSimulator: IPSReactionStruct
 
         rxn = model.reactions
 
-        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0)
-        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0)
-        @test rxn[3] == IPSReactionStruct(true, 2, 1, 1, 2, 3, 3.0)
-        @test rxn[4] == IPSReactionStruct(true, 2, 1, 1, 2, 4, 4.0)
-        @test rxn[5] == IPSReactionStruct(true, 2, 1, 1, 2, 5, 5.0)
-        @test rxn[6] == IPSReactionStruct(true, 2, 1, 1, 2, 6, 6.0)
+        @test rxn[1] == IPSReactionStruct(true, 2, 1, 1, 2, 1, 1.0, DefaultIPSLaw())
+        @test rxn[2] == IPSReactionStruct(true, 2, 1, 1, 2, 2, 2.0, DefaultIPSLaw())
+        @test rxn[3] == IPSReactionStruct(true, 2, 1, 1, 2, 3, 3.0, DefaultIPSLaw())
+        @test rxn[4] == IPSReactionStruct(true, 2, 1, 1, 2, 4, 4.0, DefaultIPSLaw())
+        @test rxn[5] == IPSReactionStruct(true, 2, 1, 1, 2, 5, 5.0, DefaultIPSLaw())
+        @test rxn[6] == IPSReactionStruct(true, 2, 1, 1, 2, 6, 6.0, DefaultIPSLaw())
       end
     end
   end
