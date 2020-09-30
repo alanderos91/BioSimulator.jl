@@ -27,7 +27,7 @@ function clean_expression(input_ex)
   ex = Expr(input_ex.head)
 
   for line in input_ex.args
-    if line isa Expr && line.head == :tuple && length(line.args) == 2
+    if line isa Expr && line.head == :tuple && length(line.args) ≥ 2
       # change 0 to :∅ to make it its own "type"
       clean_line = postwalk(x -> x isa Integer && x == 0 ? :∅ : x, line)
 
@@ -119,7 +119,7 @@ end
 
 # build a list of internal IPSReactionIR objects from input
 function encode_reaction_struct(ex::Expr, species_dict, params_dict)
-  reactions = IPSReactionIR[]
+  reactions = :([])
 
   for j in eachindex(ex.args)
     line = ex.args[j]
@@ -135,16 +135,24 @@ function encode_reaction_struct(ex::Expr, species_dict, params_dict)
     type1, type2 = get_species_types(input, species_dict)
     type3, type4 = get_species_types(output, species_dict)
 
-    # check for rate law
-    if length(formula.args) > 2
-      klaw = formula.args[3]()
+    # check for rate law; needs to be encoded as an Expr object that builds the dispatch type
+    if length(line.args) > 2
+      klaw = :($(line.args[3])())
     else
-      klaw = DefaultIPSLaw()
+      klaw = :(DefaultIPSLaw())
     end
 
-    reaction = IPSReactionIR(is_pairwise, type1, type2, type3, type4, j, params_dict[parameter], klaw)
+    # build expression that constructs IPSReactionIR by interpolating local variables
+    reaction = :(
+      IPSReactionIR(
+        $(is_pairwise),
+        $(type1), $(type2), $(type3), $(type4),
+        $(j),
+        $(params_dict[parameter]),
+        $(klaw))
+    )
 
-    push!(reactions, reaction)
+    push!(reactions.args, reaction)
   end
 
   return reactions
@@ -180,7 +188,7 @@ function __def_reactions(inputex, p)
 
   # the macro needs to return an expression
   # which builds a IPSReactionIR array
-  return :($reactions)
+  return reactions
 end
 
 ## enumerate the full reaction list using a given spatial structure

@@ -46,6 +46,20 @@ import BioSimulator: IPSReactionStruct, DefaultIPSLaw
   end
 
   @testset "macro interface" begin
+    @testset "kinetic law parsing" begin
+      # if no kinetic law is given, use DefaultIPSLaw
+      intermediate = @def_reactions begin
+        A + 0 --> A + A, α
+      end α
+      @test intermediate[1].klaw isa DefaultIPSLaw
+
+      # use the specified kinetic law
+      intermediate = @def_reactions begin
+        A + 0 --> A + A, α, DefaultIPSLaw
+      end α
+      @test intermediate[1].klaw isa DefaultIPSLaw
+    end
+
     @testset "bad inputs" begin
       # rate must be non-negative
 
