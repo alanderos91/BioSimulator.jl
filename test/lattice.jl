@@ -23,7 +23,8 @@ import BioSimulator: get_ptype, get_neighbor_class, initialize_datastructs!, coo
     initial_sites = [initial_sites[j][i] for i in 1:2, j in 1:length(initial_sites)]
     ptypes        = [1, 1, 1, 2, 2, 1, 2, 2, 2, 2]
 
-    lattice = Lattice(initial_sites, ptypes)
+    initial_lattice = Lattice(initial_sites, ptypes)
+    lattice = deepcopy(initial_lattice)
 
     ##### correct answers #####
     expected_opensites = [
@@ -104,7 +105,7 @@ import BioSimulator: get_ptype, get_neighbor_class, initialize_datastructs!, coo
     )
 
     # perform the initialization step
-    initialize_datastructs!(lattice, model)
+    initialize_datastructs!(lattice, initial_lattice, model)
 
     @testset "open site tracking" begin
       test_opensites = filter(x -> isequal(get_ptype(x), 1), lattice.site)
