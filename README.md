@@ -28,13 +28,34 @@ Landeros A, Stutz, T, Keys, KL, Alekseyenko, A, Sinsheimer, JS, Lange, K, & Sehl
 
 ```
 @article{landeros2018biosimulator,
-    title     = {{BioSimulator.jl: Stochastic simulation in Julia}},
-    author    = {Landeros, Alfonso and Stutz, Timothy and Keys, Kevin L and Alekseyenko, Alexander and Sinsheimer, Janet S and Lange, Kenneth and Sehl, Mary E},
-    journal   = {{Computer Methods and Programs in Biomedicine}},
-    volume    = {167},
-    pages     = {23--35},
-    year      = {2018},
-    publisher = {Elsevier}
+  title = {{{BioSimulator}}.Jl: Stochastic Simulation in {{Julia}}},
+  shorttitle = {{{BioSimulator}}.Jl},
+  author = {Landeros, Alfonso and Stutz, Timothy and Keys, Kevin L. and Alekseyenko, Alexander and Sinsheimer, Janet S. and Lange, Kenneth and Sehl, Mary E.},
+  year = {2018},
+  journal = {Computer Methods and Programs in Biomedicine},
+  volume = {167},
+  pages = {23--35},
+  issn = {0169-2607},
+  doi = {10.1016/j.cmpb.2018.09.009},
+  langid = {english}
+}
+```
+
+Stutz TC, Landeros A, Xu J, Sinsheimer JS, Sehl M, & Lange K (2021) Stochastic simulation algorithms for Interacting Particle Systems. _PLOS ONE_ 2;16(3):e0247046. ([journal](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0247046))
+
+```
+@article{stutz2021stochastic,
+  title = {Stochastic Simulation Algorithms for {{Interacting Particle Systems}}},
+  author = {Stutz, Timothy C. and Landeros, Alfonso and Xu, Jason and Sinsheimer, Janet S. and Sehl, Mary and Lange, Kenneth},
+  year = {2021},
+  journal = {PLOS ONE},
+  volume = {16},
+  number = {3},
+  pages = {e0247046},
+  publisher = {{Public Library of Science}},
+  issn = {1932-6203},
+  doi = {10.1371/journal.pone.0247046},
+  langid = {english}
 }
 ```
 
