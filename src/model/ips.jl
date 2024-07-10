@@ -106,8 +106,8 @@ function _print_formula(x::IPSReactionStruct)
 end
 
 # struct InteractingParticleSystem{DG,enumType}
-struct InteractingParticleSystem{enumType}
-  reactions::Vector{IPSReactionStruct}
+struct InteractingParticleSystem{reacType,enumType}
+  reactions::Vector{reacType}
   # rxn_rates::Vector{T}
   # dep_graph::DG
   # spc_graph::DG
@@ -116,7 +116,7 @@ struct InteractingParticleSystem{enumType}
   enumeration::enumType
 end
 
-function InteractingParticleSystem(reactions::Vector{IPSReactionStruct}, isactive, enumeration)
+function InteractingParticleSystem(reactions::Vector{T}, isactive, enumeration) where T
   num_reactions = length(reactions)
 
   # dep_graph = rxnrxn_depgraph(DGLazy(), reactions, isactive, enumeration)
