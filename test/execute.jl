@@ -23,9 +23,10 @@ import BioSimulator: execute_jump!, get_site, initialize_datastructs!, get_neigh
     initial_sites = [initial_sites[j][i] for i in 1:2, j in 1:length(initial_sites)]
     ptypes        = [1, 1, 1, 2, 2, 1, 2, 2, 2, 2]
 
-    lattice = Lattice(initial_sites, ptypes)
+    initial_lattice = Lattice(initial_sites, ptypes)
+    lattice = deepcopy(initial_lattice)
 
-    initialize_datastructs!(lattice, model)
+    initialize_datastructs!(lattice, initial_lattice, model)
     enum = model.enumeration
 
     # Test Reaction:

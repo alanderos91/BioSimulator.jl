@@ -79,6 +79,8 @@ save_state(simulator, state::Lattice, model) = Configuration(state)
 save_rates(simulator, state, model) = copy(jump_rates(simulator))
 
 ##### initializing output
+build_output(simulator, state, model, extra_arg) = build_output(save_state, simulator, state, model, extra_arg)
+
 function build_output(f, simulator, state, model, ::Nothing)
 
     xw = SamplePath([f(simulator, state, model)], [0.0])
