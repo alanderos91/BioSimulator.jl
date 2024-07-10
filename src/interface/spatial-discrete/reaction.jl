@@ -6,6 +6,7 @@ struct IPSReactionIR
   output2    :: Int # adjacent
   label      :: Int # reaction index
   p_index    :: Int # parameter index
+  klaw       :: KineticLaw # dispatch information for rate(...)
 end
 
 function Base.show(io::IO, x::IPSReactionIR)
@@ -26,7 +27,7 @@ function clean_expression(input_ex)
   ex = Expr(input_ex.head)
 
   for line in input_ex.args
-    if line isa Expr && line.head == :tuple && length(line.args) == 2
+    if line isa Expr && line.head == :tuple && length(line.args) ≥ 2
       # change 0 to :∅ to make it its own "type"
       clean_line = postwalk(x -> x isa Integer && x == 0 ? :∅ : x, line)
 
@@ -118,7 +119,7 @@ end
 
 # build a list of internal IPSReactionIR objects from input
 function encode_reaction_struct(ex::Expr, species_dict, params_dict)
-  reactions = IPSReactionIR[]
+  reactions = :([])
 
   for j in eachindex(ex.args)
     line = ex.args[j]
@@ -134,9 +135,24 @@ function encode_reaction_struct(ex::Expr, species_dict, params_dict)
     type1, type2 = get_species_types(input, species_dict)
     type3, type4 = get_species_types(output, species_dict)
 
-    reaction = IPSReactionIR(is_pairwise, type1, type2, type3, type4, j, params_dict[parameter])
+    # check for rate law; needs to be encoded as an Expr object that builds the dispatch type
+    if length(line.args) > 2
+      klaw = :($(line.args[3])())
+    else
+      klaw = :(MassAction())
+    end
 
-    push!(reactions, reaction)
+    # build expression that constructs IPSReactionIR by interpolating local variables
+    reaction = :(
+      IPSReactionIR(
+        $(is_pairwise),
+        $(type1), $(type2), $(type3), $(type4),
+        $(j),
+        $(params_dict[parameter]),
+        $(klaw))
+    )
+
+    push!(reactions.args, reaction)
   end
 
   return reactions
@@ -172,7 +188,7 @@ function __def_reactions(inputex, p)
 
   # the macro needs to return an expression
   # which builds a IPSReactionIR array
-  return :($reactions)
+  return reactions
 end
 
 ## enumerate the full reaction list using a given spatial structure
@@ -295,11 +311,21 @@ function __reactions_sclass(initial, nbhood, d, params)
     reactant_pair = (reaction.input1, reaction.input2)
     sampleidx = reactant_to_class[reactant_pair]
 
-    if reaction.pairwise == true
+    if reaction.pairwise
 
-      # iterate over the possible number of adjacent reactants
+      # create reaction channel based on possible number of neighbors
       for number_reactants in 1:number_neighbors
         rate = params[reaction.p_index]
+
+        if reaction.klaw isa MassAction
+          # 1 virtual reaction channel per equivalence class based on number of neighbors,
+          # so rate should be scaled by number of participating products
+          scaled_rate = rate * number_reactants
+        elseif reaction.klaw isa ConstantLaw
+          # virtual channels are redundant but required for pairwise interaction,
+          # so rate should be scaled by number of copies of the channel
+          scaled_rate = rate / number_neighbors
+        end
 
         push!(reactions, IPSReactionStruct(
         reaction.pairwise,
@@ -310,7 +336,8 @@ function __reactions_sclass(initial, nbhood, d, params)
         # need to shift index based on dimension
         sampleidx + number_reactants - 1,
         # total rate at which a particle in this class undergoes this reaction
-        number_reactants * rate)
+        scaled_rate,
+        reaction.klaw)
         )
       end
     else
@@ -325,7 +352,8 @@ function __reactions_sclass(initial, nbhood, d, params)
         reaction.output1,
         reaction.output2,
         sampleidx,
-        rate # total rate at which a particle in this class undergoes this reaction
+        rate, # total rate at which a particle in this class undergoes this reaction,
+        reaction.klaw
       ) )
     end
   end

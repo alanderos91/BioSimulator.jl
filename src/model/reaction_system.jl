@@ -1,9 +1,3 @@
-##### KineticLaw / MassActionOrder* #####
-
-abstract type KineticLaw end
-
-struct MassAction  <: KineticLaw end
-
 ##### ReactionStruct #####
 
 struct ReactionStruct{MA <: KineticLaw}
