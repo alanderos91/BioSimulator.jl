@@ -296,5 +296,5 @@ function rate(::ConstantLaw, reaction::IPSReactionStruct, lattice, enumeration)
   # grab the count for the center particle
   N = length(class[s]) # need to fix this
 
-  return per_particle_rate * (N > 0)
+  return N * per_particle_rate
 end
