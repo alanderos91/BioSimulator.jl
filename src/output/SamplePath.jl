@@ -1,31 +1,10 @@
-struct SamplePath{T,N,A,B} <: AbstractDiffEqArray{T, N, A}
-    u::A # A <: AbstractVector{<: AbstractArray{T, N - 1}}
-    t::B
-end
-
+SamplePath{T,N,A,B} = DiffEqArray{T,N,A,B}
 Ensemble{T,N,A,B} = Vector{SamplePath{T,N,A,B}}
 
-SamplePath(xs::AbstractVector{T}, ts, dims::NTuple{N}) where {T, N} = SamplePath{eltype(T), N, typeof(xs), typeof(ts)}(xs, ts)
-# Assume that the first element is representative all all other elements
-SamplePath(xs::AbstractVector, ts::AbstractVector) = SamplePath(xs, ts, (size(xs[1])..., length(xs)))
-
-##### pretty printing
-function Base.show(io::IO, xw::SamplePath)
-    print(io,"t: "); show(io, xw.t)
-    println(io);
-    print(io,"x: "); show(io, xw.u)
-    nothing
-end
-
-function Base.show(io::IO, m::MIME"text/plain", xw::SamplePath)
-    print(io,"t: "); show(io,m,xw.t)
-    println(io)
-    print(io,"x: "); show(io,m,xw.u)
-    nothing
-end
+init_samplepath(x, t) = SamplePath([x], [t], (1,))
 
 ##### update! logic
-function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_points)
+function update_samplepath!(f::F, xw::SamplePath, simulator, t, state, model, save_points) where F
     j = searchsortedlast(save_points, t)
 
     j == 0 && return xw
@@ -45,7 +24,7 @@ function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_
     return xw
 end
 
-function update_samplepath!(f, xw::SamplePath, simulator, t, state, model, save_points::Nothing)
+function update_samplepath!(f::F, xw::SamplePath, simulator, t, state, model, save_points::Nothing) where F
     push!(xw.u, f(simulator, state, model))
     push!(xw.t, t)
 
@@ -83,7 +62,7 @@ build_output(simulator, state, model, extra_arg) = build_output(save_state, simu
 
 function build_output(f, simulator, state, model, ::Nothing)
 
-    xw = SamplePath([f(simulator, state, model)], [0.0])
+    xw = init_samplepath(f(simulator, state, model), 0.0)
     sizehint!(xw, 1_000)
 
     return xw
@@ -91,7 +70,7 @@ end
 
 function build_output(f, simulator, state, model, ntrials::Integer)
 
-    ensemble = [SamplePath([f(simulator, state, model)], [0.0]) for k in 1:ntrials]
+    ensemble = [init_samplepath(f(simulator, state, model), 0.0) for _ in 1:ntrials]
     foreach(xw -> sizehint!(xw, 1000), ensemble)
 
     return ensemble
@@ -99,7 +78,7 @@ end
 
 ##### interpolation
 function get_regular_path(xw::SamplePath, save_points)
-    yw = SamplePath([xw.u[1]], [save_points[1]])
+    yw = init_samplepath(xw.u[1], save_points[1])
     t = xw.t
     u = xw.u
 

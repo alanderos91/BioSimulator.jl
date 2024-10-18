@@ -11,11 +11,6 @@ function Configuration(lattice::Lattice{D,T,M,U}) where {D,T,M,U}
   Configuration{D,T,M,U}(coord, tcode, label)
 end
 
-##### make sure SamplePath works for Configuration
-SamplePath(xs::AbstractVector{T}, ts, dims::NTuple{N}) where {T <: Configuration, N} = SamplePath{T, N, typeof(xs), typeof(ts)}(xs, ts)
-
-SamplePath(xs::AbstractVector{T}, ts::AbstractVector) where T <: Configuration = SamplePath(xs, ts, (1, 1))
-
 ##### plotting recipes
 
 @recipe function f(config::Configuration{D,T,VonNeumann}) where {D,T}

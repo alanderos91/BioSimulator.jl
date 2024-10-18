@@ -43,7 +43,7 @@ function simulate(network::Network, algname::SimulationAlgorithm;
     save_points = nothing,
     save_function::funcT = save_state,
     ntrials = nothing
-    ) where funcT <: Function
+    ) where funcT
     # build the internal representation of our stochastic process
     initial_state, model = parse_model(network)
 
@@ -90,14 +90,14 @@ function simulate(initial_state, model, algname::SimulationAlgorithm;
     save_points = nothing,
     save_function::funcT = save_state,
     ntrials = nothing
-    ) where funcT <: Function
+    ) where funcT
     # feedforward down the chain...
     return simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function, ntrials)
 end
 
 ##### internals #####
 
-function simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function, ntrials)
+function simulate(initial_state, model, algname, tfinal, rates_cache, save_points, save_function::F, ntrials) where F
     # copy state
     state = copy(initial_state)
 
@@ -114,7 +114,7 @@ function simulate(initial_state, model, algname, tfinal, rates_cache, save_point
 end
 
 # case: single trajectory
-function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function, ::Nothing)
+function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function::F, ::Nothing) where F
     initialize_datastructs!(state, initial_state, model)
     simulate!(simulator, state, model, tfinal, output, save_points, save_function)
 
@@ -122,7 +122,7 @@ function simulate!(simulator, state, initial_state, model, tfinal, output, save_
 end
 
 # case: ensemble simulation
-function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function, ntrials::Integer)
+function simulate!(simulator, state, initial_state, model, tfinal, output, save_points, save_function::F, ntrials::Integer) where F
     for k in 1:ntrials
         initialize_datastructs!(state, initial_state, model)
         sample_path = output[k]
@@ -132,7 +132,7 @@ function simulate!(simulator, state, initial_state, model, tfinal, output, save_
     return output
 end
 
-function simulate!(simulator, state, model, tfinal, output, save_points, save_function)
+function simulate!(simulator, state, model, tfinal, output, save_points, save_function::F) where F
     initialize!(simulator, state, model, tfinal)
 
     in_timespan = simulator.t < tfinal

@@ -5,7 +5,7 @@ using StaticArrays, SparseArrays, LinearAlgebra
 using RecipesBase
 
 ## imports
-import RecursiveArrayTools: AbstractDiffEqArray
+import RecursiveArrayTools: DiffEqArray
 
 import Combinatorics: multiexponents
 import MacroTools: postwalk
