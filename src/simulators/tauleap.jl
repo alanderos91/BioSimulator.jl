@@ -51,6 +51,7 @@ end
   # update the system state according to the proposed leap
   # NOTE: at this point it is assumed that the leap is valid
   simulator.execute_leap!(state, n)
+  @assert all(>=(0), state)
 
   # update statistics
   # TODO
@@ -96,6 +97,7 @@ end
   # update the system state according to the proposed leap
   # NOTE: at this point it is assumed that the leap is valid
   simulator.execute_leap!(state, n)
+  @assert all(>=(0), state)
 
   return nothing
 end

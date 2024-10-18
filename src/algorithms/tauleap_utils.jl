@@ -177,6 +177,7 @@ function update!(formula::GenericLeapFormula, state, model, V, rates, total_rate
 
   update_mean_derivatives!(dxdt, V, rates)
   update_time_derivatives!(drdt, state, model, dxdt)
+  nothing
 end
 
 update_mean_derivatives!(dxdt, V, rates) = (dxdt .= V * rates)
@@ -197,6 +198,7 @@ end
 
 struct RejectionThinning{T1,T2,F1,F2,F3,F4}
   threshold::T1
+  state::T2
   proposal::T2
   is_accepted::F1
   is_invalid::F2
@@ -204,12 +206,12 @@ struct RejectionThinning{T1,T2,F1,F2,F3,F4}
   reverse_leap!::F4
 end
 
-function RejectionThinning(threshold::Real, proposal, execute_leap!, reverse_leap!)
+function RejectionThinning(threshold::Real, state, execute_leap!, reverse_leap!)
   is_accepted = Base.Fix2(<, threshold)     # x -> x < threshold
   is_negative = Base.Fix2(<, 0)             # x -> x < 0
   is_invalid  = Base.Fix1(any, is_negative) # x -> any(is_negative, x)
 
-  RejectionThinning(threshold, proposal, is_accepted, is_invalid, execute_leap!, reverse_leap!)
+  RejectionThinning(threshold, state, copy(state), is_accepted, is_invalid, execute_leap!, reverse_leap!)
 end
 
 function (f::RejectionThinning)(v::AbstractVector, s::Real)
@@ -219,8 +221,10 @@ function (f::RejectionThinning)(v::AbstractVector, s::Real)
   is_accepted = f.is_accepted
   execute_leap! = f.execute_leap!
   reverse_leap! = f.reverse_leap!
+  state = f.state
   proposal = f.proposal
 
+  copyto!(proposal, state)
   execute_leap!(proposal, v)
 
   while is_invalid(proposal)
@@ -240,6 +244,9 @@ function (f::RejectionThinning)(v::AbstractVector, s::Real)
 
     # apply new update
     execute_leap!(proposal, v)
+  end
+  if all(==(0), v)
+    error("Thinning rejected all events in the leap.")
   end
 
   return v, s
@@ -323,9 +330,11 @@ end
 (g::ApplyLeapUpdate)(x, n) = g.f(x, g.V, n)
 
 function forward_leap!(x, V, n)
-  x .+= V*n
+  mul!(x, V, n, one(eltype(x)), one(eltype(x)))
+  return nothing
 end
 
 function backward_leap!(x, V, n)
-  x .-= V*n
+  mul!(x, V, n, -one(eltype(x)), one(eltype(x)))
+  return nothing
 end
