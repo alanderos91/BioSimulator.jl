@@ -18,6 +18,8 @@ end
 
 @inline cumulative_intensity(simulator::TauLeapSimulator) = first(simulator.algorithm.total_rate)
 
+jump_rates(simulator::TauLeapSimulator) = simulator.algorithm.rates
+
 # start a new simulation and initialize the stepper with the next event
 @inline function initialize!(simulator::TauLeapSimulator, state, model, tfinal)
   # reset the current system time
