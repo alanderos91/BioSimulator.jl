@@ -142,7 +142,7 @@ function simulate!(simulator, state, model, tfinal, output, save_points, save_fu
     while running
         tnew = get_new_time(simulator)
 
-        if tnew <= tfinal
+        if tnew < tfinal
             step!(simulator, state, model)
         else
             simulator.t = tfinal
