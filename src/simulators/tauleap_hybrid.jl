@@ -15,6 +15,8 @@ end
 # TODO: this is an ugly hack
 @inline cumulative_intensity(simulator::HybridTauLeapSimulator) = first(simulator.exact.algorithm.total_rate)
 
+jump_rates(simulator::HybridTauLeapSimulator) = jump_rates(simulator.exact)
+
 @inline function initialize!(simulator::HybridTauLeapSimulator, state, model, tfinal)
   # reset the current system time
   simulator.t = 0.0
@@ -28,7 +30,7 @@ end
 
   # seed the simulator with events
   # TODO: right now, this seeds both a leap update and jump update
-  generate_next_step!(simulator)
+  generate_next_step!(simulator, state)
 
   return nothing
 end
@@ -47,13 +49,13 @@ end
     no_update_step!(exact, state, model)
 
     simulator.t = exact.t
-    tauleap.t   = exact.t
+    tauleap.t = exact.t
   else
     # otherwise it is safe to leap
     no_update_step!(tauleap, state, model)
 
     simulator.t = tauleap.t
-    exact.t     = tauleap.t
+    exact.t = tauleap.t
   end
 
   # check if simulation is critical
@@ -63,7 +65,7 @@ end
   update!(simulator, state, model)
 
   # figure out what type of step should be taken next
-  generate_next_step!(simulator)
+  generate_next_step!(simulator, state)
 
   return nothing
 end
@@ -83,11 +85,11 @@ end
   return nothing
 end
 
-@inline function generate_next_step!(simulator::HybridTauLeapSimulator)
+@inline function generate_next_step!(simulator::HybridTauLeapSimulator, state)
   if simulator.is_critical
     generate_next_jump!(simulator.exact)
   else
-    generate_next_leap!(simulator.tauleap)
+    generate_next_leap!(simulator.tauleap, state)
   end
 
   return nothing

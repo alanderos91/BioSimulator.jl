@@ -34,7 +34,7 @@ jump_rates(simulator::TauLeapSimulator) = simulator.algorithm.rates
   initialize!(simulator.algorithm, state, model)
 
   # seed the stepper with the first leap
-  generate_next_leap!(simulator)
+  generate_next_leap!(simulator, state)
 
   return nothing
 end
@@ -42,16 +42,14 @@ end
 # carry out the next leap
 @inline function step!(simulator::TauLeapSimulator, state, model)
   # unpack information
-  n = simulator.next_leap_jumps
-  s = simulator.next_leap_time
+  jumps = simulator.next_leap_jumps
 
   # update the system time
   simulator.t = get_new_time(simulator)
 
   # update the system state according to the proposed leap
   # NOTE: at this point it is assumed that the leap is valid
-  simulator.execute_leap!(state, n)
-  @assert all(>=(0), state)
+  simulator.execute_leap!(state, jumps)
 
   # update statistics
   # TODO
@@ -60,23 +58,20 @@ end
   update!(simulator.algorithm, state, model)
 
   # generate the next leap
-  generate_next_leap!(simulator)
+  generate_next_leap!(simulator, state)
 
   return nothing
 end
 
-@inline function generate_next_leap!(simulator::TauLeapSimulator)
-  # unpack
-  v = simulator.next_leap_jumps
-
+@inline function generate_next_leap!(simulator::TauLeapSimulator, state)
   # set a limit on how large a leap may be
   Δt_max = simulator.tfinal - simulator.t
 
   # ask the algorithm for the next random leap
-  v, s = generate_leap!(v, simulator.algorithm, Δt_max)
+  v, s = generate_leap!(simulator.algorithm, simulator.next_leap_jumps, state, Δt_max)
 
   # update the stepper's fields
-  simulator.next_leap_jumps = v
+  copyto!(simulator.next_leap_jumps, v)
   simulator.next_leap_time = s
 
   return nothing
@@ -87,17 +82,12 @@ end
 ##### helper functions #####
 
 @inline function no_update_step!(simulator::TauLeapSimulator, state, model)
-  # unpack information
-  n = simulator.next_leap_jumps
-  s = simulator.next_leap_time
-
   # update the system time
   simulator.t = get_new_time(simulator)
 
   # update the system state according to the proposed leap
   # NOTE: at this point it is assumed that the leap is valid
-  simulator.execute_leap!(state, n)
-  @assert all(>=(0), state)
+  simulator.execute_leap!(state, simulator.next_leap_jumps)
 
   return nothing
 end

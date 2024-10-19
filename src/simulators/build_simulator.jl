@@ -177,7 +177,7 @@ function build_simulator(::TauLeapingDG2001, state, model, rates_cache)
 
   # build closure that ensures leaps are valid
   rejection_threshold = 0.75
-  validate_leap! = RejectionThinning(rejection_threshold, state, execute_leap!, reverse_leap!)
+  validate_leap! = RejectionThinning(rejection_threshold, number_species, number_jumps, execute_leap!, reverse_leap!)
 
   algorithm = PoissonLeapMethod(rates, total_rate, V, leap_formula, validate_leap!)
 
@@ -220,7 +220,7 @@ function build_simulator(::TauLeapingDGLP2003, state, model, rates_cache)
 
   # build closure that ensures leaps are valid
   rejection_threshold = 0.75
-  validate_leap! = RejectionThinning(rejection_threshold, state, execute_leap!, reverse_leap!)
+  validate_leap! = RejectionThinning(rejection_threshold, number_species, number_jumps, execute_leap!, reverse_leap!)
 
   algorithm = PoissonLeapMethod(rates, total_rate, V, leap_formula, validate_leap!)
 
@@ -270,7 +270,7 @@ function build_simulator(::StepAnticipation, state, model, rates_cache)
 
   # build closure that ensures leaps are valid
   rejection_threshold = 0.75
-  validate_leap! = RejectionThinning(rejection_threshold, state, execute_leap!, reverse_leap!)
+  validate_leap! = RejectionThinning(rejection_threshold, number_species, number_jumps, execute_leap!, reverse_leap!)
 
   algorithm = StepAnticipationMethod(rates, total_rate, leap_formula, validate_leap!, U, V, dxdt, drdt)
 
@@ -326,7 +326,7 @@ function build_simulator(::HybridSAL, state, model, rates_cache)
 
   # build closure that ensures leaps are valid
   rejection_threshold = 0.75
-  validate_leap! = RejectionThinning(rejection_threshold, state, execute_leap!, reverse_leap!)
+  validate_leap! = RejectionThinning(rejection_threshold, number_species, number_jumps, execute_leap!, reverse_leap!)
 
   algorithm = StepAnticipationMethod(rates, total_rate, leap_formula, validate_leap!, U, V, dxdt, drdt)
 
