@@ -180,7 +180,9 @@ function update!(formula::GenericLeapFormula, state, model, V, rates, total_rate
   nothing
 end
 
-update_mean_derivatives!(dxdt, V, rates) = (dxdt .= V * rates)
+function update_mean_derivatives!(dxdt, V, rates)
+  mul!(dxdt, V, rates)
+end
 
 function update_time_derivatives!(drdt, state, model, dxdt)
   for j in eachindex(drdt)
@@ -199,22 +201,27 @@ end
 struct RejectionThinning{T1,T2,F1,F2,F3,F4}
   threshold::T1
   state::T2
-  proposal::T2
+  jumps::T2
   is_accepted::F1
   is_invalid::F2
   execute_leap!::F3
   reverse_leap!::F4
 end
 
-function RejectionThinning(threshold::Real, state, execute_leap!, reverse_leap!)
+function RejectionThinning(threshold::Real, number_species::Integer, number_jumps::Integer,
+  execute_leap!, reverse_leap!)
+  #
   is_accepted = Base.Fix2(<, threshold)     # x -> x < threshold
   is_negative = Base.Fix2(<, 0)             # x -> x < 0
   is_invalid  = Base.Fix1(any, is_negative) # x -> any(is_negative, x)
 
-  RejectionThinning(threshold, state, copy(state), is_accepted, is_invalid, execute_leap!, reverse_leap!)
+  RejectionThinning(threshold,
+    zeros(Int, number_species), zeros(Int, number_jumps),
+    is_accepted, is_invalid, execute_leap!, reverse_leap!
+  )
 end
 
-function (f::RejectionThinning)(v::AbstractVector, s::Real)
+function (f::RejectionThinning)(v, x, s)
   # unpack
   threshold = f.threshold
   is_invalid = f.is_invalid
@@ -222,34 +229,53 @@ function (f::RejectionThinning)(v::AbstractVector, s::Real)
   execute_leap! = f.execute_leap!
   reverse_leap! = f.reverse_leap!
   state = f.state
-  proposal = f.proposal
+  jumps = f.jumps
 
-  copyto!(proposal, state)
-  execute_leap!(proposal, v)
+  copyto!(state, x)
+  copyto!(jumps, v)
+  execute_leap!(state, jumps)
+  t = s
 
-  while is_invalid(proposal)
-    reverse_leap!(proposal, v)
+  max_attempts = 1
+  attempts = 0
+  while attempts < max_attempts
+    while is_invalid(state)
+      reverse_leap!(state, jumps)
 
-    # reject events in the proposed leap
-    for j in eachindex(v)
-      # generate a stream of iid uniform deviates for the rejection step
-      event = (rand() for j in 1:v[j])
+      # reject events in the proposed leap
+      for j in eachindex(jumps)
+        # generate a stream of iid uniform deviates for the rejection step
+        event = (rand() for j in 1:jumps[j])
 
-      # count the number of accepted events
-      v[j] = count(is_accepted, event)
+        # count the number of accepted events
+        jumps[j] = count(is_accepted, event)
+      end
+
+      # contract the leap by the threshold parameter
+      t = t * threshold
+
+      # apply new update
+      execute_leap!(state, jumps)
     end
-
-    # contract the leap by the threshold parameter
-    s = s * threshold
-
-    # apply new update
-    execute_leap!(proposal, v)
+    # check that we didn't reject every event
+    if t < s && iszero(jumps)
+      copyto!(state, x)
+      copyto!(jumps, v)
+      execute_leap!(state, jumps)
+      t = s
+    else
+      break
+    end
+    attempts += 1
   end
-  if all(==(0), v)
-    error("Thinning rejected all events in the leap.")
+
+  if attempts >= max_attempts
+    fill!(v, 0)
+  else
+    copyto!(v, jumps)
   end
 
-  return v, s
+  return t
 end
 
 ##### extracting stoichiometry matrix #####
