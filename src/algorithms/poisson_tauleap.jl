@@ -6,7 +6,13 @@ mutable struct PoissonLeapMethod{F1,F2} <: UnsafeLeapAlgorithm
   validate_leap!::F2
 end
 
-generate_events!(::PoissonLeapMethod, v, rates, s) = map!(rate -> pois_rand(rate * s), v, rates)
+function generate_events!(::PoissonLeapMethod, jumps, rates, s)
+  if s < 0
+    throw(ArgumentError("The leap length $(s) should be positive; got s = $(s)."))
+  end
+  map!(rate -> pois_rand(rate * s), jumps, rates)
+  return nothing
+end
 
 function update!(algorithm::PoissonLeapMethod, state, model)
   # unpack

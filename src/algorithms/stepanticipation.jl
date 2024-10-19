@@ -9,8 +9,12 @@ mutable struct StepAnticipationMethod{F1,F2} <: UnsafeLeapAlgorithm
   drdt::Vector{Float64}
 end
 
-function generate_events!(f::StepAnticipationMethod, v, rates, s)
-  map!((rate, drdt) -> pois_rand(rate * s + 1//2 * drdt * s * s), v, rates, f.drdt)
+function generate_events!(f::StepAnticipationMethod, jumps, rates, s)
+  if s < 0
+    throw(ArgumentError("The leap length $(s) should be positive; got s = $(s)."))
+  end
+  map!((rate, drdt) -> pois_rand(rate * s + 1//2 * drdt * s * s), jumps, rates, f.drdt)
+  return nothing
 end
 
 function update!(algorithm::StepAnticipationMethod, state, model)
@@ -18,10 +22,6 @@ function update!(algorithm::StepAnticipationMethod, state, model)
   rates = algorithm.rates
   total_rate = algorithm.total_rate
   V = algorithm.V
-  U = algorithm.U
-
-  dxdt = algorithm.dxdt
-  drdt = algorithm.drdt
 
   # update jump rates
   update_jump_rates!(algorithm, state, model)
