@@ -29,7 +29,7 @@ import BioSimulator: parse_model
     @time simulate(state, model, alg, tfinal = 4.0, rates_cache = rates_cache)
 
     @info "Running $(alg) using $(msg)...\n"
-    @time result = [simulate(state, model, alg, tfinal = 4.0, rates_cache = rates_cache)[end][1] for _ in 1:N]
+    @time result = [simulate(state, model, alg, tfinal = 4.0, rates_cache = rates_cache)[1,end] for _ in 1:N]
 
     println("  absolute error = $(abs(mean(result) - expected))\n")
   end
@@ -43,7 +43,7 @@ import BioSimulator: parse_model
     @info "Precompiling $(alg)...\n"
     @time simulate(state, model, alg, tfinal = 4.0)
     @info "Running $(alg)...\n"
-    @time result = [simulate(state, model, alg, tfinal = 4.0)[end][1] for _ in 1:N]
+    @time result = [simulate(state, model, alg, tfinal = 4.0)[1,end] for _ in 1:N]
 
     println("  absolute error = $(abs(mean(result) - expected))\n")
   end

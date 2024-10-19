@@ -270,8 +270,8 @@ end
       @test rate_derivative(m, x, 1, 1) == 0
 
       # Order 1: A --> B
-      @test rate_derivative(m, x, 1, 3) ≈ params[2]
-      @test rate_derivative(m, x, 2, 3) == 0
+      @test rate_derivative(m, x, 1, 4) ≈ params[2]
+      @test rate_derivative(m, x, 2, 4) == 0
 
       # Order 2A: A + B --> C
       @test rate_derivative(m, x, 1, 6) ≈ x[2] * params[3]
@@ -288,7 +288,7 @@ end
       @test rate_derivative(m, x, 3, 8) ≈ x[1] * x[2] * params[1]
       @test rate_derivative(m, x, 4, 8) == 0
 
-      # Order 3: 3 * A + B + 2 * C --> D
+      # Order N: 3 * A + B + 2 * C --> D
       @test rate_derivative(m, x, 1, 9) ≈ (0.5*x[1]^2 - x[1] + 1/3) * x[2] * x[3] * (x[3] - 1) * params[1] / 2
       @test rate_derivative(m, x, 2, 9) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[3] * (x[3] - 1) * params[1] / 12
       @test rate_derivative(m, x, 3, 9) ≈ x[1] * (x[1] - 1) * (x[1] - 2) * x[2] * (x[3] - 0.5) * params[1] / 6
