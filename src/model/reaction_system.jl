@@ -55,22 +55,50 @@ end
 end
 
 @inline @inbounds function rate_derivative(r::ReactionStruct{MassAction}, x, p, i)
-    total_rate = p[r.paramidx]  # accumulates terms of the form (x_k - (j-1))
-    prefactor = one(total_rate) # accumulates constants 1 / m_k!
-    deriv_term = zero(total_rate)
+    total_rate = p[r.paramidx]
 
-    for (k, m) in r.reactants
-        for j in 1:m
-            total_rate *= (x[k] - (j-1))
-            prefactor *= j
-
-            if k == i
-                deriv_term += 1 / (x[k] - (j-1))
+    if isempty(r.reactants)
+        # Order 0
+        total_rate = zero(total_rate)
+    elseif all(v -> v[1] != i, r.reactants)
+        total_rate = zero(total_rate)
+    else
+        # Order >= 1; every m >= 1
+        for (k, m) in r.reactants
+            num = 1
+            den = 1
+            rat = one(total_rate)
+            if k != i
+                # accumulate contribution as usual
+                rat = one(total_rate)
+                for j in 1:m
+                    num *= (x[k] - (j-1))
+                    den *= j
+                end
+            else
+                # we are differentiating with respect to x[k]
+                if x[k] >= m
+                    # compute using a rational representation
+                    rat = zero(total_rate)
+                    for j in 1:m
+                        num *= (x[k] - (j-1))
+                        den *= j
+                        rat += 1 / (x[k] - (j-1))
+                    end
+                else
+                    # there is a single nonzero term
+                    rat = one(total_rate)
+                    for j in 1:m
+                        if x[k] != (j-1)
+                            num *= (x[k] - (j-1))
+                        end
+                        den *= j
+                    end
+                end
             end
+            total_rate = total_rate * num / den * rat
         end
     end
-
-    total_rate = total_rate / prefactor * deriv_term
 
     return total_rate
 end
