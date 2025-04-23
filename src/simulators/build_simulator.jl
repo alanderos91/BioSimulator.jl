@@ -171,7 +171,7 @@ function build_simulator(::TauLeapingDG2001, state, model, rates_cache)
   leap_formula = DG2001Eq26a(number_species, number_jumps, 0.125)
 
   # build closure to apply leap updates
-  V = extract_net_stoichiometry(model)
+  V = extract_net_stoichiometry(model, number_species, number_jumps)
   execute_leap! = ApplyLeapUpdate(forward_leap!, V)  # apply a leap update
   reverse_leap! = ApplyLeapUpdate(backward_leap!, V) # reverse a leap update
 
@@ -209,7 +209,7 @@ function build_simulator(::TauLeapingDGLP2003, state, model, rates_cache)
   total_rate = zero(eltype(rates))
 
   # extract stoichiometry
-  V = extract_net_stoichiometry(model)
+  V = extract_net_stoichiometry(model, number_species, number_jumps)
 
   # build leap formula
   leap_formula = DGLP2003Eq6(number_species, number_jumps, V, 0.125)
@@ -253,8 +253,8 @@ function build_simulator(::StepAnticipation, state, model, rates_cache)
   total_rate = zero(eltype(rates))
 
   # extract stoichiometry
-  U = extract_coefficients(model)
-  V = extract_net_stoichiometry(model)
+  U = extract_coefficients(model, number_species, number_jumps)
+  V = extract_net_stoichiometry(model, number_species, number_jumps)
 
   # allocate memory for derivatives
   dxdt = zeros(number_species)
@@ -309,8 +309,8 @@ function build_simulator(::HybridSAL, state, model, rates_cache)
   # tau-leaping simulator...
 
   # extract stoichiometry
-  U = extract_coefficients(model)
-  V = extract_net_stoichiometry(model)
+  U = extract_coefficients(model, number_species, number_jumps)
+  V = extract_net_stoichiometry(model, number_species, number_jumps)
 
   # allocate memory for derivatives
   dxdt = zeros(number_species)

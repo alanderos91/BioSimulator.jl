@@ -280,7 +280,7 @@ end
 
 ##### extracting stoichiometry matrix #####
 
-function extract_net_stoichiometry(model::ReactionSystem)
+function extract_net_stoichiometry(model::ReactionSystem, number_species, number_jumps)
   reaction = model.reactions
 
   number_entries = sum(length(reaction[j].net_change) for j in eachindex(reaction))
@@ -302,10 +302,10 @@ function extract_net_stoichiometry(model::ReactionSystem)
     end
   end
 
-  return sparse(I, J, V)
+  return sparse(I, J, V, number_species, number_jumps)
 end
 
-function extract_coefficients(model::ReactionSystem)
+function extract_coefficients(model::ReactionSystem, number_species, number_jumps)
   reaction = model.reactions
 
   number_entries = sum(length(reaction[j].reactants) for j in eachindex(reaction))
@@ -327,7 +327,7 @@ function extract_coefficients(model::ReactionSystem)
     end
   end
 
-  return sparse(I, J, V)
+  return sparse(I, J, V, number_species, number_jumps)
 end
 
 ##### applying leap updates #####
